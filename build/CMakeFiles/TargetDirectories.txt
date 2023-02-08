@@ -1,0 +1,3 @@
+/home/olsen/3dRadiation/build/CMakeFiles/rebuild_cache.dir
+/home/olsen/3dRadiation/build/CMakeFiles/edit_cache.dir
+/home/olsen/3dRadiation/build/CMakeFiles/test.dir

@@ -1,0 +1,11 @@
+# VsCode:
+.vscode
+
+# Obj files:
+*.o
+
+# Output folders:
+output/
+
+# Binaries:
+test

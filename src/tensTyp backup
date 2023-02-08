@@ -1,0 +1,281 @@
+#ifndef __INCLUDE_GUARD_TesorTypes_h__
+#define __INCLUDE_GUARD_TesorTypes_h__
+#include <iostream>             // cout
+#include "ControlFlow.hh"       // used for template arguments
+#include "Utility.hh"           // utility functions
+#include "SimpleStructs.hh"     // Double2 etc
+#include "eigen/Eigen/Dense"    // Eigen library for solving linear systems
+
+
+
+/*
+ * Access pattern for all tensors follows the mathematical access pattern:
+ * A[{i,j}] = A_ij
+ * 
+ * This allows for mathematical equations to be translated one to one:
+ * C = A*B <=> C_ij = A_ik B_kj         sum over k
+ * => C[{i,j}] = A[{i,k}] * B[{k,j}]    sum over k
+ * 
+ * This leads to the last index being the fastest, => for(i...)for(j...)for(k...)
+ *     (B00,B01,B02) 
+ * B = (B10,B11,B12) <=> Memory of B = (B00, B01, B02, B10, B11, B12, B20, B21, B22)
+ *     (B20,B21,B22) 
+ * 
+ * Initialization is row major:
+ *     (0,1,2) 
+ * B = (3,4,5) <=> Tensor3x3 B(0,1,2, 3,4,5, 6,7,8);
+ *     (6,7,8) 
+ */
+
+
+
+//template<class Frame>
+//class Tensor3x3;
+template<class Frame>
+class Tensor4x4;
+
+struct rank2Indices
+{int i, j;};
+
+
+
+
+class Coordinate3
+{
+private:
+    double data[3];
+public:
+    Coordinate3(double value)
+    { data[0] = data[1] = data[2] = value; }
+    Coordinate3(double value1, double value2, double value3)
+    { data[0] = value1; data[1] = value2; data[2] = value3; }
+    double& operator[](const int index)
+    { return data[index-1]; }
+    const double& operator[](const int index) const
+    { return data[index-1]; }
+    void Print(std::string name, bool newLine, int precision) const
+    {
+        std::cout << name << " = ("
+    	<< Format(data[0],precision) << ","
+    	<< Format(data[1],precision) << ","
+    	<< Format(data[2],precision) << ")\n";
+        if(newLine) std::cout << "\n";
+    }
+};
+
+
+
+template<class Frame>
+class Tensor3
+{
+private:
+    double data[3];
+public:
+    Tensor3(double value)
+    { data[0] = data[1] = data[2] = value; }
+    Tensor3(double value1, double value2, double value3)
+    { data[0] = value1; data[1] = value2; data[2] = value3; }
+    // Transform between observer frames.
+    // tetrad must be in same coordinates as initial vector.
+    template<class FrameB>
+    Tensor3<FrameB> Transform(Tensor4x4<Tetrad>& tetrad) const
+    {
+        if constexpr(std::is_same<Frame,IF>::value && std::is_same<FrameB,LF>::value)
+        {// IF -> LF
+            return Tensor3<FrameB>(tetrad[{1,1}]*data[0] + tetrad[{1,2}]*data[1] + tetrad[{1,3}]*data[2],
+                                   tetrad[{2,1}]*data[0] + tetrad[{2,2}]*data[1] + tetrad[{2,3}]*data[2],
+                                   tetrad[{3,1}]*data[0] + tetrad[{3,2}]*data[1] + tetrad[{3,3}]*data[2]);
+        }
+        if constexpr(std::is_same<Frame,LF>::value && std::is_same<FrameB,IF>::value)
+        {// LF -> IF
+            Tensor4x4<Tetrad> tetradInverse = tetrad.Invert();
+            return Tensor3<FrameB>(tetradInverse[{1,1}]*data[0] + tetradInverse[{1,2}]*data[1] + tetradInverse[{1,3}]*data[2],
+                                   tetradInverse[{2,1}]*data[0] + tetradInverse[{2,2}]*data[1] + tetradInverse[{2,3}]*data[2],
+                                   tetradInverse[{3,1}]*data[0] + tetradInverse[{3,2}]*data[1] + tetradInverse[{3,3}]*data[2]);
+        }
+    }
+    template<class FrameB>
+    Tensor3<FrameB> Transform(Tensor4x4<Tetrad>&& tetrad) const
+    {
+        if constexpr(std::is_same<Frame,IF>::value && std::is_same<FrameB,LF>::value)
+        {// IF -> LF
+            return Tensor3<FrameB>(tetrad[{1,1}]*data[0] + tetrad[{1,2}]*data[1] + tetrad[{1,3}]*data[2],
+                                   tetrad[{2,1}]*data[0] + tetrad[{2,2}]*data[1] + tetrad[{2,3}]*data[2],
+                                   tetrad[{3,1}]*data[0] + tetrad[{3,2}]*data[1] + tetrad[{3,3}]*data[2]);
+        }
+        if constexpr(std::is_same<Frame,LF>::value && std::is_same<FrameB,IF>::value)
+        {// LF -> IF
+            Tensor4x4<Tetrad> tetradInverse = tetrad.Invert();
+            return Tensor3<FrameB>(tetradInverse[{1,1}]*data[0] + tetradInverse[{1,2}]*data[1] + tetradInverse[{1,3}]*data[2],
+                                   tetradInverse[{2,1}]*data[0] + tetradInverse[{2,2}]*data[1] + tetradInverse[{2,3}]*data[2],
+                                   tetradInverse[{3,1}]*data[0] + tetradInverse[{3,2}]*data[1] + tetradInverse[{3,3}]*data[2]);
+        }
+    }
+    double Norm(const Tensor4x4<Frame>& metric2_ll) const
+    {
+        double norm = 0;
+        for(int j=1; j<4; j++)
+        for(int i=1; i<4; i++)
+            norm += metric2_ll[{i,j}] * (*this)[i] * (*this)[j];
+        return sqrt(abs(norm));
+    }
+    double EuklNorm() const
+    {
+        double norm = data[0]*data[0] + data[1]*data[1] + data[2]*data[2];
+        return sqrt(norm);
+    }
+    Double2 Angles() const
+    {
+        double theta = atan2(hypot(data[0],data[2]), data[1]);
+        double phi = atan2(data[1],data[0]) + 2*M_PI;
+        return Double2(theta, phi);
+    }
+    double Dot(Tensor3<Frame> v, Tensor3<Frame> w)
+    {
+        return v[1] * w[1] + v[2] * w[2] + v[3] * w[3];
+    }
+    double& operator[](const int index)
+    { return data[index-1]; }
+    const double& operator[](const int index) const
+    { return data[index-1]; }
+    void Print(std::string name, bool newline, int precision) const
+    {
+        std::cout << name;
+        if constexpr(std::is_same<Frame,IF>::value)
+        {
+            std::cout << "(IF)" << " = ("
+    	    << Format(data[0],precision) << ","
+    	    << Format(data[1],precision) << ","
+    	    << Format(data[2],precision) << ")\n";
+        }
+        if constexpr(std::is_same<Frame,LF>::value)
+        {
+            std::cout << "(LF)" << " = ("
+    	    << Format(data[0],precision) << ","
+    	    << Format(data[1],precision) << ","
+    	    << Format(data[2],precision) << ")\n";
+        }
+        if(newline) std::cout << "\n";
+    }
+};
+
+
+
+template<class Frame>
+class Tensor4x4
+{
+private:
+    double data[16];
+public:
+    Tensor4x4(double value)
+    {
+        for(int ij=0; ij<16; ij++)
+            data[ij] = value;
+    }
+    Tensor4x4(double value00, double value01, double value02, double value03,
+              double value10, double value11, double value12, double value13,
+              double value20, double value21, double value22, double value23,
+              double value30, double value31, double value32, double value33)
+    {
+        data[0*4 + 0] = value00; data[0*4 + 1] = value01; data[0*4 + 2] = value02; data[0*4 + 3] = value03;
+        data[1*4 + 0] = value10; data[1*4 + 1] = value11; data[1*4 + 2] = value12; data[1*4 + 3] = value13;
+        data[2*4 + 0] = value20; data[2*4 + 1] = value21; data[2*4 + 2] = value22; data[2*4 + 3] = value23;
+        data[3*4 + 0] = value30; data[3*4 + 1] = value31; data[3*4 + 2] = value32; data[3*4 + 3] = value33;
+    }
+    Tensor4x4<Frame> Invert()
+    {
+        Tensor4x4<Frame> invers;
+        using namespace Eigen;
+        Map<Matrix<double,4,4,RowMajor>> matrix(data);
+        Map<Matrix<double,4,4,RowMajor>> matrixInvers(invers.data);
+        matrixInvers = matrix.inverse().eval();
+        return invers;
+    }
+    // Transform between observer frames.
+    // tetrad must be in same coordinates as initial vector.
+    template<class FrameB>
+    Tensor4x4<FrameB> Transform(Tensor4x4<Tetrad>& tetrad) const
+    {
+        if constexpr(std::is_same<Frame,IF>::value && std::is_same<FrameB,LF>::value)
+        {// IF -> LF
+            Tensor4x4<FrameB> result(0.0);
+            for(int a=0; a<4; a++)
+                for(int b=0; b<4; b++)
+                    for(int A=0; A<4; A++)
+                        for(int B=0; B<4; B++)
+                            result[{a,b}] += (*this)[{A,B}] * tetrad[{a,A}] * tetrad[{b,B}];
+            return result;
+        }
+        if constexpr(std::is_same<Frame,LF>::value && std::is_same<FrameB,IF>::value)
+        {// LF -> IF
+            Tensor4x4<Tetrad> tetradInverse = tetrad.Invert();
+            Tensor4x4<FrameB> result(0.0);
+            for(int a=0; a<4; a++)
+                for(int b=0; b<4; b++)
+                    for(int A=0; A<4; A++)
+                        for(int B=0; B<4; B++)
+                            result[{a,b}] += (*this)[{A,B}] * tetradInverse[{a,A}] * tetradInverse[{b,B}];
+            return result;
+        }
+    }
+    template<class FrameB>
+    Tensor4x4<FrameB> Transform(Tensor4x4<Tetrad>&& tetrad) const
+    {
+        if constexpr(std::is_same<Frame,IF>::value && std::is_same<FrameB,LF>::value)
+        {// IF -> LF
+            Tensor4x4<FrameB> result(0.0);
+            for(int a=0; a<4; a++)
+                for(int b=0; b<4; b++)
+                    for(int A=0; A<4; A++)
+                        for(int B=0; B<4; B++)
+                            result[{a,b}] += (*this)[{A,B}] * tetrad[{a,A}] * tetrad[{b,B}];
+            return result;
+        }
+        if constexpr(std::is_same<Frame,LF>::value && std::is_same<FrameB,IF>::value)
+        {// LF -> IF
+            Tensor4x4<Tetrad> tetradInverse = tetrad.Invert();
+            Tensor4x4<FrameB> result(0.0);
+            for(int a=0; a<4; a++)
+                for(int b=0; b<4; b++)
+                    for(int A=0; A<4; A++)
+                        for(int B=0; B<4; B++)
+                            result[{a,b}] += (*this)[{A,B}] * tetradInverse[{a,A}] * tetradInverse[{b,B}];
+            return result;
+        }
+    }
+    double& operator[](const rank2Indices& index)
+    { return data[index.i*4 + index.j]; }
+    const double& operator[](const rank2Indices& index) const
+    { return data[index.i*4 + index.j]; }
+    void Print(std::string name, bool newline, int precision) const
+    {
+        int size = name.size();
+        std::string space(size,' ');
+        if constexpr(std::is_same<Frame,IF>::value)
+        {
+            std::cout << space << "       (" << Format(data[0*4 + 0],precision) << "," << Format(data[0*4 + 1],precision) << "," << Format(data[0*4 + 2],precision) << "," << Format(data[0*4 + 3],precision) << ")" << "\n";
+            std::cout << name  << "(IF) = (" << Format(data[1*4 + 0],precision) << "," << Format(data[1*4 + 1],precision) << "," << Format(data[1*4 + 2],precision) << "," << Format(data[1*4 + 3],precision) << ")" << "\n";
+            std::cout << space << "       (" << Format(data[2*4 + 0],precision) << "," << Format(data[2*4 + 1],precision) << "," << Format(data[2*4 + 2],precision) << "," << Format(data[2*4 + 3],precision) << ")" << "\n";
+            std::cout << space << "       (" << Format(data[3*4 + 0],precision) << "," << Format(data[3*4 + 1],precision) << "," << Format(data[3*4 + 2],precision) << "," << Format(data[3*4 + 3],precision) << ")" << "\n";
+        }
+        if constexpr(std::is_same<Frame,LF>::value)
+        {
+            std::cout << space << "       (" << Format(data[0*4 + 0],precision) << "," << Format(data[0*4 + 1],precision) << "," << Format(data[0*4 + 2],precision) << "," << Format(data[0*4 + 3],precision) << ")" << "\n";
+            std::cout << name  << "(LF) = (" << Format(data[1*4 + 0],precision) << "," << Format(data[1*4 + 1],precision) << "," << Format(data[1*4 + 2],precision) << "," << Format(data[1*4 + 3],precision) << ")" << "\n";
+            std::cout << space << "       (" << Format(data[2*4 + 0],precision) << "," << Format(data[2*4 + 1],precision) << "," << Format(data[2*4 + 2],precision) << "," << Format(data[2*4 + 3],precision) << ")" << "\n";
+            std::cout << space << "       (" << Format(data[3*4 + 0],precision) << "," << Format(data[3*4 + 1],precision) << "," << Format(data[3*4 + 2],precision) << "," << Format(data[3*4 + 3],precision) << ")" << "\n";
+        }
+        if constexpr(std::is_same<Frame,Tetrad>::value)
+        {
+            std::cout << space << "   (" << Format(data[0*4 + 0],precision) << "," << Format(data[0*4 + 1],precision) << "," << Format(data[0*4 + 2],precision) << "," << Format(data[0*4 + 3],precision) << ")" << "\n";
+            std::cout << name  << " = (" << Format(data[1*4 + 0],precision) << "," << Format(data[1*4 + 1],precision) << "," << Format(data[1*4 + 2],precision) << "," << Format(data[1*4 + 3],precision) << ")" << "\n";
+            std::cout << space << "   (" << Format(data[2*4 + 0],precision) << "," << Format(data[2*4 + 1],precision) << "," << Format(data[2*4 + 2],precision) << "," << Format(data[2*4 + 3],precision) << ")" << "\n";
+            std::cout << space << "   (" << Format(data[3*4 + 0],precision) << "," << Format(data[3*4 + 1],precision) << "," << Format(data[3*4 + 2],precision) << "," << Format(data[3*4 + 3],precision) << ")" << "\n";
+        }
+        if(newline) std::cout << "\n";
+    }
+};
+
+
+
+#endif //__INCLUDE_GUARD_TesorTypes_h__
