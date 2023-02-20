@@ -142,7 +142,7 @@ void Grid::WriteFrametoCsv
     
     name = (name == "") ? "data" :  name;
     std::ofstream fileOut(directory + "/" + name + FrameNumber(frameNumber) + "_" + std::to_string(nx) + "x" + std::to_string(ny) + "y" + std::to_string(nz) + "z" +  ".csv");
-    fileOut << "#x, y, z, r, g, b, a \n";
+    fileOut << "#x,y,z,r,g,b,a\n";
 
     for(int k=0; k<nz; k++)
     for(int j=0; j<ny; j++)
@@ -150,8 +150,8 @@ void Grid::WriteFrametoCsv
     {
         int ijk = Index(i,j,k);
         Coord x = xyz(i,j,k);
-        fileOut << x[1]   << ", " << x[2]   << ", " << x[3] << ", ";
-        fileOut << r[ijk] << ", " << g[ijk] << ", " << b[ijk] << ", " << a[ijk] << " \n";
+        fileOut << x[1]   << "," << x[2]   << "," << x[3] << ",";
+        fileOut << r[ijk] << "," << g[ijk] << "," << b[ijk] << "," << a[ijk] << "\n";
     }
 
     fileOut.close();

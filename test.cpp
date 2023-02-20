@@ -100,7 +100,7 @@ void Test_TensorTypes()
 void Test_Grid()
 {
     int nx, ny, nz;
-    nx = ny = nz = 50;
+    nx = ny = nz = 20;
     Coord start(0,0,0);
     Coord end(1,1,1);
     Grid grid(nx, ny, nz, start, end);
@@ -132,7 +132,7 @@ void Test_Grid()
         data2[ijk] = (dist(bOrb,xyz) < 0.2) ? 1 : 0;
         data3[ijk] = 1;
     }
-    grid.WriteFrametoJson(0,data0,data1,data2,data3,0,"output","Test_Grid");
+    // grid.WriteFrametoJson(0,data0,data1,data2,data3,0,"output","Test_Grid");
     grid.WriteFrametoCsv (0,data0,data1,data2,data3,0,"output","Test_Grid");
 }
 
@@ -251,8 +251,9 @@ void Test_Stencil()
         double z = stencil.Cz(d0,d1);
         double theta = stencil.Theta(d0,d1);
         double phi = stencil.Phi(d0,d1);
-        cout << theta << ", " << stencil.Theta(x,y,z) << endl;
-        cout << phi << ", " << stencil.Phi(x,y,z) << endl;
+        Tensor3 cxyz = stencil.Cxyz(d0,d1);
+        cout << theta << ", " << stencil.Theta(x,y,z) << ", " << cxyz.Theta() << endl;
+        cout << phi << ", " << stencil.Phi(x,y,z) << ", " << cxyz.Phi() << endl;
     }
     cout << endl;
     {
@@ -448,6 +449,7 @@ void Test_StreamFlatStatic()
     Coord start(-1,-1,-1);
     Coord end(1,1,1);
     Grid grid(nx, ny, nz, start, end);
+    grid.SetCFL(0.5);
     Minkowski metric(grid, 1.0, 0.0);
     Stencil stencil(6,10);
     LebedevStencil3 lebedevStencil;
@@ -461,7 +463,7 @@ void Test_StreamFlatStatic()
         int ijk = grid.Index(i,j,k);
         Coord xyz = grid.xyz(i,j,k);
         double r = xyz.Radius();
-        if (r < 0.2)
+        if (r < 0.1)
         {
             radiation.isInitialGridPoint[ijk] = true;
             radiation.initialE[ijk] = 1;
@@ -602,7 +604,7 @@ void Test_StreamFlatDynamic()
 {
     // Create Radiation object:
     int nx, ny, nz;
-    nx = ny = nz = 100;
+    nx = ny = nz = 50;
     Coord start(-1,-1,-1);
     Coord end(1,1,1);
     Grid grid(nx, ny, nz, start, end);

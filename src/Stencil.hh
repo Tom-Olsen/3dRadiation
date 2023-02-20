@@ -71,7 +71,6 @@ struct Stencil
     double Cz(double d0, double d1) const
     { return cos(Theta(d0,d1)); }
 
-    //Tensor3 Cxyz(double d0, double d1, glm::quat quaternion) const
     Tensor3 Cxyz(double d0, double d1) const
     { return Tensor3(Cx(d0,d1), Cy(d0,d1), Cz(d0,d1)); }
 

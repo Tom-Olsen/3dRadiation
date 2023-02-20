@@ -180,9 +180,14 @@ void Radiation::LoadInitialData()
 			{// Uniform intensity distribution:
 				if (isDynamicStreaming)
 				{// Random direction for uniformity:
-					nx[ijk] = 2.0 * ((float) rand() / RAND_MAX) - 1.0;
-					ny[ijk] = 2.0 * ((float) rand() / RAND_MAX) - 1.0;
-					nz[ijk] = 2.0 * ((float) rand() / RAND_MAX) - 1.0;
+					Tensor3 n(0.0);
+					n[1] = 2.0 * ((float) rand() / RAND_MAX) - 1.0;
+					n[2] = 2.0 * ((float) rand() / RAND_MAX) - 1.0;
+					n[3] = 2.0 * ((float) rand() / RAND_MAX) - 1.0;
+					n = n.EuklNormalized();
+					nx[ijk] = n[1];
+					ny[ijk] = n[2];
+					nz[ijk] = n[3];
 				}
 				else
 				{// (0,0,0) is an invalid direction. Default direction is towards z:
@@ -314,20 +319,24 @@ void Radiation::ComputeMomentsIF()
 		Pyy[ijk] = 0.0;
 		Pyz[ijk] = 0.0;
 		Pzz[ijk] = 0.0;
+		glm::vec3 from(0,0,1);
+		glm::vec3 to(nx[ijk],ny[ijk],nz[ijk]);
+		glm::quat q(from,to);
 		for(int d1=0; d1<stencil.nPh; d1++)
 		for(int d0=0; d0<stencil.nTh; d0++)
 		{
+			Tensor3 cxyz = q * stencil.Cxyz(d0,d1);
 			int d = stencil.Index(d0,d1);
 			E[ijk]   += stencil.W(d0,d1) * I[ijk + d*grid.nxyz];
-			Fx[ijk]  += stencil.W(d0,d1) * I[ijk + d*grid.nxyz] * stencil.Cx(d0,d1);
-			Fy[ijk]  += stencil.W(d0,d1) * I[ijk + d*grid.nxyz] * stencil.Cy(d0,d1);
-			Fz[ijk]  += stencil.W(d0,d1) * I[ijk + d*grid.nxyz] * stencil.Cz(d0,d1);
-			Pxx[ijk] += stencil.W(d0,d1) * I[ijk + d*grid.nxyz] * stencil.Cx(d0,d1) * stencil.Cx(d0,d1);
-			Pxy[ijk] += stencil.W(d0,d1) * I[ijk + d*grid.nxyz] * stencil.Cx(d0,d1) * stencil.Cy(d0,d1);
-			Pxz[ijk] += stencil.W(d0,d1) * I[ijk + d*grid.nxyz] * stencil.Cx(d0,d1) * stencil.Cz(d0,d1);
-			Pyy[ijk] += stencil.W(d0,d1) * I[ijk + d*grid.nxyz] * stencil.Cy(d0,d1) * stencil.Cy(d0,d1);
-			Pyz[ijk] += stencil.W(d0,d1) * I[ijk + d*grid.nxyz] * stencil.Cy(d0,d1) * stencil.Cz(d0,d1);
-			Pzz[ijk] += stencil.W(d0,d1) * I[ijk + d*grid.nxyz] * stencil.Cz(d0,d1) * stencil.Cz(d0,d1);
+			Fx[ijk]  += stencil.W(d0,d1) * I[ijk + d*grid.nxyz] * cxyz[1];
+			Fy[ijk]  += stencil.W(d0,d1) * I[ijk + d*grid.nxyz] * cxyz[2];
+			Fz[ijk]  += stencil.W(d0,d1) * I[ijk + d*grid.nxyz] * cxyz[3];
+			Pxx[ijk] += stencil.W(d0,d1) * I[ijk + d*grid.nxyz] * cxyz[1] * cxyz[1];
+			Pxy[ijk] += stencil.W(d0,d1) * I[ijk + d*grid.nxyz] * cxyz[1] * cxyz[2];
+			Pxz[ijk] += stencil.W(d0,d1) * I[ijk + d*grid.nxyz] * cxyz[1] * cxyz[3];
+			Pyy[ijk] += stencil.W(d0,d1) * I[ijk + d*grid.nxyz] * cxyz[2] * cxyz[2];
+			Pyz[ijk] += stencil.W(d0,d1) * I[ijk + d*grid.nxyz] * cxyz[2] * cxyz[3];
+			Pzz[ijk] += stencil.W(d0,d1) * I[ijk + d*grid.nxyz] * cxyz[3] * cxyz[3];
 		}
         E[ijk]   *= fourPiInv;
         Fx[ijk]  *= fourPiInv;
@@ -372,14 +381,16 @@ void Radiation::ComputeMomentsLF()
 void Radiation::SetIntensitiesNorthSouth()
 {
 	PROFILE_FUNCTION();
+	int d0north = 0;
+	int d0south = stencil.nTh - 1;
 	#pragma omp parallel for
 	for(int ijk=0; ijk<grid.nxyz; ijk++)
 	{
 		Inorth[ijk] = Isouth[ijk] = 0;
 		for(int d1=0; d1<stencil.nPh; d1++)
 		{
-			Inorth[ijk] += I[ijk + 0 * grid.nxyz];
-			Isouth[ijk] += I[ijk + (stencil.nTh - 1) * grid.nxyz];
+			Inorth[ijk] += I[ijk + stencil.Index(d0north,d1) * grid.nxyz];
+			Isouth[ijk] += I[ijk + stencil.Index(d0south,d1) * grid.nxyz];
 		}
 		Inorth[ijk] /= stencil.nPh;
 		Isouth[ijk] /= stencil.nPh;
@@ -485,9 +496,9 @@ double Radiation::IntensityAt(int ijk, Tensor3 vTempIF)
 Tensor3 Radiation::AverageF(int i, int j, int k)
 {
 	Tensor3 averageF(0.0);
-	for(int a=-1; a<=1; a++)
-	for(int b=-1; b<=1; b++)
 	for(int c=-1; c<=1; c++)
+	for(int b=-1; b<=1; b++)
+	for(int a=-1; a<=1; a++)
 	{
 		int index = grid.Index(i+a, j+b, k+c);
 		averageF[1] += Fx[index];

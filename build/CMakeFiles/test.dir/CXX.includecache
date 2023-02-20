@@ -34,32 +34,6 @@ TensorTypes.hh
 Profiler.hh
 /home/olsen/3dRadiation/src/Profiler.hh
 
-/home/olsen/3dRadiation/src/Includes.hh
-ControlFlow.hh
-/home/olsen/3dRadiation/src/ControlFlow.hh
-Utility.hh
-/home/olsen/3dRadiation/src/Utility.hh
-TensorTypes.hh
-/home/olsen/3dRadiation/src/TensorTypes.hh
-Grid.h
-/home/olsen/3dRadiation/src/Grid.h
-Interpolation.hh
-/home/olsen/3dRadiation/src/Interpolation.hh
-Metric.h
-/home/olsen/3dRadiation/src/Metric.h
-Spacetimes.h
-/home/olsen/3dRadiation/src/Spacetimes.h
-GeodesicEquationSolver.h
-/home/olsen/3dRadiation/src/GeodesicEquationSolver.h
-TensorOperations.h
-/home/olsen/3dRadiation/src/TensorOperations.h
-Stencil.hh
-/home/olsen/3dRadiation/src/Stencil.hh
-SphericalHarmonics.h
-/home/olsen/3dRadiation/src/SphericalHarmonics.h
-Radiation.h
-/home/olsen/3dRadiation/src/Radiation.h
-
 /home/olsen/3dRadiation/src/Interpolation.hh
 math.h
 -
@@ -122,6 +96,10 @@ omp.h
 vector
 -
 
+/home/olsen/3dRadiation/src/Radiation.cpp
+Radiation.h
+/home/olsen/3dRadiation/src/Radiation.h
+
 /home/olsen/3dRadiation/src/Radiation.h
 math.h
 -
@@ -155,18 +133,6 @@ SphericalHarmonics.h
 /home/olsen/3dRadiation/src/SphericalHarmonics.h
 Log.hh
 /home/olsen/3dRadiation/src/Log.hh
-
-/home/olsen/3dRadiation/src/Spacetimes.h
-string
--
-ControlFlow.hh
-/home/olsen/3dRadiation/src/ControlFlow.hh
-TensorTypes.hh
-/home/olsen/3dRadiation/src/TensorTypes.hh
-Grid.h
-/home/olsen/3dRadiation/src/Grid.h
-Metric.h
-/home/olsen/3dRadiation/src/Metric.h
 
 /home/olsen/3dRadiation/src/SphericalHarmonics.h
 math.h
@@ -1935,10 +1901,4 @@ IndexedViewMethods.h
 /home/olsen/3dRadiation/src/eigen/Eigen/src/plugins/ReshapedMethods.h
 ReshapedMethods.h
 /home/olsen/3dRadiation/src/eigen/Eigen/src/plugins/ReshapedMethods.h
-
-/home/olsen/3dRadiation/test.cpp
-iostream
--
-src/Includes.hh
-/home/olsen/3dRadiation/src/Includes.hh
 
