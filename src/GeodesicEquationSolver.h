@@ -13,8 +13,10 @@ Tensor3 Dx(const Coord& x, const Tensor3& v, Metric& metric);
 Tensor3 Dv(const Coord& x, const Tensor3& v, Metric& metric);
 
 // Euler solver in Lab Frame.
+template<int timeDirection>
 double Euler_GeodesicEquation(double dt, Coord& x, Tensor3& v, Metric& metric);
 // Adaptive Runge-Kutta 45 Geodesic Equation solver in Lab Frame.
+template<int timeDirection>
 double RK45_GeodesicEquation(double dt, Coord& x, Tensor3& v, Metric& metric);
 
 

@@ -11,3 +11,7 @@ test: FORCE
 .Phony: clean
 clean:
 	make clean -sCbuild
+
+.Phony: outputClean
+outputClean:
+	rm -r output/*

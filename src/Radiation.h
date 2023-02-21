@@ -113,7 +113,7 @@ public:
 
 	void NormalizeInitialDirections();
 	void LoadInitialData();
-	void NormalizeInitialData();
+	void NormalizeInitialIntensities();
 	void UpdateSphericalHarmonicsCoefficients();
 	void ComputeMomentsIF();
 	void ComputeMomentsLF();

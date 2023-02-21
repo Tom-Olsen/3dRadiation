@@ -52,7 +52,7 @@ Tensor3 Dv(const Coord& x, const Tensor3& v, Metric& metric)
     return dv;
 }
 
-template<int direction, class Coord>
+template<int timeDirection>
 double Euler_GeodesicEquation(double dt, Coord& x, Tensor3& v, Metric& metric)
 {
     // nu0 = 1, s = nu/nu0 = nu.
@@ -66,15 +66,16 @@ double Euler_GeodesicEquation(double dt, Coord& x, Tensor3& v, Metric& metric)
         Tensor3 dv = Dv(x,v,metric);
         for(int k=1; k<4; k++)
         {
-            x[k] += dx[k]*ddt*direction;
-            v[k] += dv[k]*ddt*direction;
+            x[k] += timeDirection*ddt*dx[k];
+            v[k] += timeDirection*ddt*dv[k];
         }
-        nu += ddt*dnu;
+        nu += timeDirection*ddt*dnu;
     }
     return nu;
 }
 
 constexpr double maxTE = 1e-6;
+template<int timeDirection>
 double RK45_GeodesicEquation(double dt, Coord& x, Tensor3& v, Metric& metric)
 {
     Tensor3 k1x, k2x, k3x, k4x, k5x, k6x;
@@ -99,50 +100,50 @@ double RK45_GeodesicEquation(double dt, Coord& x, Tensor3& v, Metric& metric)
         k1nu= Dnu(nu,x,v,metric);
         for(int d=1; d<4; d++)
         {
-            xTemp[d] = x[d] + ddt*( (1.0/4.0)*k1x[d] );
-            vTemp[d] = v[d] + ddt*( (1.0/4.0)*k1v[d] );
+            xTemp[d] = x[d] + timeDirection*ddt*( (1.0/4.0)*k1x[d] );
+            vTemp[d] = v[d] + timeDirection*ddt*( (1.0/4.0)*k1v[d] );
         }
-        nuTemp = nu + ddt*( (1.0/4.0)*k1nu );
+        nuTemp = nu + timeDirection*ddt*( (1.0/4.0)*k1nu );
 
         k2x = Dx(xTemp,vTemp,metric);
         k2v = Dv(xTemp,vTemp,metric);
         k2nu= Dnu(nuTemp,xTemp,vTemp,metric);
         for(int d=1; d<4; d++)
         {
-            xTemp[d] = x[d] + ddt*( (3.0/32.0)*k1x[d] + (9.0/32.0)*k2x[d] );
-            vTemp[d] = v[d] + ddt*( (3.0/32.0)*k1v[d] + (9.0/32.0)*k2v[d] );
+            xTemp[d] = x[d] + timeDirection*ddt*( (3.0/32.0)*k1x[d] + (9.0/32.0)*k2x[d] );
+            vTemp[d] = v[d] + timeDirection*ddt*( (3.0/32.0)*k1v[d] + (9.0/32.0)*k2v[d] );
         }
-        nuTemp = nu + ddt*( (3.0/32.0)*k1nu + (9.0/32.0)*k2nu );
+        nuTemp = nu + timeDirection*ddt*( (3.0/32.0)*k1nu + (9.0/32.0)*k2nu );
 
         k3x = Dx(xTemp,vTemp,metric);
         k3v = Dv(xTemp,vTemp,metric);
         k3nu= Dnu(nuTemp,xTemp,vTemp,metric);
         for(int d=1; d<4; d++)
         {
-            xTemp[d] = x[d] + ddt*( (1932.0/2197.0)*k1x[d] - (7200.0/2197.0)*k2x[d] + (7296.0/2197.0)*k3x[d] );
-            vTemp[d] = v[d] + ddt*( (1932.0/2197.0)*k1v[d] - (7200.0/2197.0)*k2v[d] + (7296.0/2197.0)*k3v[d] );
+            xTemp[d] = x[d] + timeDirection*ddt*( (1932.0/2197.0)*k1x[d] - (7200.0/2197.0)*k2x[d] + (7296.0/2197.0)*k3x[d] );
+            vTemp[d] = v[d] + timeDirection*ddt*( (1932.0/2197.0)*k1v[d] - (7200.0/2197.0)*k2v[d] + (7296.0/2197.0)*k3v[d] );
         }
-        nuTemp = nu + ddt*( (1932.0/2197.0)*k1nu - (7200.0/2197.0)*k2nu + (7296.0/2197.0)*k3nu );
+        nuTemp = nu + timeDirection*ddt*( (1932.0/2197.0)*k1nu - (7200.0/2197.0)*k2nu + (7296.0/2197.0)*k3nu );
 
         k4x = Dx(xTemp,vTemp,metric);
         k4v = Dv(xTemp,vTemp,metric);
         k4nu= Dnu(nuTemp,xTemp,vTemp,metric);
         for(int d=1; d<4; d++)
         {
-            xTemp[d] = x[d] + ddt*( (439.0/216.0)*k1x[d] - (8.0)*k2x[d] + (3680.0/513.0)*k3x[d] - (845.0/4104.0)*k4x[d] );
-            vTemp[d] = v[d] + ddt*( (439.0/216.0)*k1v[d] - (8.0)*k2v[d] + (3680.0/513.0)*k3v[d] - (845.0/4104.0)*k4v[d] );
+            xTemp[d] = x[d] + timeDirection*ddt*( (439.0/216.0)*k1x[d] - (8.0)*k2x[d] + (3680.0/513.0)*k3x[d] - (845.0/4104.0)*k4x[d] );
+            vTemp[d] = v[d] + timeDirection*ddt*( (439.0/216.0)*k1v[d] - (8.0)*k2v[d] + (3680.0/513.0)*k3v[d] - (845.0/4104.0)*k4v[d] );
         }
-        nuTemp = nu + ddt*( (439.0/216.0)*k1nu - (8.0)*k2nu + (3680.0/513.0)*k3nu - (845.0/4104.0)*k4nu );
+        nuTemp = nu + timeDirection*ddt*( (439.0/216.0)*k1nu - (8.0)*k2nu + (3680.0/513.0)*k3nu - (845.0/4104.0)*k4nu );
 
         k5x = Dx(xTemp,vTemp,metric);
         k5v = Dv(xTemp,vTemp,metric);
         k5nu= Dnu(nuTemp,xTemp,vTemp,metric);
         for(int d=1; d<4; d++)
         {
-            xTemp[d] = x[d] + ddt*( -(8.0/27.0)*k1x[d] + (2.0)*k2x[d] - (3544.0/2565.0)*k3x[d] + (1859.0/4104.0)*k4x[d] - (11.0/44.0)*k5x[d] );
-            vTemp[d] = v[d] + ddt*( -(8.0/27.0)*k1v[d] + (2.0)*k2v[d] - (3544.0/2565.0)*k3v[d] + (1859.0/4104.0)*k4v[d] - (11.0/44.0)*k5v[d] );
+            xTemp[d] = x[d] + timeDirection*ddt*( -(8.0/27.0)*k1x[d] + (2.0)*k2x[d] - (3544.0/2565.0)*k3x[d] + (1859.0/4104.0)*k4x[d] - (11.0/44.0)*k5x[d] );
+            vTemp[d] = v[d] + timeDirection*ddt*( -(8.0/27.0)*k1v[d] + (2.0)*k2v[d] - (3544.0/2565.0)*k3v[d] + (1859.0/4104.0)*k4v[d] - (11.0/44.0)*k5v[d] );
         }
-        nuTemp = nu + ddt*( -(8.0/27.0)*k1nu + (2.0)*k2nu - (3544.0/2565.0)*k3nu + (1859.0/4104.0)*k4nu - (11.0/44.0)*k5nu );
+        nuTemp = nu + timeDirection*ddt*( -(8.0/27.0)*k1nu + (2.0)*k2nu - (3544.0/2565.0)*k3nu + (1859.0/4104.0)*k4nu - (11.0/44.0)*k5nu );
 
         k6x = Dx(xTemp,vTemp,metric);
         k6v = Dv(xTemp,vTemp,metric);
@@ -169,10 +170,10 @@ double RK45_GeodesicEquation(double dt, Coord& x, Tensor3& v, Metric& metric)
         {// Accept new point:
             for(int d=1; d<4; d++)
             {
-                x[d] += ddt*dx[d];
-                v[d] += ddt*dv[d];
+                x[d] += timeDirection*ddt*dx[d];
+                v[d] += timeDirection*ddt*dv[d];
             }
-            nu += ddt*dnu;
+            nu += timeDirection*ddt*dnu;
             
             totalTime += ddt;
             ddt *= 0.95 * pow(maxTE / (TE + 1e-50), 1.0/4.0);
@@ -183,3 +184,10 @@ double RK45_GeodesicEquation(double dt, Coord& x, Tensor3& v, Metric& metric)
     }
     return nu;
 }
+
+
+
+template double Euler_GeodesicEquation< 1>(double dt, Coord& x, Tensor3& v, Metric& metric);
+template double Euler_GeodesicEquation<-1>(double dt, Coord& x, Tensor3& v, Metric& metric);
+template double RK45_GeodesicEquation< 1>(double dt, Coord& x, Tensor3& v, Metric& metric);
+template double RK45_GeodesicEquation<-1>(double dt, Coord& x, Tensor3& v, Metric& metric);

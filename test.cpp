@@ -197,12 +197,12 @@ void Test_Metric()
 void Test_GeodesicEquationSolver()
 {
     std::ofstream fileOut("output/Test_GeodesicEquationSolver.csv");
-    fileOut << "#x, y, z \n";
+    fileOut << "#x, y, z, s \n";
 
     int nx, ny, nz;
     nx = ny = nz = 100;
-    Coord start(-3,-3,-3);
-    Coord end(3,3,3);
+    Coord start(-4,-4,-4);
+    Coord end(4,4,4);
     Grid grid(nx, ny, nz, start, end);
     // Minkowski metric(grid, 1.0, 0.0);
     KerrSchild metric(grid, 1.0, 0.0);
@@ -213,6 +213,7 @@ void Test_GeodesicEquationSolver()
     for(int j=0; j<n; j++)
     for(int i=0; i<n; i++)
     {
+        double s = 1.0;
         Coord x(start[1] + (i+0.5) * (end[1] - start[1]) / n, start[2] + (j+0.5) * (end[2] - start[2]) / n, start[3]);
         Tensor4x4 g_ll = metric.GetMetric_ll(x);
         Tensor3x3 gamma_ll = metric.GetGamma_ll(x);
@@ -222,13 +223,13 @@ void Test_GeodesicEquationSolver()
         uLF = NullNormalize(uLF, g_ll);
         Tensor3 vLF = Vec3ObservedByEulObs<LF,LF>(uLF,x,metric);
 
-        fileOut << x[1] << ", " << x[2] << ", " << x[3] << "\n";
+        fileOut << x[1] << ", " << x[2] << ", " << x[3] << ", " << s << "\n";
         while(true)
         {
             if (grid.OutsideDomain(x) || metric.InsideBH(x))
                 break;
-            RK45_GeodesicEquation(10 * grid.dt, x, vLF, metric);
-            fileOut << x[1] << ", " << x[2] << ", " << x[3] << "\n";
+            s *= RK45_GeodesicEquation<1>(5 * grid.dt, x, vLF, metric);
+            fileOut << x[1] << ", " << x[2] << ", " << x[3] << ", " << s << "\n";
         }
         cout << "Photon(" << i << "," << j << ") complete." << endl;
     }
@@ -382,16 +383,22 @@ void Test_SphericalHarmonicsExpansion()
     KerrSchild metric(grid, 1.0, 0.0);
     // SchwarzSchild metric(grid, 1.0, 0.0);
     Stencil stencil(15,20);
-    LebedevStencil3 lebedevStencil;
+    LebedevStencil5 lebedevStencil;
 
     Radiation radiation(metric, stencil, lebedevStencil, StreamingType::CurvedDynamic);
     radiation.UpdateSphericalHarmonicsCoefficients();
     
-    ofstream file("output/Test_SphericalHarmonicsExpansion.csv");
-    file << "#x, y, z, s \n";
-	for(int k=0; k<grid.nz; k+=2)
-	for(int j=0; j<grid.ny; j+=2)
-	for(int i=0; i<grid.nx; i+=2)
+    ofstream file0("output/Test_SphericalHarmonicsExpansionCoord.csv");
+    ofstream file1("output/Test_SphericalHarmonicsExpansionVeloc.csv");
+    ofstream file2("output/Test_GeodesicCoord.csv");
+    ofstream file3("output/Test_GeodesicVeloc.csv");
+    file0 << "#x, y, z, s \n";
+    file1 << "#x, y, z, s \n";
+    file2 << "#x, y, z, s \n";
+    file3 << "#x, y, z, s \n";
+	for(int k=2; k<grid.nz-2; k+=2)
+	for(int j=2; j<grid.ny-2; j+=2)
+	for(int i=2; i<grid.nx-2; i+=2)
     {
 		if(i == grid.nx/2 && j == grid.ny/2 && k == grid.nz/2)
         {
@@ -404,44 +411,52 @@ void Test_SphericalHarmonicsExpansion()
     		std::cout << std::endl;
         }
 
+        int ijk = grid.Index(i,j,k);
+        double alpha = metric.GetAlpha(ijk);
+        Coord center = grid.xyz(i,j,k);
         for(int d1=0; d1<stencil.nPh; d1++)
         for(int d0=0; d0<stencil.nTh; d0++)
         {
-            double theta = stencil.Theta(d0,d1);
-            double phi = stencil.Phi(d0,d1);
-            double s = radiation.GetFrequencyShift(i,j,k,theta,phi);
-            Coord xyz = radiation.GetTempCoordinate(i,j,k,theta,phi);
-            Tensor3 v = radiation.GetTemp3Velocity(i,j,k,theta,phi);
-            if(!metric.InsideBH(xyz))
-                file << xyz[1] << ", " << xyz[2] << ", " << xyz[3] << ", " << s << "\n";
-        }
-        // North Pole:
-        {
-            double theta = 0;
-            double phi = 0;
-            double s = radiation.GetFrequencyShift(i,j,k,theta,phi);
-            Coord xyz = radiation.GetTempCoordinate(i,j,k,theta,phi);
-            Tensor3 v = radiation.GetTemp3Velocity(i,j,k,theta,phi);
-            if(!metric.InsideBH(xyz))
-                file << xyz[1] << ", " << xyz[2] << ", " << xyz[3] << ", " << s << "\n";
-        }
-        // South Pole:
-        {
-            double theta = M_PI;
-            double phi = 0;
-            double s = radiation.GetFrequencyShift(i,j,k,theta,phi);
-            Coord xyz = radiation.GetTempCoordinate(i,j,k,theta,phi);
-            Tensor3 v = radiation.GetTemp3Velocity(i,j,k,theta,phi);
-            if(!metric.InsideBH(xyz))
-                file << xyz[1] << ", " << xyz[2] << ", " << xyz[3] << ", " << s << "\n";
+            // Get pos and vel by Spherical Harmonic Expansion:
+            {
+                double theta = stencil.Theta(d0,d1);
+                double phi = stencil.Phi(d0,d1);
+                double s = radiation.GetFrequencyShift(i,j,k,theta,phi);
+                Coord xyz = radiation.GetTempCoordinate(i,j,k,theta,phi);
+                Tensor3 v = radiation.GetTemp3Velocity(i,j,k,theta,phi);
+                if(!metric.InsideBH(xyz))
+                {
+                    file0 << xyz[1] << ", " << xyz[2] << ", " << xyz[3] << ", " << s << "\n";
+                    file1 << center[1] + 0.1*v[1] << ", " << center[2] + 0.1*v[2] << ", " << center[3] + 0.1*v[3] << ", " << s << "\n";
+                }
+            }
+            
+            // Get pos and vel by Geodesic Equation Solver:
+            {
+                double s = 1;
+			    Coord xyz = center;
+                Tensor3 c = stencil.Cxyz(d0,d1);
+                Tensor4 u(alpha, c[1] * alpha, c[2] * alpha, c[3] * alpha);
+                Tensor3 v = Vec3ObservedByEulObs<IF,LF>(u, xyz, metric);
+    
+			    if(!metric.InsideBH(xyz))
+                {
+    	        	s *= RK45_GeodesicEquation<-1>(grid.dt, xyz, v, metric);
+                    file2 << xyz[1] << ", " << xyz[2] << ", " << xyz[3] << ", " << 1.0/s << "\n";
+                    file3 << center[1] + 0.1*v[1] << ", " << center[2] + 0.1*v[2] << ", " << center[3] + 0.1*v[3] << ", " << 1.0/s << "\n";
+                }
+            }
         }
     }
-    file.close();
+    file0.close();
+    file1.close();
+    file2.close();
+    file3.close();
 }
 
 
 
-void Test_StreamFlatStatic()
+void Test_StreamFlatStaticSphereWave()
 {
     // Create Radiation object:
     int nx, ny, nz;
@@ -452,6 +467,7 @@ void Test_StreamFlatStatic()
     grid.SetCFL(0.5);
     Minkowski metric(grid, 1.0, 0.0);
     Stencil stencil(6,10);
+    stencil.sigma = 1.0;
     LebedevStencil3 lebedevStencil;
     Radiation radiation(metric, stencil, lebedevStencil, StreamingType::FlatStatic);
 
@@ -473,7 +489,7 @@ void Test_StreamFlatStatic()
     // Start simulation:
     Config config =
     {
-        .name = "Test_StreamFlatStatic",
+        .name = "Test_StreamFlatStaticSphereWave",
         .simTime = 1,
         .writeFrequency = 5,
         .updateSphericalHarmonics = false,
@@ -600,7 +616,10 @@ void Test_IntensityAt()
     file0.close();
     file1.close();
 }
-void Test_StreamFlatDynamic()
+
+
+
+void Test_StreamFlatDynamicSphereWave()
 {
     // Create Radiation object:
     int nx, ny, nz;
@@ -611,6 +630,7 @@ void Test_StreamFlatDynamic()
     grid.SetCFL(0.5);
     Minkowski metric(grid, 1.0, 0.0);
     Stencil stencil(6,10);
+    stencil.sigma = 1.0;
     LebedevStencil3 lebedevStencil;
     Radiation radiation(metric, stencil, lebedevStencil, StreamingType::FlatDynamic);
 
@@ -632,7 +652,7 @@ void Test_StreamFlatDynamic()
     // Start simulation:
     Config config =
     {
-        .name = "Test_StreamFlatDynamic",
+        .name = "Test_StreamFlatDynamicSphereWave",
         .simTime = 1,
         .writeFrequency = 5,
         .updateSphericalHarmonics = false,
@@ -641,6 +661,131 @@ void Test_StreamFlatDynamic()
         .printToTerminal = true
     };
     radiation.RunSimulation(config);
+}
+
+
+
+void Test_StreamFlatBeam()
+{
+    // Create Radiation object:
+    int nx, ny, nz;
+    nx = ny = nz = 50;
+    Coord start(-2,0,0);
+    Coord end(2,4,4);
+    Grid grid(nx, ny, nz, start, end);
+    grid.SetCFL(0.5);
+    Minkowski metric(grid, 1.0, 0.0);
+    Stencil stencil(15,30);
+    stencil.sigma = 100;
+    LebedevStencil3 lebedevStencil;
+    // Radiation radiation(metric, stencil, lebedevStencil, StreamingType::FlatDynamic);
+    Radiation radiation(metric, stencil, lebedevStencil, StreamingType::FlatStatic);
+
+    // Initial Data:
+    double beamWidth = 0.5;
+    Coord beamCenter(0,3,0);
+    for(int k=0; k<grid.nz; k++)
+    for(int j=0; j<grid.ny; j++)
+    for(int i=0; i<grid.nx; i++)
+    {
+        int ijk = grid.Index(i,j,k);
+        Coord xyz = grid.xyz(i,j,k);
+        double x = xyz[1];
+        double y = xyz[2];
+        double z = xyz[3];
+        if (-0.5 < x && x < 0.5
+          && 2.5 < y && y < 3.5
+          && 0.2 < z && z < 0.3)
+        {
+            radiation.isInitialGridPoint[ijk] = true;
+            radiation.initialE[ijk] = 1;
+            radiation.initialNx[ijk] = 0;
+            radiation.initialNy[ijk] = 0;
+            radiation.initialNz[ijk] = 1;
+        }
+    }
+
+    // Start simulation:
+    Config config =
+    {
+        // .name = "Test_StreamFlatDynamicBeam",
+        .name = "Test_StreamFlatStaticBeam",
+        .simTime = 4,
+        .writeFrequency = 10,
+        .updateSphericalHarmonics = false,
+        .keepSourceNodesActive = true,
+        .writeData = true,
+        .printToTerminal = true
+    };
+    radiation.RunSimulation(config);
+}
+
+
+
+void Test_StreamCurvedBeam()
+{
+    // Create Radiation object:
+    int nx, ny, nz;
+    nx = ny = nz = 50;
+    Coord start(-2,0,0);
+    Coord end(2,4,4);
+    Grid grid(nx, ny, nz, start, end);
+    grid.SetCFL(0.5);
+    // KerrSchild metric(grid, 1.0, 0.0);
+    SchwarzSchild metric(grid, 1.0, 0.0);
+    // Minkowski minkowski(grid, 1.0, 0.0);
+    Stencil stencil(15,30);
+    stencil.sigma = 100;
+    LebedevStencil7 lebedevStencil;
+    // Radiation radiation(metric, stencil, lebedevStencil, StreamingType::CurvedStatic);
+    Radiation radiation(metric, stencil, lebedevStencil, StreamingType::CurvedDynamic);
+
+    // Initial Data:
+    for(int k=0; k<grid.nz; k++)
+    for(int j=0; j<grid.ny; j++)
+    for(int i=0; i<grid.nx; i++)
+    {
+        int ijk = grid.Index(i,j,k);
+        Coord xyz = grid.xyz(i,j,k);
+        double x = xyz[1];
+        double y = xyz[2];
+        double z = xyz[3];
+        if (-0.5 < x && x < 0.5
+          && 2.5 < y && y < 3.5
+          && 0.2 < z && z < 0.3)
+        {
+            double alpha = metric.GetAlpha(ijk);
+            Tensor4 u(alpha,0,0,alpha);
+            Tensor3 v = Vec3ObservedByEulObs<LF,IF>(u, xyz, metric);
+
+            radiation.isInitialGridPoint[ijk] = true;
+            radiation.initialE[ijk] = 1;
+            radiation.initialNx[ijk] = 0;//v[1];
+            radiation.initialNy[ijk] = 0;//v[2];
+            radiation.initialNz[ijk] = 1;//v[3];
+        }
+    }
+
+    // Start simulation:
+    Config config =
+    {
+        // .name = "Test_StreamCurvedStaticBeam",
+        .name = "Test_StreamCurvedDynamicBeam",
+        .simTime = 10,
+        .writeFrequency = 10,
+        .updateSphericalHarmonics = false,
+        .keepSourceNodesActive = true,
+        .writeData = true,
+        .printToTerminal = true
+    };
+    radiation.RunSimulation(config);
+}
+
+
+
+void Test_ThinDiskAround()
+{
+
 }
 
 
@@ -657,8 +802,11 @@ int main()
     // Test_Quadrature();
     // Test_QuadratureLebedev();
     // Test_SphericalHarmonicsExpansion();
-    // Test_StreamFlatStatic();
+    // Test_StreamFlatStaticSphereWave();
     // Test_QuaternionRotation();
     // Test_IntensityAt();
-    Test_StreamFlatDynamic();
+    // Test_StreamFlatDynamicSphereWave();
+    // Test_StreamFlatBeam();
+    // Test_StreamCurvedBeam();
+    Test_ThinDiskAround();
 }
