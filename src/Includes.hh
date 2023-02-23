@@ -18,5 +18,6 @@
 #include "Stencil.hh"               // Velocity stencil.
 #include "SphericalHarmonics.h"     // Real spherical harmonic functions and expansion.
 #include "Radiation.h"              // 'General Relativistic Lattice Boltzmann Method for Radiative Transport' code.
+#include "Camera.h"
 
 #endif //__INCLUDE_GUARD_Includes_hh__

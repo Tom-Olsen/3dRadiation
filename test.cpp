@@ -722,21 +722,20 @@ void Test_StreamFlatBeam()
 
 
 
-void Test_StreamCurvedBeam()
+void Test_StreamCurvedBeam(double sigma, double simTime)
 {
     // Create Radiation object:
     int nx, ny, nz;
-    nx = ny = nz = 50;
-    Coord start(-2,0,0);
+    nx = ny = nz = 100;
+    Coord start(-2,0,-0.1);
     Coord end(2,4,4);
     Grid grid(nx, ny, nz, start, end);
     grid.SetCFL(0.5);
-    // KerrSchild metric(grid, 1.0, 0.0);
     SchwarzSchild metric(grid, 1.0, 0.0);
-    // Minkowski minkowski(grid, 1.0, 0.0);
+    // KerrSchild metric(grid, 1.0, 0.0);
     Stencil stencil(15,30);
-    stencil.sigma = 100;
-    LebedevStencil7 lebedevStencil;
+    stencil.sigma = sigma;
+    LebedevStencil5 lebedevStencil;
     // Radiation radiation(metric, stencil, lebedevStencil, StreamingType::CurvedStatic);
     Radiation radiation(metric, stencil, lebedevStencil, StreamingType::CurvedDynamic);
 
@@ -752,7 +751,7 @@ void Test_StreamCurvedBeam()
         double z = xyz[3];
         if (-0.5 < x && x < 0.5
           && 2.5 < y && y < 3.5
-          && 0.2 < z && z < 0.3)
+          && z < 0.0)
         {
             double alpha = metric.GetAlpha(ijk);
             Tensor4 u(alpha,0,0,alpha);
@@ -760,9 +759,9 @@ void Test_StreamCurvedBeam()
 
             radiation.isInitialGridPoint[ijk] = true;
             radiation.initialE[ijk] = 1;
-            radiation.initialNx[ijk] = 0;//v[1];
-            radiation.initialNy[ijk] = 0;//v[2];
-            radiation.initialNz[ijk] = 1;//v[3];
+            radiation.initialNx[ijk] = v[1];
+            radiation.initialNy[ijk] = v[2];
+            radiation.initialNz[ijk] = v[3];
         }
     }
 
@@ -770,8 +769,9 @@ void Test_StreamCurvedBeam()
     Config config =
     {
         // .name = "Test_StreamCurvedStaticBeam",
-        .name = "Test_StreamCurvedDynamicBeam",
-        .simTime = 10,
+        .name = "Curved Beam Dynamic " + metric.Name() + " " + Format(stencil.nTh,0) + "." + Format(stencil.nPh,0)
+              + " s" + Format(sigma,0) + " Leb" + Format(lebedevStencil.nOrder,0) + " t" + Format(simTime,0),
+        .simTime = simTime,
         .writeFrequency = 10,
         .updateSphericalHarmonics = false,
         .keepSourceNodesActive = true,
@@ -783,9 +783,80 @@ void Test_StreamCurvedBeam()
 
 
 
+void Test_Camera()
+{
+    int resX = 400;
+    int resY = 200;
+    int width = 28;
+    int height = 14;
+
+    Coord position(0,20,3);
+    double degreeToRadians = 2.0 * M_PI / 360.0;
+    double angleX = -80 * degreeToRadians;
+    double angleY = 0 * degreeToRadians;
+    double angleZ = 0 * degreeToRadians;
+    glm::vec3 eulerAngles(angleX,angleY,angleZ);
+
+    Camera camera(resX, resY, width, height, position, eulerAngles);
+
+    for(int j=0; j<camera.resY; j++)
+    for(int i=0; i<camera.resX; i++)
+    {
+        int ij = camera.Index(i,j);
+        camera.image[ij] = i / (resX-1.0) * j / (resY-1.0);
+    }
+
+    camera.WriteImagetoCsv(0, 0, "output");
+}
+
+
+
+void BlackHoleCsv()
+{
+    // Grid:
+    Coord start(-12,-12,-12);
+    Coord end(12,12,12);
+    Grid grid(100,100,100,start,end);
+
+    // Black Hole Geometry:
+    double m = 1;
+    double r = 2 * m;
+    double diskInner = 3 * r;
+    double diskOuter = 6 * r;
+
+    ofstream file0("output/BlackHole.csv");
+    ofstream file1("output/ThinDisk.csv");
+    file0 << "#x,y,z,value\n";
+    file1 << "#x,y,z,value\n";
+
+    // Add one point with different value so min != max.
+    file0 << "0,0,0,1" << "\n";
+    file1 << "0,0,0,0" << "\n";
+
+    for(int k=0; k<grid.nz; k++)
+    for(int j=0; j<grid.ny; j++)
+    for(int i=0; i<grid.nx; i++)
+    {
+        Coord xyz = grid.xyz(i,j,k);
+        double radius = xyz.Radius();
+
+        // Black Hole:
+        if(radius <= r)
+            file0 << xyz[1] << "," << xyz[2] << "," << xyz[3] << "," << 0 << "\n";
+        // Disk:
+        if(diskInner <= radius && radius <= diskOuter && abs(xyz[3]) < 0.2)
+            file1 << xyz[1] << "," << xyz[2] << "," << xyz[3] << "," << 1 << "\n";
+    }
+
+    file0.close();
+    file1.close();
+}
+
+
+
 void Test_ThinDiskAround()
 {
-
+    
 }
 
 
@@ -807,6 +878,16 @@ int main()
     // Test_IntensityAt();
     // Test_StreamFlatDynamicSphereWave();
     // Test_StreamFlatBeam();
-    // Test_StreamCurvedBeam();
-    Test_ThinDiskAround();
+
+    double simTime = 10;
+    Test_StreamCurvedBeam(  5,simTime);
+    Test_StreamCurvedBeam( 10,simTime);
+    Test_StreamCurvedBeam( 25,simTime);
+    Test_StreamCurvedBeam( 50,simTime);
+    Test_StreamCurvedBeam(100,simTime);
+    Test_StreamCurvedBeam(150,simTime);
+
+    // Test_Camera();
+    // BlackHoleCsv();
+    // Test_ThinDiskAround();
 }

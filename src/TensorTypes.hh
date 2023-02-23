@@ -59,6 +59,17 @@ public:
     { return data[0] * data[0] + data[1] * data[1] + data[2] * data[2]; }
     double Radius() const
     { return sqrt(data[0] * data[0] + data[1] * data[1] + data[2] * data[2]); }
+
+    static double Dot(const Coord& lhs, const Coord& rhs)
+    { return lhs[1] * rhs[1] + lhs[2] * rhs[2] + lhs[3] * rhs[3]; }
+    static Coord Cross(const Coord& lhs, const Coord& rhs)
+    {
+        return Coord
+        (lhs[2] * rhs[3] - rhs[2] * lhs[3],
+         lhs[3] * rhs[1] - rhs[3] * lhs[1],
+         lhs[1] * rhs[2] - rhs[1] * lhs[2]);
+    }
+
     double& operator[](const int index)
     { return data[index - 1]; }
     const double& operator[](const int index) const
@@ -73,6 +84,25 @@ public:
         if(newline) std::cout << "\n";
     }
 };
+// Additional operator overloading:
+// Coord addition:
+inline Coord operator+(const Coord& lhs, const Coord& rhs)
+{ return Coord(lhs[1] + rhs[1], lhs[2] + rhs[2], lhs[3] + rhs[3]); }
+
+// Scalar multiplication:
+inline Coord operator*(double lhs, const Coord& rhs)
+{ return Coord(lhs * rhs[1], lhs * rhs[2], lhs * rhs[3]); }
+inline Coord operator*(const Coord& lhs, double rhs)
+{ return Coord(lhs[1] * rhs, lhs[2] * rhs, lhs[3] * rhs); }
+
+// Quaternion rotation:
+inline Coord operator*(const glm::quat& q, const Coord& p)
+{
+    Coord u(q.x, q.y, q.z);
+    Coord up  = Coord::Cross(u, p);
+    Coord uup = Coord::Cross(u, up);
+	return p + 2.0 * ((up * q.w) + uup);
+}
 
 
 

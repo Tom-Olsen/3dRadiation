@@ -60,17 +60,17 @@ grid(metric_.grid), metric(metric_), stencil(stencil_), lebedevStencil(lebedevSt
 	kappa1 = new double[grid.nxyz]();
 	kappaA = new double[grid.nxyz]();
 	eta    = new double[grid.nxyz]();
-	I      = new double[grid.nxyz * stencil.nThPh]();
-	Inew   = new double[grid.nxyz * stencil.nThPh]();
+	I      = new double[(long)grid.nxyz * (long)stencil.nThPh]();
+	Inew   = new double[(long)grid.nxyz * (long)stencil.nThPh]();
 	Inorth = new double[grid.nxyz]();
 	Isouth = new double[grid.nxyz]();
-	coefficientsS  = new double[grid.nxyz * lebedevStencil.nDir];
-	coefficientsX  = new double[grid.nxyz * lebedevStencil.nDir];
-	coefficientsY  = new double[grid.nxyz * lebedevStencil.nDir];
-	coefficientsZ  = new double[grid.nxyz * lebedevStencil.nDir];
-	coefficientsCx = new double[grid.nxyz * lebedevStencil.nDir];
-	coefficientsCy = new double[grid.nxyz * lebedevStencil.nDir];
-	coefficientsCz = new double[grid.nxyz * lebedevStencil.nDir];
+	coefficientsS  = new double[grid.nxyz * lebedevStencil.nCoefficients];
+	coefficientsX  = new double[grid.nxyz * lebedevStencil.nCoefficients];
+	coefficientsY  = new double[grid.nxyz * lebedevStencil.nCoefficients];
+	coefficientsZ  = new double[grid.nxyz * lebedevStencil.nCoefficients];
+	coefficientsCx = new double[grid.nxyz * lebedevStencil.nCoefficients];
+	coefficientsCy = new double[grid.nxyz * lebedevStencil.nCoefficients];
+	coefficientsCz = new double[grid.nxyz * lebedevStencil.nCoefficients];
 
 	// Initialize all stencil directions to north pole:
 	#pragma omp parallel for

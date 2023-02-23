@@ -4,8 +4,9 @@
 # Obj files:
 *.o
 
-# Output folders:
+# Output:
 output/
+output.txt
 
 # Binaries:
 test

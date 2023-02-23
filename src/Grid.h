@@ -47,8 +47,8 @@ public:
     Coord xyz(int i, int j, int k);
     Coord xyz(double i, double j, double k);
     double i(double x);
-    double j(double x);
-    double k(double x);
+    double j(double y);
+    double k(double z);
     Coord ijk(const Coord& xyz);
 
     // Domain Checks:

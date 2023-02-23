@@ -6,6 +6,10 @@
 
 #IncludeRegexTransform: 
 
+/home/olsen/3dRadiation/src/Camera.h
+TensorTypes.hh
+/home/olsen/3dRadiation/src/TensorTypes.hh
+
 /home/olsen/3dRadiation/src/ControlFlow.hh
 
 /home/olsen/3dRadiation/src/GeodesicEquationSolver.h
@@ -59,6 +63,8 @@ SphericalHarmonics.h
 /home/olsen/3dRadiation/src/SphericalHarmonics.h
 Radiation.h
 /home/olsen/3dRadiation/src/Radiation.h
+Camera.h
+/home/olsen/3dRadiation/src/Camera.h
 
 /home/olsen/3dRadiation/src/Interpolation.hh
 math.h

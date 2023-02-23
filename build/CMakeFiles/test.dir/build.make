@@ -70,9 +70,22 @@ CMakeFiles/test.dir/test.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/test.dir/test.cpp.s"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/olsen/3dRadiation/test.cpp -o CMakeFiles/test.dir/test.cpp.s
 
+CMakeFiles/test.dir/src/Camera.cpp.o: CMakeFiles/test.dir/flags.make
+CMakeFiles/test.dir/src/Camera.cpp.o: ../src/Camera.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/olsen/3dRadiation/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building CXX object CMakeFiles/test.dir/src/Camera.cpp.o"
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/test.dir/src/Camera.cpp.o -c /home/olsen/3dRadiation/src/Camera.cpp
+
+CMakeFiles/test.dir/src/Camera.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/test.dir/src/Camera.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/olsen/3dRadiation/src/Camera.cpp > CMakeFiles/test.dir/src/Camera.cpp.i
+
+CMakeFiles/test.dir/src/Camera.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/test.dir/src/Camera.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/olsen/3dRadiation/src/Camera.cpp -o CMakeFiles/test.dir/src/Camera.cpp.s
+
 CMakeFiles/test.dir/src/GeodesicEquationSolver.cpp.o: CMakeFiles/test.dir/flags.make
 CMakeFiles/test.dir/src/GeodesicEquationSolver.cpp.o: ../src/GeodesicEquationSolver.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/olsen/3dRadiation/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building CXX object CMakeFiles/test.dir/src/GeodesicEquationSolver.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/olsen/3dRadiation/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building CXX object CMakeFiles/test.dir/src/GeodesicEquationSolver.cpp.o"
 	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/test.dir/src/GeodesicEquationSolver.cpp.o -c /home/olsen/3dRadiation/src/GeodesicEquationSolver.cpp
 
 CMakeFiles/test.dir/src/GeodesicEquationSolver.cpp.i: cmake_force
@@ -85,7 +98,7 @@ CMakeFiles/test.dir/src/GeodesicEquationSolver.cpp.s: cmake_force
 
 CMakeFiles/test.dir/src/Grid.cpp.o: CMakeFiles/test.dir/flags.make
 CMakeFiles/test.dir/src/Grid.cpp.o: ../src/Grid.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/olsen/3dRadiation/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building CXX object CMakeFiles/test.dir/src/Grid.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/olsen/3dRadiation/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Building CXX object CMakeFiles/test.dir/src/Grid.cpp.o"
 	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/test.dir/src/Grid.cpp.o -c /home/olsen/3dRadiation/src/Grid.cpp
 
 CMakeFiles/test.dir/src/Grid.cpp.i: cmake_force
@@ -98,7 +111,7 @@ CMakeFiles/test.dir/src/Grid.cpp.s: cmake_force
 
 CMakeFiles/test.dir/src/Metric.cpp.o: CMakeFiles/test.dir/flags.make
 CMakeFiles/test.dir/src/Metric.cpp.o: ../src/Metric.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/olsen/3dRadiation/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Building CXX object CMakeFiles/test.dir/src/Metric.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/olsen/3dRadiation/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Building CXX object CMakeFiles/test.dir/src/Metric.cpp.o"
 	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/test.dir/src/Metric.cpp.o -c /home/olsen/3dRadiation/src/Metric.cpp
 
 CMakeFiles/test.dir/src/Metric.cpp.i: cmake_force
@@ -111,7 +124,7 @@ CMakeFiles/test.dir/src/Metric.cpp.s: cmake_force
 
 CMakeFiles/test.dir/src/Radiation.cpp.o: CMakeFiles/test.dir/flags.make
 CMakeFiles/test.dir/src/Radiation.cpp.o: ../src/Radiation.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/olsen/3dRadiation/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Building CXX object CMakeFiles/test.dir/src/Radiation.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/olsen/3dRadiation/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_6) "Building CXX object CMakeFiles/test.dir/src/Radiation.cpp.o"
 	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/test.dir/src/Radiation.cpp.o -c /home/olsen/3dRadiation/src/Radiation.cpp
 
 CMakeFiles/test.dir/src/Radiation.cpp.i: cmake_force
@@ -124,7 +137,7 @@ CMakeFiles/test.dir/src/Radiation.cpp.s: cmake_force
 
 CMakeFiles/test.dir/src/Spacetimes.cpp.o: CMakeFiles/test.dir/flags.make
 CMakeFiles/test.dir/src/Spacetimes.cpp.o: ../src/Spacetimes.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/olsen/3dRadiation/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_6) "Building CXX object CMakeFiles/test.dir/src/Spacetimes.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/olsen/3dRadiation/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_7) "Building CXX object CMakeFiles/test.dir/src/Spacetimes.cpp.o"
 	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/test.dir/src/Spacetimes.cpp.o -c /home/olsen/3dRadiation/src/Spacetimes.cpp
 
 CMakeFiles/test.dir/src/Spacetimes.cpp.i: cmake_force
@@ -137,7 +150,7 @@ CMakeFiles/test.dir/src/Spacetimes.cpp.s: cmake_force
 
 CMakeFiles/test.dir/src/SphericalHarmonics.cpp.o: CMakeFiles/test.dir/flags.make
 CMakeFiles/test.dir/src/SphericalHarmonics.cpp.o: ../src/SphericalHarmonics.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/olsen/3dRadiation/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_7) "Building CXX object CMakeFiles/test.dir/src/SphericalHarmonics.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/olsen/3dRadiation/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_8) "Building CXX object CMakeFiles/test.dir/src/SphericalHarmonics.cpp.o"
 	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/test.dir/src/SphericalHarmonics.cpp.o -c /home/olsen/3dRadiation/src/SphericalHarmonics.cpp
 
 CMakeFiles/test.dir/src/SphericalHarmonics.cpp.i: cmake_force
@@ -150,7 +163,7 @@ CMakeFiles/test.dir/src/SphericalHarmonics.cpp.s: cmake_force
 
 CMakeFiles/test.dir/src/TensorOperations.cpp.o: CMakeFiles/test.dir/flags.make
 CMakeFiles/test.dir/src/TensorOperations.cpp.o: ../src/TensorOperations.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/olsen/3dRadiation/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_8) "Building CXX object CMakeFiles/test.dir/src/TensorOperations.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/olsen/3dRadiation/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_9) "Building CXX object CMakeFiles/test.dir/src/TensorOperations.cpp.o"
 	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/test.dir/src/TensorOperations.cpp.o -c /home/olsen/3dRadiation/src/TensorOperations.cpp
 
 CMakeFiles/test.dir/src/TensorOperations.cpp.i: cmake_force
@@ -164,6 +177,7 @@ CMakeFiles/test.dir/src/TensorOperations.cpp.s: cmake_force
 # Object files for target test
 test_OBJECTS = \
 "CMakeFiles/test.dir/test.cpp.o" \
+"CMakeFiles/test.dir/src/Camera.cpp.o" \
 "CMakeFiles/test.dir/src/GeodesicEquationSolver.cpp.o" \
 "CMakeFiles/test.dir/src/Grid.cpp.o" \
 "CMakeFiles/test.dir/src/Metric.cpp.o" \
@@ -176,6 +190,7 @@ test_OBJECTS = \
 test_EXTERNAL_OBJECTS =
 
 ../test: CMakeFiles/test.dir/test.cpp.o
+../test: CMakeFiles/test.dir/src/Camera.cpp.o
 ../test: CMakeFiles/test.dir/src/GeodesicEquationSolver.cpp.o
 ../test: CMakeFiles/test.dir/src/Grid.cpp.o
 ../test: CMakeFiles/test.dir/src/Metric.cpp.o
@@ -187,7 +202,7 @@ test_EXTERNAL_OBJECTS =
 ../test: /usr/lib/gcc/x86_64-linux-gnu/9/libgomp.so
 ../test: /usr/lib/x86_64-linux-gnu/libpthread.so
 ../test: CMakeFiles/test.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/home/olsen/3dRadiation/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_9) "Linking CXX executable ../test"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/home/olsen/3dRadiation/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_10) "Linking CXX executable ../test"
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/test.dir/link.txt --verbose=$(VERBOSE)
 
 # Rule to build all files generated by this target.
