@@ -12,9 +12,11 @@
 #include "eigen/Eigen/Dense"    // Eigen library for solving linear systems.
 
 
-#define STRINGIZE(X) #X
-#define PRAGMA(X) _Pragma(STRINGIZE(X))
-#define PARALLEL_FOR(N) PRAGMA(omp parallel for collapse(N))
+
+#define STRINGIFY(X) #X
+#define PRAGMA(X) _Pragma(STRINGIFY(X))
+#define PARALLEL_FOR(N) PRAGMA(omp parallel for collapse(N) dynamic(500))
+
 
 
 // Felix:
@@ -36,6 +38,10 @@ public:
     template<class U, class... Args>
     void construct(U* p, Args&&... args)
     { *p = 0; }
+
+    // Needed for std::swap(..., ...):
+    bool operator==(const AlignedAllocator &)
+    { return true; }
 };
 using RealBuffer = std::vector<double,AlignedAllocator<double>>;
 
