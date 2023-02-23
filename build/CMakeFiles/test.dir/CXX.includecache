@@ -6,11 +6,19 @@
 
 #IncludeRegexTransform: 
 
+/home/olsen/3dRadiation/src/Camera.cpp
+Camera.h
+/home/olsen/3dRadiation/src/Camera.h
+
 /home/olsen/3dRadiation/src/Camera.h
 TensorTypes.hh
 /home/olsen/3dRadiation/src/TensorTypes.hh
 
 /home/olsen/3dRadiation/src/ControlFlow.hh
+
+/home/olsen/3dRadiation/src/GeodesicEquationSolver.cpp
+GeodesicEquationSolver.h
+/home/olsen/3dRadiation/src/GeodesicEquationSolver.h
 
 /home/olsen/3dRadiation/src/GeodesicEquationSolver.h
 fstream
@@ -21,6 +29,10 @@ TensorTypes.hh
 /home/olsen/3dRadiation/src/TensorTypes.hh
 Metric.h
 /home/olsen/3dRadiation/src/Metric.h
+
+/home/olsen/3dRadiation/src/Grid.cpp
+Grid.h
+/home/olsen/3dRadiation/src/Grid.h
 
 /home/olsen/3dRadiation/src/Grid.h
 iomanip
@@ -96,6 +108,10 @@ Metric.h
 Stencil.hh
 /home/olsen/3dRadiation/src/Stencil.hh
 
+/home/olsen/3dRadiation/src/Metric.cpp
+Metric.h
+/home/olsen/3dRadiation/src/Metric.h
+
 /home/olsen/3dRadiation/src/Metric.h
 string
 -
@@ -127,6 +143,10 @@ omp.h
 -
 vector
 -
+
+/home/olsen/3dRadiation/src/Radiation.cpp
+Radiation.h
+/home/olsen/3dRadiation/src/Radiation.h
 
 /home/olsen/3dRadiation/src/Radiation.h
 math.h
@@ -162,6 +182,10 @@ SphericalHarmonics.h
 Log.hh
 /home/olsen/3dRadiation/src/Log.hh
 
+/home/olsen/3dRadiation/src/Spacetimes.cpp
+Spacetimes.h
+/home/olsen/3dRadiation/src/Spacetimes.h
+
 /home/olsen/3dRadiation/src/Spacetimes.h
 string
 -
@@ -173,6 +197,10 @@ Grid.h
 /home/olsen/3dRadiation/src/Grid.h
 Metric.h
 /home/olsen/3dRadiation/src/Metric.h
+
+/home/olsen/3dRadiation/src/SphericalHarmonics.cpp
+SphericalHarmonics.h
+/home/olsen/3dRadiation/src/SphericalHarmonics.h
 
 /home/olsen/3dRadiation/src/SphericalHarmonics.h
 math.h
@@ -211,6 +239,10 @@ LebedevStencil/LebedevStencil13
 /home/olsen/3dRadiation/src/LebedevStencil/LebedevStencil13
 LebedevStencil/LebedevStencil15
 /home/olsen/3dRadiation/src/LebedevStencil/LebedevStencil15
+
+/home/olsen/3dRadiation/src/TensorOperations.cpp
+TensorOperations.h
+/home/olsen/3dRadiation/src/TensorOperations.h
 
 /home/olsen/3dRadiation/src/TensorOperations.h
 TensorTypes.hh
@@ -265,10 +297,8 @@ src/Cholesky/LLT.h
 /home/olsen/3dRadiation/src/eigen/Eigen/src/Cholesky/LLT.h
 src/Cholesky/LDLT.h
 /home/olsen/3dRadiation/src/eigen/Eigen/src/Cholesky/LDLT.h
-mkl_lapacke.h
-/home/olsen/3dRadiation/src/eigen/Eigen/mkl_lapacke.h
-src/misc/lapacke.h
-/home/olsen/3dRadiation/src/eigen/Eigen/src/misc/lapacke.h
+src/misc/lapacke_helpers.h
+/home/olsen/3dRadiation/src/eigen/Eigen/src/misc/lapacke_helpers.h
 src/Cholesky/LLT_LAPACKE.h
 /home/olsen/3dRadiation/src/eigen/Eigen/src/Cholesky/LLT_LAPACKE.h
 src/Core/util/ReenableStupidWarnings.h
@@ -291,6 +321,8 @@ complex
 -
 src/Core/util/MKL_support.h
 /home/olsen/3dRadiation/src/eigen/Eigen/src/Core/util/MKL_support.h
+atomic
+-
 omp.h
 -
 cerrno
@@ -300,8 +332,6 @@ cstddef
 cstdlib
 -
 cmath
--
-cassert
 -
 functional
 -
@@ -337,10 +367,16 @@ utility
 -
 thread
 -
+mkl_lapacke.h
+/home/olsen/3dRadiation/src/eigen/Eigen/mkl_lapacke.h
+src/misc/lapacke.h
+/home/olsen/3dRadiation/src/eigen/Eigen/src/misc/lapacke.h
 src/Core/util/Constants.h
 /home/olsen/3dRadiation/src/eigen/Eigen/src/Core/util/Constants.h
 src/Core/util/Meta.h
 /home/olsen/3dRadiation/src/eigen/Eigen/src/Core/util/Meta.h
+src/Core/util/Assert.h
+/home/olsen/3dRadiation/src/eigen/Eigen/src/Core/util/Assert.h
 src/Core/util/ForwardDeclarations.h
 /home/olsen/3dRadiation/src/eigen/Eigen/src/Core/util/ForwardDeclarations.h
 src/Core/util/StaticAssert.h
@@ -373,6 +409,8 @@ src/Core/arch/Default/TypeCasting.h
 /home/olsen/3dRadiation/src/eigen/Eigen/src/Core/arch/Default/TypeCasting.h
 src/Core/arch/Default/GenericPacketMathFunctionsFwd.h
 /home/olsen/3dRadiation/src/eigen/Eigen/src/Core/arch/Default/GenericPacketMathFunctionsFwd.h
+src/Core/arch/AVX512/PacketMathFP16.h
+/home/olsen/3dRadiation/src/eigen/Eigen/src/Core/arch/AVX512/PacketMathFP16.h
 src/Core/arch/SSE/PacketMath.h
 /home/olsen/3dRadiation/src/eigen/Eigen/src/Core/arch/SSE/PacketMath.h
 src/Core/arch/SSE/TypeCasting.h
@@ -397,6 +435,8 @@ src/Core/arch/AVX/MathFunctions.h
 /home/olsen/3dRadiation/src/eigen/Eigen/src/Core/arch/AVX/MathFunctions.h
 src/Core/arch/AVX512/MathFunctions.h
 /home/olsen/3dRadiation/src/eigen/Eigen/src/Core/arch/AVX512/MathFunctions.h
+src/Core/arch/AVX512/TrsmKernel.h
+/home/olsen/3dRadiation/src/eigen/Eigen/src/Core/arch/AVX512/TrsmKernel.h
 src/Core/arch/SSE/PacketMath.h
 /home/olsen/3dRadiation/src/eigen/Eigen/src/Core/arch/SSE/PacketMath.h
 src/Core/arch/SSE/TypeCasting.h
@@ -485,8 +525,10 @@ src/Core/functors/StlFunctors.h
 /home/olsen/3dRadiation/src/eigen/Eigen/src/Core/functors/StlFunctors.h
 src/Core/functors/AssignmentFunctors.h
 /home/olsen/3dRadiation/src/eigen/Eigen/src/Core/functors/AssignmentFunctors.h
-src/Core/arch/CUDA/Complex.h
-/home/olsen/3dRadiation/src/eigen/Eigen/src/Core/arch/CUDA/Complex.h
+src/Core/arch/GPU/Complex.h
+/home/olsen/3dRadiation/src/eigen/Eigen/src/Core/arch/GPU/Complex.h
+src/Core/arch/NEON/UnaryFunctors.h
+/home/olsen/3dRadiation/src/eigen/Eigen/src/Core/arch/NEON/UnaryFunctors.h
 src/Core/util/IndexedViewHelper.h
 /home/olsen/3dRadiation/src/eigen/Eigen/src/Core/util/IndexedViewHelper.h
 src/Core/util/ReshapedHelper.h
@@ -569,6 +611,8 @@ src/Core/Diagonal.h
 /home/olsen/3dRadiation/src/eigen/Eigen/src/Core/Diagonal.h
 src/Core/DiagonalProduct.h
 /home/olsen/3dRadiation/src/eigen/Eigen/src/Core/DiagonalProduct.h
+src/Core/SkewSymmetricMatrix3.h
+/home/olsen/3dRadiation/src/eigen/Eigen/src/Core/SkewSymmetricMatrix3.h
 src/Core/Redux.h
 /home/olsen/3dRadiation/src/eigen/Eigen/src/Core/Redux.h
 src/Core/Visitor.h
@@ -635,6 +679,8 @@ src/Core/arch/AltiVec/MatrixProduct.h
 /home/olsen/3dRadiation/src/eigen/Eigen/src/Core/arch/AltiVec/MatrixProduct.h
 src/Core/arch/NEON/GeneralBlockPanelKernel.h
 /home/olsen/3dRadiation/src/eigen/Eigen/src/Core/arch/NEON/GeneralBlockPanelKernel.h
+src/Core/arch/AVX512/GemmKernel.h
+/home/olsen/3dRadiation/src/eigen/Eigen/src/Core/arch/AVX512/GemmKernel.h
 src/Core/BooleanRedux.h
 /home/olsen/3dRadiation/src/eigen/Eigen/src/Core/BooleanRedux.h
 src/Core/Select.h
@@ -825,10 +871,8 @@ src/LU/FullPivLU.h
 /home/olsen/3dRadiation/src/eigen/Eigen/src/LU/FullPivLU.h
 src/LU/PartialPivLU.h
 /home/olsen/3dRadiation/src/eigen/Eigen/src/LU/PartialPivLU.h
-mkl_lapacke.h
-/home/olsen/3dRadiation/src/eigen/Eigen/mkl_lapacke.h
-src/misc/lapacke.h
-/home/olsen/3dRadiation/src/eigen/Eigen/src/misc/lapacke.h
+src/misc/lapacke_helpers.h
+/home/olsen/3dRadiation/src/eigen/Eigen/src/misc/lapacke_helpers.h
 src/LU/PartialPivLU_LAPACKE.h
 /home/olsen/3dRadiation/src/eigen/Eigen/src/LU/PartialPivLU_LAPACKE.h
 src/LU/Determinant.h
@@ -859,10 +903,8 @@ src/QR/ColPivHouseholderQR.h
 /home/olsen/3dRadiation/src/eigen/Eigen/src/QR/ColPivHouseholderQR.h
 src/QR/CompleteOrthogonalDecomposition.h
 /home/olsen/3dRadiation/src/eigen/Eigen/src/QR/CompleteOrthogonalDecomposition.h
-mkl_lapacke.h
-/home/olsen/3dRadiation/src/eigen/Eigen/mkl_lapacke.h
-src/misc/lapacke.h
-/home/olsen/3dRadiation/src/eigen/Eigen/src/misc/lapacke.h
+src/misc/lapacke_helpers.h
+/home/olsen/3dRadiation/src/eigen/Eigen/src/misc/lapacke_helpers.h
 src/QR/HouseholderQR_LAPACKE.h
 /home/olsen/3dRadiation/src/eigen/Eigen/src/QR/HouseholderQR_LAPACKE.h
 src/QR/ColPivHouseholderQR_LAPACKE.h
@@ -895,6 +937,8 @@ src/misc/lapacke.h
 /home/olsen/3dRadiation/src/eigen/Eigen/src/misc/lapacke.h
 src/SVD/JacobiSVD_LAPACKE.h
 /home/olsen/3dRadiation/src/eigen/Eigen/src/SVD/JacobiSVD_LAPACKE.h
+src/SVD/BDCSVD_LAPACKE.h
+/home/olsen/3dRadiation/src/eigen/Eigen/src/SVD/BDCSVD_LAPACKE.h
 src/Core/util/ReenableStupidWarnings.h
 /home/olsen/3dRadiation/src/eigen/Eigen/src/Core/util/ReenableStupidWarnings.h
 
@@ -1168,6 +1212,10 @@ src/Core/util/ReenableStupidWarnings.h
 ./InternalHeaderCheck.h
 /home/olsen/3dRadiation/src/eigen/Eigen/src/Core/InternalHeaderCheck.h
 
+/home/olsen/3dRadiation/src/eigen/Eigen/src/Core/SkewSymmetricMatrix3.h
+./InternalHeaderCheck.h
+/home/olsen/3dRadiation/src/eigen/Eigen/src/Core/InternalHeaderCheck.h
+
 /home/olsen/3dRadiation/src/eigen/Eigen/src/Core/Solve.h
 ./InternalHeaderCheck.h
 /home/olsen/3dRadiation/src/eigen/Eigen/src/Core/InternalHeaderCheck.h
@@ -1240,6 +1288,18 @@ src/Core/util/ReenableStupidWarnings.h
 ../../InternalHeaderCheck.h
 /home/olsen/3dRadiation/src/eigen/Eigen/src/Core/InternalHeaderCheck.h
 
+/home/olsen/3dRadiation/src/eigen/Eigen/src/Core/arch/AVX512/GemmKernel.h
+intrin.h
+-
+x86intrin.h
+-
+immintrin.h
+-
+type_traits
+-
+../../InternalHeaderCheck.h
+/home/olsen/3dRadiation/src/eigen/Eigen/src/Core/InternalHeaderCheck.h
+
 /home/olsen/3dRadiation/src/eigen/Eigen/src/Core/arch/AVX512/MathFunctions.h
 ../../InternalHeaderCheck.h
 /home/olsen/3dRadiation/src/eigen/Eigen/src/Core/InternalHeaderCheck.h
@@ -1247,6 +1307,18 @@ src/Core/util/ReenableStupidWarnings.h
 /home/olsen/3dRadiation/src/eigen/Eigen/src/Core/arch/AVX512/PacketMath.h
 ../../InternalHeaderCheck.h
 /home/olsen/3dRadiation/src/eigen/Eigen/src/Core/InternalHeaderCheck.h
+
+/home/olsen/3dRadiation/src/eigen/Eigen/src/Core/arch/AVX512/PacketMathFP16.h
+../../InternalHeaderCheck.h
+/home/olsen/3dRadiation/src/eigen/Eigen/src/Core/InternalHeaderCheck.h
+
+/home/olsen/3dRadiation/src/eigen/Eigen/src/Core/arch/AVX512/TrsmKernel.h
+../../InternalHeaderCheck.h
+/home/olsen/3dRadiation/src/eigen/Eigen/src/Core/InternalHeaderCheck.h
+TrsmUnrolls.inc
+/home/olsen/3dRadiation/src/eigen/Eigen/src/Core/arch/AVX512/TrsmUnrolls.inc
+
+/home/olsen/3dRadiation/src/eigen/Eigen/src/Core/arch/AVX512/TrsmUnrolls.inc
 
 /home/olsen/3dRadiation/src/eigen/Eigen/src/Core/arch/AVX512/TypeCasting.h
 ../../InternalHeaderCheck.h
@@ -1267,6 +1339,8 @@ MatrixProductMMA.h
 /home/olsen/3dRadiation/src/eigen/Eigen/src/Core/arch/AltiVec/MatrixProductMMA.h
 ../../InternalHeaderCheck.h
 /home/olsen/3dRadiation/src/eigen/Eigen/src/Core/InternalHeaderCheck.h
+MatrixVectorProduct.h
+/home/olsen/3dRadiation/src/eigen/Eigen/src/Core/arch/AltiVec/MatrixVectorProduct.h
 
 /home/olsen/3dRadiation/src/eigen/Eigen/src/Core/arch/AltiVec/MatrixProductCommon.h
 ../../InternalHeaderCheck.h
@@ -1275,12 +1349,16 @@ MatrixProductMMA.h
 /home/olsen/3dRadiation/src/eigen/Eigen/src/Core/arch/AltiVec/MatrixProductMMA.h
 ../../InternalHeaderCheck.h
 /home/olsen/3dRadiation/src/eigen/Eigen/src/Core/InternalHeaderCheck.h
+MatrixProductMMAbfloat16.h
+/home/olsen/3dRadiation/src/eigen/Eigen/src/Core/arch/AltiVec/MatrixProductMMAbfloat16.h
 
-/home/olsen/3dRadiation/src/eigen/Eigen/src/Core/arch/AltiVec/PacketMath.h
+/home/olsen/3dRadiation/src/eigen/Eigen/src/Core/arch/AltiVec/MatrixProductMMAbfloat16.h
+
+/home/olsen/3dRadiation/src/eigen/Eigen/src/Core/arch/AltiVec/MatrixVectorProduct.h
 ../../InternalHeaderCheck.h
 /home/olsen/3dRadiation/src/eigen/Eigen/src/Core/InternalHeaderCheck.h
 
-/home/olsen/3dRadiation/src/eigen/Eigen/src/Core/arch/CUDA/Complex.h
+/home/olsen/3dRadiation/src/eigen/Eigen/src/Core/arch/AltiVec/PacketMath.h
 ../../InternalHeaderCheck.h
 /home/olsen/3dRadiation/src/eigen/Eigen/src/Core/InternalHeaderCheck.h
 
@@ -1303,12 +1381,14 @@ MatrixProductMMA.h
 /home/olsen/3dRadiation/src/eigen/Eigen/src/Core/arch/Default/Half.h
 ../../InternalHeaderCheck.h
 /home/olsen/3dRadiation/src/eigen/Eigen/src/Core/InternalHeaderCheck.h
-sstream
--
 
 /home/olsen/3dRadiation/src/eigen/Eigen/src/Core/arch/Default/Settings.h
 
 /home/olsen/3dRadiation/src/eigen/Eigen/src/Core/arch/Default/TypeCasting.h
+../../InternalHeaderCheck.h
+/home/olsen/3dRadiation/src/eigen/Eigen/src/Core/InternalHeaderCheck.h
+
+/home/olsen/3dRadiation/src/eigen/Eigen/src/Core/arch/GPU/Complex.h
 ../../InternalHeaderCheck.h
 /home/olsen/3dRadiation/src/eigen/Eigen/src/Core/InternalHeaderCheck.h
 
@@ -1359,6 +1439,10 @@ string
 /home/olsen/3dRadiation/src/eigen/Eigen/src/Core/InternalHeaderCheck.h
 
 /home/olsen/3dRadiation/src/eigen/Eigen/src/Core/arch/NEON/TypeCasting.h
+../../InternalHeaderCheck.h
+/home/olsen/3dRadiation/src/eigen/Eigen/src/Core/InternalHeaderCheck.h
+
+/home/olsen/3dRadiation/src/eigen/Eigen/src/Core/arch/NEON/UnaryFunctors.h
 ../../InternalHeaderCheck.h
 /home/olsen/3dRadiation/src/eigen/Eigen/src/Core/InternalHeaderCheck.h
 
@@ -1489,8 +1573,6 @@ unordered_map
 /home/olsen/3dRadiation/src/eigen/Eigen/src/Core/InternalHeaderCheck.h
 
 /home/olsen/3dRadiation/src/eigen/Eigen/src/Core/products/Parallelizer.h
-atomic
--
 ../InternalHeaderCheck.h
 /home/olsen/3dRadiation/src/eigen/Eigen/src/Core/InternalHeaderCheck.h
 
@@ -1546,6 +1628,10 @@ atomic
 ../InternalHeaderCheck.h
 /home/olsen/3dRadiation/src/eigen/Eigen/src/Core/InternalHeaderCheck.h
 
+/home/olsen/3dRadiation/src/eigen/Eigen/src/Core/util/Assert.h
+cassert
+-
+
 /home/olsen/3dRadiation/src/eigen/Eigen/src/Core/util/BlasUtil.h
 ../InternalHeaderCheck.h
 /home/olsen/3dRadiation/src/eigen/Eigen/src/Core/InternalHeaderCheck.h
@@ -1597,6 +1683,8 @@ hip/hip_vector_types.h
 -
 hip/hip_fp16.h
 -
+hip/hip_bfloat16.h
+-
 ../InternalHeaderCheck.h
 /home/olsen/3dRadiation/src/eigen/Eigen/src/Core/InternalHeaderCheck.h
 
@@ -1635,10 +1723,6 @@ hip/hip_runtime.h
 -
 cmath
 -
-cstdlib
--
-iostream
--
 
 /home/olsen/3dRadiation/src/eigen/Eigen/src/Core/util/Memory.h
 ../InternalHeaderCheck.h
@@ -1654,8 +1738,6 @@ math_constants.h
 Eigen/src/Core/arch/HIP/hcc/math_constants.h
 /home/olsen/3dRadiation/src/eigen/Eigen/src/Core/util/Eigen/src/Core/arch/HIP/hcc/math_constants.h
 cstdint
--
-stdint.h
 -
 
 /home/olsen/3dRadiation/src/eigen/Eigen/src/Core/util/ReenableStupidWarnings.h
@@ -1875,6 +1957,10 @@ type_traits
 /home/olsen/3dRadiation/src/eigen/Eigen/src/SVD/BDCSVD.h
 ./InternalHeaderCheck.h
 /home/olsen/3dRadiation/src/eigen/Eigen/src/SVD/InternalHeaderCheck.h
+iostream
+-
+
+/home/olsen/3dRadiation/src/eigen/Eigen/src/SVD/BDCSVD_LAPACKE.h
 
 /home/olsen/3dRadiation/src/eigen/Eigen/src/SVD/JacobiSVD.h
 ./InternalHeaderCheck.h
@@ -1911,12 +1997,16 @@ lapacke_config.h
 /home/olsen/3dRadiation/src/eigen/Eigen/src/misc/lapacke_config.h
 stdlib.h
 -
-complex.h
--
-complex.h
--
 lapacke_mangling.h
 /home/olsen/3dRadiation/src/eigen/Eigen/src/misc/lapacke_mangling.h
+
+/home/olsen/3dRadiation/src/eigen/Eigen/src/misc/lapacke_helpers.h
+./InternalHeaderCheck.h
+/home/olsen/3dRadiation/src/eigen/Eigen/src/misc/InternalHeaderCheck.h
+mkl_lapacke.h
+/home/olsen/3dRadiation/src/eigen/Eigen/src/misc/mkl_lapacke.h
+lapacke.h
+/home/olsen/3dRadiation/src/eigen/Eigen/src/misc/lapacke.h
 
 /home/olsen/3dRadiation/src/eigen/Eigen/src/misc/lapacke_mangling.h
 

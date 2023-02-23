@@ -726,9 +726,11 @@ void Test_StreamCurvedBeam(double sigma, double simTime)
 {
     // Create Radiation object:
     int nx, ny, nz;
-    nx = ny = nz = 100;
-    Coord start(-2,0,-0.1);
-    Coord end(2,4,4);
+    nx = 25;
+    ny = 45;
+    nz = 50;
+    Coord start(-1,0,-0.1);
+    Coord end(1,3.6,3.9);
     Grid grid(nx, ny, nz, start, end);
     grid.SetCFL(0.5);
     SchwarzSchild metric(grid, 1.0, 0.0);
@@ -749,9 +751,9 @@ void Test_StreamCurvedBeam(double sigma, double simTime)
         double x = xyz[1];
         double y = xyz[2];
         double z = xyz[3];
-        if (-0.5 < x && x < 0.5
-          && 2.5 < y && y < 3.5
-          && z < 0.0)
+        if (-0.25 < x && x < 0.25
+          && 3.00 < y && y < 3.50
+          && z < 0.00)
         {
             double alpha = metric.GetAlpha(ijk);
             Tensor4 u(alpha,0,0,alpha);
@@ -762,6 +764,10 @@ void Test_StreamCurvedBeam(double sigma, double simTime)
             radiation.initialNx[ijk] = v[1];
             radiation.initialNy[ijk] = v[2];
             radiation.initialNz[ijk] = v[3];
+            radiation.initialKappa0[ijk] = 0;
+            radiation.initialKappa1[ijk] = 0;
+            radiation.initialKappaA[ijk] = 0;
+            radiation.initialEta[ijk] = 0;
         }
     }
 
@@ -769,10 +775,10 @@ void Test_StreamCurvedBeam(double sigma, double simTime)
     Config config =
     {
         // .name = "Test_StreamCurvedStaticBeam",
-        .name = "Curved Beam Dynamic " + metric.Name() + " " + Format(stencil.nTh,0) + "." + Format(stencil.nPh,0)
-              + " s" + Format(sigma,0) + " Leb" + Format(lebedevStencil.nOrder,0) + " t" + Format(simTime,0),
+        .name = "Curved Beam Dynamic " + metric.Name() + " " + std::to_string(stencil.nTh) + "." + std::to_string(stencil.nPh)
+              + " s" + std::to_string(sigma) + " Leb" + std::to_string(lebedevStencil.nOrder) + " t" + std::to_string(simTime) + " ",
         .simTime = simTime,
-        .writeFrequency = 10,
+        .writeFrequency = 20,
         .updateSphericalHarmonics = false,
         .keepSourceNodesActive = true,
         .writeData = true,
@@ -884,8 +890,8 @@ int main()
     Test_StreamCurvedBeam( 10,simTime);
     Test_StreamCurvedBeam( 25,simTime);
     Test_StreamCurvedBeam( 50,simTime);
-    Test_StreamCurvedBeam(100,simTime);
-    Test_StreamCurvedBeam(150,simTime);
+    // Test_StreamCurvedBeam(100,simTime);
+    // Test_StreamCurvedBeam(150,simTime);
 
     // Test_Camera();
     // BlackHoleCsv();
