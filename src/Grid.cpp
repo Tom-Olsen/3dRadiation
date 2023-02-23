@@ -82,7 +82,7 @@ bool Grid::OutsideDomain(double i, double j, double k)
 
 // Write Data to file:
 void Grid::WriteFrametoJson
-(float time, double* r, double* g, double* b, double* a,
+(float time, const RealBuffer& r, const RealBuffer& g, const RealBuffer& b, const RealBuffer& a,
  const int frameNumber, std::string directory, std::string name)
 {
     PROFILE_FUNCTION();
@@ -135,7 +135,7 @@ void Grid::WriteFrametoJson
     fileOut.close();
 }
 void Grid::WriteFrametoCsv
-(float time, double* r, double* g, double* b, double* a,
+(float time, const RealBuffer& r, const RealBuffer& g, const RealBuffer& b, const RealBuffer& a,
  const int frameNumber, std::string directory, std::string name)
 {
     CreateDirectory(directory);

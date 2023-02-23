@@ -22,58 +22,58 @@ Radiation::Radiation(Metric& metric_, Stencil& stencil_, LebedevStencil& lebedev
 grid(metric_.grid), metric(metric_), stencil(stencil_), lebedevStencil(lebedevStencil_), streamingType(streamingType_)
 {
 	isInitialGridPoint = new bool[grid.nxyz]();
-	initialE           = new double[grid.nxyz]();
-	initialNx          = new double[grid.nxyz]();
-	initialNy          = new double[grid.nxyz]();
-	initialNz          = new double[grid.nxyz]();
-	initialKappa0      = new double[grid.nxyz]();
-	initialKappa1      = new double[grid.nxyz]();
-	initialKappaA      = new double[grid.nxyz]();
-	initialEta         = new double[grid.nxyz]();
-	nx     = new double[grid.nxyz]();
-	ny     = new double[grid.nxyz]();
-	nz     = new double[grid.nxyz]();
-	nxNew  = new double[grid.nxyz]();
-	nyNew  = new double[grid.nxyz]();
-	nzNew  = new double[grid.nxyz]();
-	E      = new double[grid.nxyz]();
-	Fx     = new double[grid.nxyz]();
-	Fy     = new double[grid.nxyz]();
-	Fz     = new double[grid.nxyz]();
-	Pxx    = new double[grid.nxyz]();
-	Pxy    = new double[grid.nxyz]();
-	Pxz    = new double[grid.nxyz]();
-	Pyy    = new double[grid.nxyz]();
-	Pyz    = new double[grid.nxyz]();
-	Pzz    = new double[grid.nxyz]();
-	E_LF   = new double[grid.nxyz]();
-	Fx_LF  = new double[grid.nxyz]();
-	Fy_LF  = new double[grid.nxyz]();
-	Fz_LF  = new double[grid.nxyz]();
-	Pxx_LF = new double[grid.nxyz]();
-	Pxy_LF = new double[grid.nxyz]();
-	Pxz_LF = new double[grid.nxyz]();
-	Pyy_LF = new double[grid.nxyz]();
-	Pyz_LF = new double[grid.nxyz]();
-	Pzz_LF = new double[grid.nxyz]();
-	kappa0 = new double[grid.nxyz]();
-	kappa1 = new double[grid.nxyz]();
-	kappaA = new double[grid.nxyz]();
-	eta    = new double[grid.nxyz]();
-	I      = new double[(long)grid.nxyz * (long)stencil.nThPh]();
-	Inew   = new double[(long)grid.nxyz * (long)stencil.nThPh]();
-	Inorth = new double[grid.nxyz]();
-	Isouth = new double[grid.nxyz]();
-	coefficientsS  = new double[grid.nxyz * lebedevStencil.nCoefficients];
-	coefficientsX  = new double[grid.nxyz * lebedevStencil.nCoefficients];
-	coefficientsY  = new double[grid.nxyz * lebedevStencil.nCoefficients];
-	coefficientsZ  = new double[grid.nxyz * lebedevStencil.nCoefficients];
-	coefficientsCx = new double[grid.nxyz * lebedevStencil.nCoefficients];
-	coefficientsCy = new double[grid.nxyz * lebedevStencil.nCoefficients];
-	coefficientsCz = new double[grid.nxyz * lebedevStencil.nCoefficients];
+	initialE.resize(grid.nxyz);
+	initialNx.resize(grid.nxyz);
+	initialNy.resize(grid.nxyz);
+	initialNz.resize(grid.nxyz);
+	initialKappa0.resize(grid.nxyz);
+	initialKappa1.resize(grid.nxyz);
+	initialKappaA.resize(grid.nxyz);
+	initialEta.resize(grid.nxyz);
+	nx.resize(grid.nxyz);
+	ny.resize(grid.nxyz);
+	nz.resize(grid.nxyz);
+	nxNew.resize(grid.nxyz);
+	nyNew.resize(grid.nxyz);
+	nzNew.resize(grid.nxyz);
+	E.resize(grid.nxyz);
+	Fx.resize(grid.nxyz);
+	Fy.resize(grid.nxyz);
+	Fz.resize(grid.nxyz);
+	Pxx.resize(grid.nxyz);
+	Pxy.resize(grid.nxyz);
+	Pxz.resize(grid.nxyz);
+	Pyy.resize(grid.nxyz);
+	Pyz.resize(grid.nxyz);
+	Pzz.resize(grid.nxyz);
+	E_LF .resize(grid.nxyz);
+	Fx_LF.resize(grid.nxyz);
+	Fy_LF.resize(grid.nxyz);
+	Fz_LF.resize(grid.nxyz);
+	Pxx_LF.resize(grid.nxyz);
+	Pxy_LF.resize(grid.nxyz);
+	Pxz_LF.resize(grid.nxyz);
+	Pyy_LF.resize(grid.nxyz);
+	Pyz_LF.resize(grid.nxyz);
+	Pzz_LF.resize(grid.nxyz);
+	kappa0.resize(grid.nxyz);
+	kappa1.resize(grid.nxyz);
+	kappaA.resize(grid.nxyz);
+	eta.resize(grid.nxyz);
+	I.resize((size_t)grid.nxyz * (size_t)stencil.nThPh);
+	Inew.resize((size_t)grid.nxyz * (size_t)stencil.nThPh);
+	Inorth.resize(grid.nxyz);
+	Isouth.resize(grid.nxyz);
+	coefficientsS.resize(grid.nxyz * lebedevStencil.nCoefficients);
+	coefficientsX.resize(grid.nxyz * lebedevStencil.nCoefficients);
+	coefficientsY.resize(grid.nxyz * lebedevStencil.nCoefficients);
+	coefficientsZ.resize(grid.nxyz * lebedevStencil.nCoefficients);
+	coefficientsCx.resize(grid.nxyz * lebedevStencil.nCoefficients);
+	coefficientsCy.resize(grid.nxyz * lebedevStencil.nCoefficients);
+	coefficientsCz.resize(grid.nxyz * lebedevStencil.nCoefficients);
 
 	// Initialize all stencil directions to north pole:
-	#pragma omp parallel for
+	PARALLEL_FOR(1)
 	for(int ijk=0; ijk<grid.nxyz; ijk++)
 	{
 		nx[ijk] = 0;
@@ -87,55 +87,6 @@ grid(metric_.grid), metric(metric_), stencil(stencil_), lebedevStencil(lebedevSt
 Radiation::~Radiation()
 {
 	delete[] isInitialGridPoint;
-	delete[] initialE;
-	delete[] initialNx;
-	delete[] initialNy;
-	delete[] initialNz;
-	delete[] initialKappa0;
-	delete[] initialKappa1;
-	delete[] initialKappaA;
-	delete[] initialEta;
-	delete[] nx;
-	delete[] ny;
-	delete[] nz;
-	delete[] nxNew;
-	delete[] nyNew;
-	delete[] nzNew;
-	delete[] E;
-	delete[] Fx;
-	delete[] Fy;
-	delete[] Fz;
-	delete[] Pxx;
-	delete[] Pxy;
-	delete[] Pxz;
-	delete[] Pyy;
-	delete[] Pyz;
-	delete[] Pzz;
-	delete[] E_LF;
-	delete[] Fx_LF;
-	delete[] Fy_LF;
-	delete[] Fz_LF;
-	delete[] Pxx_LF;
-	delete[] Pxy_LF;
-	delete[] Pxz_LF;
-	delete[] Pyy_LF;
-	delete[] Pyz_LF;
-	delete[] Pzz_LF;
-	delete[] kappa0;
-	delete[] kappa1;
-	delete[] kappaA;
-	delete[] eta;
-	delete[] I;
-	delete[] Inew;
-	delete[] Inorth;
-	delete[] Isouth;
-	delete[] coefficientsS;
-	delete[] coefficientsX;
-	delete[] coefficientsY;
-	delete[] coefficientsZ;
-	delete[] coefficientsCx;
-	delete[] coefficientsCy;
-	delete[] coefficientsCz;
 }
 
 
@@ -143,7 +94,7 @@ Radiation::~Radiation()
 void Radiation::NormalizeInitialDirections()
 {
 	PROFILE_FUNCTION();
-	#pragma omp parallel for
+	PARALLEL_FOR(1)
 	for(int ijk=0; ijk<grid.nxyz; ijk++)
 	{
 		Tensor3 n(initialNx[ijk], initialNy[ijk], initialNz[ijk]);
@@ -172,7 +123,7 @@ void Radiation::LoadInitialData()
 	bool isDynamicStreaming = (streamingType == StreamingType::FlatDynamic || streamingType == StreamingType::GeodesicDynamic || streamingType == StreamingType::CurvedDynamic);
 	srand((unsigned) time(NULL));
 
-	#pragma omp parallel for
+	PARALLEL_FOR(1)
 	for(int ijk=0; ijk<grid.nxyz; ijk++)
 	{
 		if(isInitialGridPoint[ijk])
@@ -232,7 +183,7 @@ void Radiation::LoadInitialData()
 void Radiation::NormalizeInitialIntensities()
 {
 	PROFILE_FUNCTION();
-	#pragma omp parallel for
+	PARALLEL_FOR(1)
 	for(int ijk=0; ijk<grid.nxyz; ijk++)
 		if(isInitialGridPoint[ijk])
 			initialE[ijk] *= initialE[ijk] / E_LF[ijk];
@@ -243,7 +194,7 @@ void Radiation::NormalizeInitialIntensities()
 void Radiation::UpdateSphericalHarmonicsCoefficients()
 {
 	PROFILE_FUNCTION();
-	#pragma omp parallel for
+	PARALLEL_FOR(3)
 	for(int k=2; k<grid.nz-2; k++)
 	for(int j=2; j<grid.ny-2; j++)
 	for(int i=2; i<grid.nx-2; i++)
@@ -312,7 +263,7 @@ void Radiation::ComputeMomentsIF()
 	PROFILE_FUNCTION();
 	constexpr double fourPiInv = 1.0 / (4.0 * M_PI);
 	
-	#pragma omp parallel for
+	PARALLEL_FOR(1)
 	for(int ijk=0; ijk<grid.nxyz; ijk++)
 	{
 		E[ijk]   = 0.0;
@@ -359,7 +310,7 @@ void Radiation::ComputeMomentsIF()
 void Radiation::ComputeMomentsLF()
 {
 	PROFILE_FUNCTION();
-	#pragma omp parallel for
+	PARALLEL_FOR(1)
 	for(int ijk=0; ijk<grid.nxyz; ijk++)
 	{
 		Tensor4x4 EnergyMomentumTensorIF
@@ -389,7 +340,7 @@ void Radiation::SetIntensitiesNorthSouth()
 	PROFILE_FUNCTION();
 	int d0north = 0;
 	int d0south = stencil.nTh - 1;
-	#pragma omp parallel for
+	PARALLEL_FOR(1)
 	for(int ijk=0; ijk<grid.nxyz; ijk++)
 	{
 		Inorth[ijk] = Isouth[ijk] = 0;
@@ -522,7 +473,7 @@ Tensor3 Radiation::AverageF(int i, int j, int k)
 void Radiation::StreamFlatStatic()
 {
 	PROFILE_FUNCTION();
-	#pragma omp parallel for
+	PARALLEL_FOR(5)
 	for(int d1=0; d1<stencil.nPh; d1++)
 	for(int d0=0; d0<stencil.nTh; d0++)
 	for(int k=2; k<grid.nz-2; k++)
@@ -559,7 +510,7 @@ void Radiation::StreamFlatStatic()
 void Radiation::StreamFlatDynamic()
 {
 	PROFILE_FUNCTION();
-	#pragma omp parallel for
+	PARALLEL_FOR(5)
 	for(int d1=0; d1<stencil.nPh; d1++)
 	for(int d0=0; d0<stencil.nTh; d0++)
 	for(int k=2; k<grid.nz-2; k++)
@@ -613,7 +564,7 @@ void Radiation::StreamGeodesicStatic()
 {
 	exit_on_error("StreamGeodesicDynamic not supported yet.");
 	//PROFILE_FUNCTION();
-	//#pragma omp parallel for
+	//PARALLEL_FOR
 	//for(int d=0; d<nDir; d++)
 	//for(int j=2; j<grid.n2-2; j++)
 	//for(int i=2; i<grid.n1-2; i++)
@@ -674,7 +625,7 @@ void Radiation::StreamGeodesicDynamic()
 {
 	exit_on_error("StreamGeodesicDynamic not supported yet.");
 	//PROFILE_FUNCTION();
-	//#pragma omp parallel for
+	//PARALLEL_FOR
 	//for(int j=2; j<grid.n2-2; j++)
 	//for(int i=2; i<grid.n1-2; i++)
 	//{
@@ -684,7 +635,7 @@ void Radiation::StreamGeodesicDynamic()
 	//	rotationNew[ijk] = (averageF.EuklNorm()>rotationThreshold) ? averageF.Angle() : rotation[ijk];
 	//}
 	//
-	//#pragma omp parallel for
+	//PARALLEL_FOR
 	//for(int d=0; d<nDir; d++)
 	//for(int j=2; j<grid.n2-2; j++)
 	//for(int i=2; i<grid.n1-2; i++)
@@ -748,7 +699,7 @@ void Radiation::StreamGeodesicDynamic()
 void Radiation::StreamCurvedStatic()
 {
 	PROFILE_FUNCTION();
-	#pragma omp parallel for
+	PARALLEL_FOR(5)
 	for(int d1=0; d1<stencil.nPh; d1++)
 	for(int d0=0; d0<stencil.nTh; d0++)
 	for(int k=2; k<grid.nz-2; k++)
@@ -813,7 +764,7 @@ void Radiation::StreamCurvedStatic()
 void Radiation::StreamCurvedDynamic()
 {
 	PROFILE_FUNCTION();
-	#pragma omp parallel for
+	PARALLEL_FOR(5)
 	for(int d1=0; d1<stencil.nPh; d1++)
 	for(int d0=0; d0<stencil.nTh; d0++)
 	for(int k=2; k<grid.nz-2; k++)
@@ -899,7 +850,7 @@ void Radiation::Collide()
 	PROFILE_FUNCTION();
 	// TODO: Steife DGL?
 	
-	#pragma omp parallel for
+	PARALLEL_FOR(3)
 	for(int k = 0; k < metric.grid.nz; k++)
 	for(int j = 0; j < metric.grid.ny; j++)
 	for(int i = 0; i < metric.grid.nx; i++)

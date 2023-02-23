@@ -57,10 +57,10 @@ public:
 
     // Write Data to file:
     void WriteFrametoJson
-    (float time, double* r, double* g, double* b, double* a,
+    (float time, const RealBuffer& r, const RealBuffer& g, const RealBuffer& b, const RealBuffer& a,
      const int frameNumber, std::string directory, std::string name="");
     void WriteFrametoCsv
-    (float time, double* r, double* g, double* b, double* a,
+    (float time, const RealBuffer& r, const RealBuffer& g, const RealBuffer& b, const RealBuffer& a,
      const int frameNumber, std::string directory, std::string name="");
 };
 #endif //__INCLUDE_GUARD_Grid_h__

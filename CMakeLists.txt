@@ -7,6 +7,10 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/..)
 # Set cpp version:
 set(CMAKE_CXX_STANDARD 17)
 
+# Find packages:
+find_package(OpenMP REQUIRED)
+find_package(glm REQUIRED)
+
 # Find all src files in src folder:
 file(GLOB srcs src/*.cpp)
 
@@ -17,6 +21,4 @@ add_executable(test test.cpp ${srcs})
 target_compile_options(test PUBLIC -O3 -ffast-math)
 
 # libraries to link:
-find_package(OpenMP REQUIRED)
-find_package(glm REQUIRED)
 target_link_libraries(test jsoncpp OpenMP::OpenMP_CXX glm::glm)

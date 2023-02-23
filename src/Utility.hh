@@ -7,8 +7,37 @@
 #include <algorithm>            // clamp.
 #include <sstream>              // stringstream.
 #include <filesystem>           // Folder/file management.
+#include <vector>
 #include "ControlFlow.hh"       // Template arguments and profiling macros.
 #include "eigen/Eigen/Dense"    // Eigen library for solving linear systems.
+
+
+#define STRINGIZE(X) #X
+#define PRAGMA(X) _Pragma(STRINGIZE(X))
+#define PARALLEL_FOR(N) PRAGMA(omp parallel for collapse(N))
+
+
+// Felix:
+template <class T>
+class AlignedAllocator
+{
+public:
+    using value_type = T;
+
+    // Constructor:
+    T * allocate(size_t size)
+    { return static_cast<T *>(std::aligned_alloc(64,size * sizeof(T))); }
+
+    // Descturctor:
+    void deallocate(T * p_t, size_t)
+    { std::free(p_t); }
+
+    // Initialize each element:
+    template<class U, class... Args>
+    void construct(U* p, Args&&... args)
+    { *p = 0; }
+};
+using RealBuffer = std::vector<double,AlignedAllocator<double>>;
 
 
 

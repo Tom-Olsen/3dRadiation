@@ -72,7 +72,7 @@ public:
 	    file << "nLebedev = " << lebedevStencil.nDir << std::endl;
 	    file << "oLebedev = " << lebedevStencil.nOrder << std::endl;
 	    file << "n Coeff  = " << lebedevStencil.nCoefficients << std::endl;
-	    file << "Normal distribution sigma = " << "???" << std::endl << std::endl;
+	    file << "Normal distribution sigma = " << stencil.sigma << std::endl << std::endl;
 
 	    file << "Time measurements:" << std::endl;
 	    for(int i=0; i<timeMeasurements.size(); i++)

@@ -6,156 +6,79 @@
 Metric::Metric(Grid& grid_, double m_, double a_) : grid(grid_), m(m_), a(a_)
 {
     // Metrik Data:
-    g00_ll = new double[grid.nxyz]();    g00_uu = new double[grid.nxyz]();
-    g01_ll = new double[grid.nxyz]();    g01_uu = new double[grid.nxyz]();
-    g02_ll = new double[grid.nxyz]();    g02_uu = new double[grid.nxyz]();
-    g03_ll = new double[grid.nxyz]();    g03_uu = new double[grid.nxyz]();
-    g11_ll = new double[grid.nxyz]();    g11_uu = new double[grid.nxyz]();
-    g12_ll = new double[grid.nxyz]();    g12_uu = new double[grid.nxyz]();
-    g13_ll = new double[grid.nxyz]();    g13_uu = new double[grid.nxyz]();
-    g22_ll = new double[grid.nxyz]();    g22_uu = new double[grid.nxyz]();
-    g23_ll = new double[grid.nxyz]();    g23_uu = new double[grid.nxyz]();
-    g33_ll = new double[grid.nxyz]();    g33_uu = new double[grid.nxyz]();
-    d0_g00_lll = new double[grid.nxyz]();    d1_g00_lll = new double[grid.nxyz]();    d2_g00_lll = new double[grid.nxyz]();    d3_g00_lll = new double[grid.nxyz]();
-    d0_g01_lll = new double[grid.nxyz]();    d1_g01_lll = new double[grid.nxyz]();    d2_g01_lll = new double[grid.nxyz]();    d3_g01_lll = new double[grid.nxyz]();
-    d0_g02_lll = new double[grid.nxyz]();    d1_g02_lll = new double[grid.nxyz]();    d2_g02_lll = new double[grid.nxyz]();    d3_g02_lll = new double[grid.nxyz]();
-    d0_g03_lll = new double[grid.nxyz]();    d1_g03_lll = new double[grid.nxyz]();    d2_g03_lll = new double[grid.nxyz]();    d3_g03_lll = new double[grid.nxyz]();
-    d0_g11_lll = new double[grid.nxyz]();    d1_g11_lll = new double[grid.nxyz]();    d2_g11_lll = new double[grid.nxyz]();    d3_g11_lll = new double[grid.nxyz]();
-    d0_g12_lll = new double[grid.nxyz]();    d1_g12_lll = new double[grid.nxyz]();    d2_g12_lll = new double[grid.nxyz]();    d3_g12_lll = new double[grid.nxyz]();
-    d0_g13_lll = new double[grid.nxyz]();    d1_g13_lll = new double[grid.nxyz]();    d2_g13_lll = new double[grid.nxyz]();    d3_g13_lll = new double[grid.nxyz]();
-    d0_g22_lll = new double[grid.nxyz]();    d1_g22_lll = new double[grid.nxyz]();    d2_g22_lll = new double[grid.nxyz]();    d3_g22_lll = new double[grid.nxyz]();
-    d0_g23_lll = new double[grid.nxyz]();    d1_g23_lll = new double[grid.nxyz]();    d2_g23_lll = new double[grid.nxyz]();    d3_g23_lll = new double[grid.nxyz]();
-    d0_g33_lll = new double[grid.nxyz]();    d1_g33_lll = new double[grid.nxyz]();    d2_g33_lll = new double[grid.nxyz]();    d3_g33_lll = new double[grid.nxyz]();
-    d0_g00_luu = new double[grid.nxyz]();    d1_g00_luu = new double[grid.nxyz]();    d2_g00_luu = new double[grid.nxyz]();    d3_g00_luu = new double[grid.nxyz]();
-    d0_g01_luu = new double[grid.nxyz]();    d1_g01_luu = new double[grid.nxyz]();    d2_g01_luu = new double[grid.nxyz]();    d3_g01_luu = new double[grid.nxyz]();
-    d0_g02_luu = new double[grid.nxyz]();    d1_g02_luu = new double[grid.nxyz]();    d2_g02_luu = new double[grid.nxyz]();    d3_g02_luu = new double[grid.nxyz]();
-    d0_g03_luu = new double[grid.nxyz]();    d1_g03_luu = new double[grid.nxyz]();    d2_g03_luu = new double[grid.nxyz]();    d3_g03_luu = new double[grid.nxyz]();
-    d0_g11_luu = new double[grid.nxyz]();    d1_g11_luu = new double[grid.nxyz]();    d2_g11_luu = new double[grid.nxyz]();    d3_g11_luu = new double[grid.nxyz]();
-    d0_g12_luu = new double[grid.nxyz]();    d1_g12_luu = new double[grid.nxyz]();    d2_g12_luu = new double[grid.nxyz]();    d3_g12_luu = new double[grid.nxyz]();
-    d0_g13_luu = new double[grid.nxyz]();    d1_g13_luu = new double[grid.nxyz]();    d2_g13_luu = new double[grid.nxyz]();    d3_g13_luu = new double[grid.nxyz]();
-    d0_g22_luu = new double[grid.nxyz]();    d1_g22_luu = new double[grid.nxyz]();    d2_g22_luu = new double[grid.nxyz]();    d3_g22_luu = new double[grid.nxyz]();
-    d0_g23_luu = new double[grid.nxyz]();    d1_g23_luu = new double[grid.nxyz]();    d2_g23_luu = new double[grid.nxyz]();    d3_g23_luu = new double[grid.nxyz]();
-    d0_g33_luu = new double[grid.nxyz]();    d1_g33_luu = new double[grid.nxyz]();    d2_g33_luu = new double[grid.nxyz]();    d3_g33_luu = new double[grid.nxyz]();
+    g00_ll.resize(grid.nxyz);    g00_uu.resize(grid.nxyz);
+    g01_ll.resize(grid.nxyz);    g01_uu.resize(grid.nxyz);
+    g02_ll.resize(grid.nxyz);    g02_uu.resize(grid.nxyz);
+    g03_ll.resize(grid.nxyz);    g03_uu.resize(grid.nxyz);
+    g11_ll.resize(grid.nxyz);    g11_uu.resize(grid.nxyz);
+    g12_ll.resize(grid.nxyz);    g12_uu.resize(grid.nxyz);
+    g13_ll.resize(grid.nxyz);    g13_uu.resize(grid.nxyz);
+    g22_ll.resize(grid.nxyz);    g22_uu.resize(grid.nxyz);
+    g23_ll.resize(grid.nxyz);    g23_uu.resize(grid.nxyz);
+    g33_ll.resize(grid.nxyz);    g33_uu.resize(grid.nxyz);
+    d0_g00_lll.resize(grid.nxyz);    d1_g00_lll.resize(grid.nxyz);    d2_g00_lll.resize(grid.nxyz);    d3_g00_lll.resize(grid.nxyz);
+    d0_g01_lll.resize(grid.nxyz);    d1_g01_lll.resize(grid.nxyz);    d2_g01_lll.resize(grid.nxyz);    d3_g01_lll.resize(grid.nxyz);
+    d0_g02_lll.resize(grid.nxyz);    d1_g02_lll.resize(grid.nxyz);    d2_g02_lll.resize(grid.nxyz);    d3_g02_lll.resize(grid.nxyz);
+    d0_g03_lll.resize(grid.nxyz);    d1_g03_lll.resize(grid.nxyz);    d2_g03_lll.resize(grid.nxyz);    d3_g03_lll.resize(grid.nxyz);
+    d0_g11_lll.resize(grid.nxyz);    d1_g11_lll.resize(grid.nxyz);    d2_g11_lll.resize(grid.nxyz);    d3_g11_lll.resize(grid.nxyz);
+    d0_g12_lll.resize(grid.nxyz);    d1_g12_lll.resize(grid.nxyz);    d2_g12_lll.resize(grid.nxyz);    d3_g12_lll.resize(grid.nxyz);
+    d0_g13_lll.resize(grid.nxyz);    d1_g13_lll.resize(grid.nxyz);    d2_g13_lll.resize(grid.nxyz);    d3_g13_lll.resize(grid.nxyz);
+    d0_g22_lll.resize(grid.nxyz);    d1_g22_lll.resize(grid.nxyz);    d2_g22_lll.resize(grid.nxyz);    d3_g22_lll.resize(grid.nxyz);
+    d0_g23_lll.resize(grid.nxyz);    d1_g23_lll.resize(grid.nxyz);    d2_g23_lll.resize(grid.nxyz);    d3_g23_lll.resize(grid.nxyz);
+    d0_g33_lll.resize(grid.nxyz);    d1_g33_lll.resize(grid.nxyz);    d2_g33_lll.resize(grid.nxyz);    d3_g33_lll.resize(grid.nxyz);
+    d0_g00_luu.resize(grid.nxyz);    d1_g00_luu.resize(grid.nxyz);    d2_g00_luu.resize(grid.nxyz);    d3_g00_luu.resize(grid.nxyz);
+    d0_g01_luu.resize(grid.nxyz);    d1_g01_luu.resize(grid.nxyz);    d2_g01_luu.resize(grid.nxyz);    d3_g01_luu.resize(grid.nxyz);
+    d0_g02_luu.resize(grid.nxyz);    d1_g02_luu.resize(grid.nxyz);    d2_g02_luu.resize(grid.nxyz);    d3_g02_luu.resize(grid.nxyz);
+    d0_g03_luu.resize(grid.nxyz);    d1_g03_luu.resize(grid.nxyz);    d2_g03_luu.resize(grid.nxyz);    d3_g03_luu.resize(grid.nxyz);
+    d0_g11_luu.resize(grid.nxyz);    d1_g11_luu.resize(grid.nxyz);    d2_g11_luu.resize(grid.nxyz);    d3_g11_luu.resize(grid.nxyz);
+    d0_g12_luu.resize(grid.nxyz);    d1_g12_luu.resize(grid.nxyz);    d2_g12_luu.resize(grid.nxyz);    d3_g12_luu.resize(grid.nxyz);
+    d0_g13_luu.resize(grid.nxyz);    d1_g13_luu.resize(grid.nxyz);    d2_g13_luu.resize(grid.nxyz);    d3_g13_luu.resize(grid.nxyz);
+    d0_g22_luu.resize(grid.nxyz);    d1_g22_luu.resize(grid.nxyz);    d2_g22_luu.resize(grid.nxyz);    d3_g22_luu.resize(grid.nxyz);
+    d0_g23_luu.resize(grid.nxyz);    d1_g23_luu.resize(grid.nxyz);    d2_g23_luu.resize(grid.nxyz);    d3_g23_luu.resize(grid.nxyz);
+    d0_g33_luu.resize(grid.nxyz);    d1_g33_luu.resize(grid.nxyz);    d2_g33_luu.resize(grid.nxyz);    d3_g33_luu.resize(grid.nxyz);
     // ADM Data:
-    alpha = new double[grid.nxyz]();
-    beta1_u = new double[grid.nxyz]();    beta1_l = new double[grid.nxyz]();
-    beta2_u = new double[grid.nxyz]();    beta2_l = new double[grid.nxyz]();
-    beta3_u = new double[grid.nxyz]();    beta3_l = new double[grid.nxyz]();
-    gamma11_ll = new double[grid.nxyz]();    gamma11_uu = new double[grid.nxyz]();
-    gamma12_ll = new double[grid.nxyz]();    gamma12_uu = new double[grid.nxyz]();
-    gamma13_ll = new double[grid.nxyz]();    gamma13_uu = new double[grid.nxyz]();
-    gamma22_ll = new double[grid.nxyz]();    gamma22_uu = new double[grid.nxyz]();
-    gamma23_ll = new double[grid.nxyz]();    gamma23_uu = new double[grid.nxyz]();
-    gamma33_ll = new double[grid.nxyz]();    gamma33_uu = new double[grid.nxyz]();
-    d1_alpha_l = new double[grid.nxyz]();
-    d2_alpha_l = new double[grid.nxyz]();
-    d3_alpha_l = new double[grid.nxyz]();
-    d1_beta1_lu = new double[grid.nxyz]();    d1_beta2_lu = new double[grid.nxyz]();    d1_beta3_lu = new double[grid.nxyz]();
-    d2_beta1_lu = new double[grid.nxyz]();    d2_beta2_lu = new double[grid.nxyz]();    d2_beta3_lu = new double[grid.nxyz]();
-    d3_beta1_lu = new double[grid.nxyz]();    d3_beta2_lu = new double[grid.nxyz]();    d3_beta3_lu = new double[grid.nxyz]();
-    d1_beta1_ll = new double[grid.nxyz]();    d1_beta2_ll = new double[grid.nxyz]();    d1_beta3_ll = new double[grid.nxyz]();
-    d2_beta1_ll = new double[grid.nxyz]();    d2_beta2_ll = new double[grid.nxyz]();    d2_beta3_ll = new double[grid.nxyz]();
-    d3_beta1_ll = new double[grid.nxyz]();    d3_beta2_ll = new double[grid.nxyz]();    d3_beta3_ll = new double[grid.nxyz]();
-    d1_gamma11_lll = new double[grid.nxyz]();    d2_gamma11_lll = new double[grid.nxyz]();    d3_gamma11_lll = new double[grid.nxyz]();
-    d1_gamma12_lll = new double[grid.nxyz]();    d2_gamma12_lll = new double[grid.nxyz]();    d3_gamma12_lll = new double[grid.nxyz]();
-    d1_gamma13_lll = new double[grid.nxyz]();    d2_gamma13_lll = new double[grid.nxyz]();    d3_gamma13_lll = new double[grid.nxyz]();
-    d1_gamma22_lll = new double[grid.nxyz]();    d2_gamma22_lll = new double[grid.nxyz]();    d3_gamma22_lll = new double[grid.nxyz]();
-    d1_gamma23_lll = new double[grid.nxyz]();    d2_gamma23_lll = new double[grid.nxyz]();    d3_gamma23_lll = new double[grid.nxyz]();
-    d1_gamma33_lll = new double[grid.nxyz]();    d2_gamma33_lll = new double[grid.nxyz]();    d3_gamma33_lll = new double[grid.nxyz]();
-    d1_gamma11_luu = new double[grid.nxyz]();    d2_gamma11_luu = new double[grid.nxyz]();    d3_gamma11_luu = new double[grid.nxyz]();
-    d1_gamma12_luu = new double[grid.nxyz]();    d2_gamma12_luu = new double[grid.nxyz]();    d3_gamma12_luu = new double[grid.nxyz]();
-    d1_gamma13_luu = new double[grid.nxyz]();    d2_gamma13_luu = new double[grid.nxyz]();    d3_gamma13_luu = new double[grid.nxyz]();
-    d1_gamma22_luu = new double[grid.nxyz]();    d2_gamma22_luu = new double[grid.nxyz]();    d3_gamma22_luu = new double[grid.nxyz]();
-    d1_gamma23_luu = new double[grid.nxyz]();    d2_gamma23_luu = new double[grid.nxyz]();    d3_gamma23_luu = new double[grid.nxyz]();
-    d1_gamma33_luu = new double[grid.nxyz]();    d2_gamma33_luu = new double[grid.nxyz]();    d3_gamma33_luu = new double[grid.nxyz]();
-    K11_ll = new double[grid.nxyz]();
-    K12_ll = new double[grid.nxyz]();
-    K13_ll = new double[grid.nxyz]();
-    K22_ll = new double[grid.nxyz]();
-    K23_ll = new double[grid.nxyz]();
-    K33_ll = new double[grid.nxyz]();
+    alpha.resize(grid.nxyz);
+    beta1_u.resize(grid.nxyz);    beta1_l.resize(grid.nxyz);
+    beta2_u.resize(grid.nxyz);    beta2_l.resize(grid.nxyz);
+    beta3_u.resize(grid.nxyz);    beta3_l.resize(grid.nxyz);
+    gamma11_ll.resize(grid.nxyz);    gamma11_uu.resize(grid.nxyz);
+    gamma12_ll.resize(grid.nxyz);    gamma12_uu.resize(grid.nxyz);
+    gamma13_ll.resize(grid.nxyz);    gamma13_uu.resize(grid.nxyz);
+    gamma22_ll.resize(grid.nxyz);    gamma22_uu.resize(grid.nxyz);
+    gamma23_ll.resize(grid.nxyz);    gamma23_uu.resize(grid.nxyz);
+    gamma33_ll.resize(grid.nxyz);    gamma33_uu.resize(grid.nxyz);
+    d1_alpha_l.resize(grid.nxyz);
+    d2_alpha_l.resize(grid.nxyz);
+    d3_alpha_l.resize(grid.nxyz);
+    d1_beta1_lu.resize(grid.nxyz);    d1_beta2_lu.resize(grid.nxyz);    d1_beta3_lu.resize(grid.nxyz);
+    d2_beta1_lu.resize(grid.nxyz);    d2_beta2_lu.resize(grid.nxyz);    d2_beta3_lu.resize(grid.nxyz);
+    d3_beta1_lu.resize(grid.nxyz);    d3_beta2_lu.resize(grid.nxyz);    d3_beta3_lu.resize(grid.nxyz);
+    d1_beta1_ll.resize(grid.nxyz);    d1_beta2_ll.resize(grid.nxyz);    d1_beta3_ll.resize(grid.nxyz);
+    d2_beta1_ll.resize(grid.nxyz);    d2_beta2_ll.resize(grid.nxyz);    d2_beta3_ll.resize(grid.nxyz);
+    d3_beta1_ll.resize(grid.nxyz);    d3_beta2_ll.resize(grid.nxyz);    d3_beta3_ll.resize(grid.nxyz);
+    d1_gamma11_lll.resize(grid.nxyz);    d2_gamma11_lll.resize(grid.nxyz);    d3_gamma11_lll.resize(grid.nxyz);
+    d1_gamma12_lll.resize(grid.nxyz);    d2_gamma12_lll.resize(grid.nxyz);    d3_gamma12_lll.resize(grid.nxyz);
+    d1_gamma13_lll.resize(grid.nxyz);    d2_gamma13_lll.resize(grid.nxyz);    d3_gamma13_lll.resize(grid.nxyz);
+    d1_gamma22_lll.resize(grid.nxyz);    d2_gamma22_lll.resize(grid.nxyz);    d3_gamma22_lll.resize(grid.nxyz);
+    d1_gamma23_lll.resize(grid.nxyz);    d2_gamma23_lll.resize(grid.nxyz);    d3_gamma23_lll.resize(grid.nxyz);
+    d1_gamma33_lll.resize(grid.nxyz);    d2_gamma33_lll.resize(grid.nxyz);    d3_gamma33_lll.resize(grid.nxyz);
+    d1_gamma11_luu.resize(grid.nxyz);    d2_gamma11_luu.resize(grid.nxyz);    d3_gamma11_luu.resize(grid.nxyz);
+    d1_gamma12_luu.resize(grid.nxyz);    d2_gamma12_luu.resize(grid.nxyz);    d3_gamma12_luu.resize(grid.nxyz);
+    d1_gamma13_luu.resize(grid.nxyz);    d2_gamma13_luu.resize(grid.nxyz);    d3_gamma13_luu.resize(grid.nxyz);
+    d1_gamma22_luu.resize(grid.nxyz);    d2_gamma22_luu.resize(grid.nxyz);    d3_gamma22_luu.resize(grid.nxyz);
+    d1_gamma23_luu.resize(grid.nxyz);    d2_gamma23_luu.resize(grid.nxyz);    d3_gamma23_luu.resize(grid.nxyz);
+    d1_gamma33_luu.resize(grid.nxyz);    d2_gamma33_luu.resize(grid.nxyz);    d3_gamma33_luu.resize(grid.nxyz);
+    K11_ll.resize(grid.nxyz);
+    K12_ll.resize(grid.nxyz);
+    K13_ll.resize(grid.nxyz);
+    K22_ll.resize(grid.nxyz);
+    K23_ll.resize(grid.nxyz);
+    K33_ll.resize(grid.nxyz);
     // Tetrad Data:
-    tetrad00_ul = new double[grid.nxyz]();    tetrad01_ul = new double[grid.nxyz]();    tetrad02_ul = new double[grid.nxyz]();    tetrad03_ul = new double[grid.nxyz]();
-    tetrad10_ul = new double[grid.nxyz]();    tetrad11_ul = new double[grid.nxyz]();    tetrad12_ul = new double[grid.nxyz]();    tetrad13_ul = new double[grid.nxyz]();
-    tetrad20_ul = new double[grid.nxyz]();    tetrad21_ul = new double[grid.nxyz]();    tetrad22_ul = new double[grid.nxyz]();    tetrad23_ul = new double[grid.nxyz]();
-    tetrad30_ul = new double[grid.nxyz]();    tetrad31_ul = new double[grid.nxyz]();    tetrad32_ul = new double[grid.nxyz]();    tetrad33_ul = new double[grid.nxyz]();
-}
-Metric::~Metric()
-{
-    // Metrik Data:
-    delete[] g00_ll;    delete[] g00_uu;
-    delete[] g01_ll;    delete[] g01_uu;
-    delete[] g02_ll;    delete[] g02_uu;
-    delete[] g03_ll;    delete[] g03_uu;
-    delete[] g11_ll;    delete[] g11_uu;
-    delete[] g12_ll;    delete[] g12_uu;
-    delete[] g13_ll;    delete[] g13_uu;
-    delete[] g22_ll;    delete[] g22_uu;
-    delete[] g23_ll;    delete[] g23_uu;
-    delete[] g33_ll;    delete[] g33_uu;
-    delete[] d0_g00_lll;    delete[] d1_g00_lll;    delete[] d2_g00_lll;    delete[] d3_g00_lll;
-    delete[] d0_g01_lll;    delete[] d1_g01_lll;    delete[] d2_g01_lll;    delete[] d3_g01_lll;
-    delete[] d0_g02_lll;    delete[] d1_g02_lll;    delete[] d2_g02_lll;    delete[] d3_g02_lll;
-    delete[] d0_g03_lll;    delete[] d1_g03_lll;    delete[] d2_g03_lll;    delete[] d3_g03_lll;
-    delete[] d0_g11_lll;    delete[] d1_g11_lll;    delete[] d2_g11_lll;    delete[] d3_g11_lll;
-    delete[] d0_g12_lll;    delete[] d1_g12_lll;    delete[] d2_g12_lll;    delete[] d3_g12_lll;
-    delete[] d0_g13_lll;    delete[] d1_g13_lll;    delete[] d2_g13_lll;    delete[] d3_g13_lll;
-    delete[] d0_g22_lll;    delete[] d1_g22_lll;    delete[] d2_g22_lll;    delete[] d3_g22_lll;
-    delete[] d0_g23_lll;    delete[] d1_g23_lll;    delete[] d2_g23_lll;    delete[] d3_g23_lll;
-    delete[] d0_g33_lll;    delete[] d1_g33_lll;    delete[] d2_g33_lll;    delete[] d3_g33_lll;
-    delete[] d0_g00_luu;    delete[] d1_g00_luu;    delete[] d2_g00_luu;    delete[] d3_g00_luu;
-    delete[] d0_g01_luu;    delete[] d1_g01_luu;    delete[] d2_g01_luu;    delete[] d3_g01_luu;
-    delete[] d0_g02_luu;    delete[] d1_g02_luu;    delete[] d2_g02_luu;    delete[] d3_g02_luu;
-    delete[] d0_g03_luu;    delete[] d1_g03_luu;    delete[] d2_g03_luu;    delete[] d3_g03_luu;
-    delete[] d0_g11_luu;    delete[] d1_g11_luu;    delete[] d2_g11_luu;    delete[] d3_g11_luu;
-    delete[] d0_g12_luu;    delete[] d1_g12_luu;    delete[] d2_g12_luu;    delete[] d3_g12_luu;
-    delete[] d0_g13_luu;    delete[] d1_g13_luu;    delete[] d2_g13_luu;    delete[] d3_g13_luu;
-    delete[] d0_g22_luu;    delete[] d1_g22_luu;    delete[] d2_g22_luu;    delete[] d3_g22_luu;
-    delete[] d0_g23_luu;    delete[] d1_g23_luu;    delete[] d2_g23_luu;    delete[] d3_g23_luu;
-    delete[] d0_g33_luu;    delete[] d1_g33_luu;    delete[] d2_g33_luu;    delete[] d3_g33_luu;
-    // ADM Data:
-    delete[] alpha;
-    delete[] beta1_u;    delete[] beta1_l;
-    delete[] beta2_u;    delete[] beta2_l;
-    delete[] beta3_u;    delete[] beta3_l;
-    delete[] gamma11_ll;    delete[] gamma11_uu;
-    delete[] gamma12_ll;    delete[] gamma12_uu;
-    delete[] gamma13_ll;    delete[] gamma13_uu;
-    delete[] gamma22_ll;    delete[] gamma22_uu;
-    delete[] gamma23_ll;    delete[] gamma23_uu;
-    delete[] gamma33_ll;    delete[] gamma33_uu;
-    delete[] d1_alpha_l;
-    delete[] d2_alpha_l;
-    delete[] d3_alpha_l;
-    delete[] d1_beta1_lu;    delete[] d1_beta2_lu;    delete[] d1_beta3_lu;
-    delete[] d2_beta1_lu;    delete[] d2_beta2_lu;    delete[] d2_beta3_lu;
-    delete[] d3_beta1_lu;    delete[] d3_beta2_lu;    delete[] d3_beta3_lu;
-    delete[] d1_beta1_ll;    delete[] d1_beta2_ll;    delete[] d1_beta3_ll;
-    delete[] d2_beta1_ll;    delete[] d2_beta2_ll;    delete[] d2_beta3_ll;
-    delete[] d3_beta1_ll;    delete[] d3_beta2_ll;    delete[] d3_beta3_ll;
-    delete[] d1_gamma11_lll;    delete[] d2_gamma11_lll;    delete[] d3_gamma11_lll;
-    delete[] d1_gamma12_lll;    delete[] d2_gamma12_lll;    delete[] d3_gamma12_lll;
-    delete[] d1_gamma13_lll;    delete[] d2_gamma13_lll;    delete[] d3_gamma13_lll;
-    delete[] d1_gamma22_lll;    delete[] d2_gamma22_lll;    delete[] d3_gamma22_lll;
-    delete[] d1_gamma23_lll;    delete[] d2_gamma23_lll;    delete[] d3_gamma23_lll;
-    delete[] d1_gamma33_lll;    delete[] d2_gamma33_lll;    delete[] d3_gamma33_lll;
-    delete[] d1_gamma11_luu;    delete[] d2_gamma11_luu;    delete[] d3_gamma11_luu;
-    delete[] d1_gamma12_luu;    delete[] d2_gamma12_luu;    delete[] d3_gamma12_luu;
-    delete[] d1_gamma13_luu;    delete[] d2_gamma13_luu;    delete[] d3_gamma13_luu;
-    delete[] d1_gamma22_luu;    delete[] d2_gamma22_luu;    delete[] d3_gamma22_luu;
-    delete[] d1_gamma23_luu;    delete[] d2_gamma23_luu;    delete[] d3_gamma23_luu;
-    delete[] d1_gamma33_luu;    delete[] d2_gamma33_luu;    delete[] d3_gamma33_luu;
-    delete[] K11_ll;
-    delete[] K12_ll;
-    delete[] K13_ll;
-    delete[] K22_ll;
-    delete[] K23_ll;
-    delete[] K33_ll;
-    // Tetrad Data:
-    delete[] tetrad00_ul;    delete[] tetrad01_ul;    delete[] tetrad02_ul;    delete[] tetrad03_ul;
-    delete[] tetrad10_ul;    delete[] tetrad11_ul;    delete[] tetrad12_ul;    delete[] tetrad13_ul;
-    delete[] tetrad20_ul;    delete[] tetrad21_ul;    delete[] tetrad22_ul;    delete[] tetrad23_ul;
-    delete[] tetrad30_ul;    delete[] tetrad31_ul;    delete[] tetrad32_ul;    delete[] tetrad33_ul;
+    tetrad00_ul.resize(grid.nxyz);    tetrad01_ul.resize(grid.nxyz);    tetrad02_ul.resize(grid.nxyz);    tetrad03_ul.resize(grid.nxyz);
+    tetrad10_ul.resize(grid.nxyz);    tetrad11_ul.resize(grid.nxyz);    tetrad12_ul.resize(grid.nxyz);    tetrad13_ul.resize(grid.nxyz);
+    tetrad20_ul.resize(grid.nxyz);    tetrad21_ul.resize(grid.nxyz);    tetrad22_ul.resize(grid.nxyz);    tetrad23_ul.resize(grid.nxyz);
+    tetrad30_ul.resize(grid.nxyz);    tetrad31_ul.resize(grid.nxyz);    tetrad32_ul.resize(grid.nxyz);    tetrad33_ul.resize(grid.nxyz);
 }
 
 
@@ -391,7 +314,7 @@ void Metric::InitializeAdmComponentsOnGrid()
     }
 }
 
-double Metric::InterpolateArrayTo_ijk(double* array, const Coord& ijk)
+double Metric::InterpolateArrayTo_ijk(const RealBuffer& array, const Coord& ijk)
 {
     int i0 = std::floor(ijk[1]);
     int j0 = std::floor(ijk[2]);
@@ -405,7 +328,7 @@ double Metric::InterpolateArrayTo_ijk(double* array, const Coord& ijk)
     array[grid.Index(i0,j0,k0)], array[grid.Index(i0,j0,k1)], array[grid.Index(i0,j1,k0)], array[grid.Index(i0,j1,k1)],
     array[grid.Index(i1,j0,k0)], array[grid.Index(i1,j0,k1)], array[grid.Index(i1,j1,k0)], array[grid.Index(i1,j1,k1)]);
 }
-double Metric::InterpolateArrayTo_ijk(double* array, double i, double j, double k)
+double Metric::InterpolateArrayTo_ijk(const RealBuffer& array, double i, double j, double k)
 {
     int i0 = std::floor(i);
     int j0 = std::floor(j);

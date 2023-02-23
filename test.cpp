@@ -117,10 +117,10 @@ void Test_Grid()
     Coord gOrb(0.3,0.7,0.4);
     Coord bOrb(0.7,0.4,0.6);
     Coord aOrb(0.6,0.7,0.6);
-    double data0[grid.nxyz];
-    double data1[grid.nxyz];
-    double data2[grid.nxyz];
-    double data3[grid.nxyz];
+    RealBuffer data0(grid.nxyz);
+    RealBuffer data1(grid.nxyz);
+    RealBuffer data2(grid.nxyz);
+    RealBuffer data3(grid.nxyz);
     for(int i=0; i<grid.nx; i++)
     for(int j=0; j<grid.ny; j++)
     for(int k=0; k<grid.nz; k++)
@@ -146,10 +146,10 @@ void Test_Interpolation()
     Coord end(1,1,1);
     Grid grid(nx, ny, nz, start, end);
 
-    double data0[grid.nxyz];
-    double data1[grid.nxyz];
-    double data2[grid.nxyz];
-    double data3[grid.nxyz];
+    RealBuffer data0(grid.nxyz);
+    RealBuffer data1(grid.nxyz);
+    RealBuffer data2(grid.nxyz);
+    RealBuffer data3(grid.nxyz);
     for(int i=0; i<grid.nx; i++)
     for(int j=0; j<grid.ny; j++)
     for(int k=0; k<grid.nz; k++)
@@ -887,9 +887,9 @@ int main()
 
     double simTime = 10;
     Test_StreamCurvedBeam(  5,simTime);
-    Test_StreamCurvedBeam( 10,simTime);
-    Test_StreamCurvedBeam( 25,simTime);
-    Test_StreamCurvedBeam( 50,simTime);
+    // Test_StreamCurvedBeam( 10,simTime);
+    // Test_StreamCurvedBeam( 25,simTime);
+    // Test_StreamCurvedBeam( 50,simTime);
     // Test_StreamCurvedBeam(100,simTime);
     // Test_StreamCurvedBeam(150,simTime);
 

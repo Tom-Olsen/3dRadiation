@@ -6,19 +6,11 @@
 
 #IncludeRegexTransform: 
 
-/home/olsen/3dRadiation/src/Camera.cpp
-Camera.h
-/home/olsen/3dRadiation/src/Camera.h
-
 /home/olsen/3dRadiation/src/Camera.h
 TensorTypes.hh
 /home/olsen/3dRadiation/src/TensorTypes.hh
 
 /home/olsen/3dRadiation/src/ControlFlow.hh
-
-/home/olsen/3dRadiation/src/GeodesicEquationSolver.cpp
-GeodesicEquationSolver.h
-/home/olsen/3dRadiation/src/GeodesicEquationSolver.h
 
 /home/olsen/3dRadiation/src/GeodesicEquationSolver.h
 fstream
@@ -29,10 +21,6 @@ TensorTypes.hh
 /home/olsen/3dRadiation/src/TensorTypes.hh
 Metric.h
 /home/olsen/3dRadiation/src/Metric.h
-
-/home/olsen/3dRadiation/src/Grid.cpp
-Grid.h
-/home/olsen/3dRadiation/src/Grid.h
 
 /home/olsen/3dRadiation/src/Grid.h
 iomanip
@@ -108,10 +96,6 @@ Metric.h
 Stencil.hh
 /home/olsen/3dRadiation/src/Stencil.hh
 
-/home/olsen/3dRadiation/src/Metric.cpp
-Metric.h
-/home/olsen/3dRadiation/src/Metric.h
-
 /home/olsen/3dRadiation/src/Metric.h
 string
 -
@@ -143,10 +127,6 @@ omp.h
 -
 vector
 -
-
-/home/olsen/3dRadiation/src/Radiation.cpp
-Radiation.h
-/home/olsen/3dRadiation/src/Radiation.h
 
 /home/olsen/3dRadiation/src/Radiation.h
 math.h
@@ -182,10 +162,6 @@ SphericalHarmonics.h
 Log.hh
 /home/olsen/3dRadiation/src/Log.hh
 
-/home/olsen/3dRadiation/src/Spacetimes.cpp
-Spacetimes.h
-/home/olsen/3dRadiation/src/Spacetimes.h
-
 /home/olsen/3dRadiation/src/Spacetimes.h
 string
 -
@@ -197,10 +173,6 @@ Grid.h
 /home/olsen/3dRadiation/src/Grid.h
 Metric.h
 /home/olsen/3dRadiation/src/Metric.h
-
-/home/olsen/3dRadiation/src/SphericalHarmonics.cpp
-SphericalHarmonics.h
-/home/olsen/3dRadiation/src/SphericalHarmonics.h
 
 /home/olsen/3dRadiation/src/SphericalHarmonics.h
 math.h
@@ -240,10 +212,6 @@ LebedevStencil/LebedevStencil13
 LebedevStencil/LebedevStencil15
 /home/olsen/3dRadiation/src/LebedevStencil/LebedevStencil15
 
-/home/olsen/3dRadiation/src/TensorOperations.cpp
-TensorOperations.h
-/home/olsen/3dRadiation/src/TensorOperations.h
-
 /home/olsen/3dRadiation/src/TensorOperations.h
 TensorTypes.hh
 /home/olsen/3dRadiation/src/TensorTypes.hh
@@ -280,6 +248,8 @@ algorithm
 sstream
 -
 filesystem
+-
+vector
 -
 ControlFlow.hh
 /home/olsen/3dRadiation/src/ControlFlow.hh

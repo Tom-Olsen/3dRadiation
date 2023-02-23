@@ -15,3 +15,7 @@ clean:
 .Phony: outputClean
 outputClean:
 	rm -r output/*
+
+.Phony: runTest
+runTest:
+	OMP_PLACES=threads OMP_PROC_BIND=true ./test
