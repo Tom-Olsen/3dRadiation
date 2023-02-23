@@ -1,3 +1,7 @@
+Do not forget to download submodules aswell:
+-git submodule init
+-git submodule update
+
 The following libraries are necessary to compile the code:
 
 openmp:     -sudo apt-get install libomp-dev
