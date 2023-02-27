@@ -15,7 +15,8 @@
 #include "TensorOperations.h"       // More specific tensor operations, nullNormalize etc.
 #include "Stencil.hh"				// Velocity stencils.
 #include "SphericalHarmonics.h"     // Real spherical harmonic functions and expansion.
-#include "Log.hh"					// log final results
+#include "Log.hh"					// log final results.
+#include "Camera.h"					// orthographic camera to take images of radiation field.
 
 
 
@@ -34,6 +35,7 @@ struct Config
     bool keepSourceNodesActive;
     bool writeData;
     bool printToTerminal;
+	bool useCamera;
 };
 
 
@@ -46,6 +48,8 @@ public:
 	Metric& metric;
 	Stencil& stencil;
 	LebedevStencil& lebedevStencil;
+	Camera& camera;
+
 
 	bool* isInitialGridPoint;
 	RealBuffer initialE;
@@ -102,7 +106,7 @@ public:
 	double normThreshhold = 1e-4;
 
 	Radiation() = delete;
-	Radiation(Metric& metric_, Stencil& stencil_, LebedevStencil& lebedevStencil_, StreamingType streamingType_);
+	Radiation(Metric& metric, Stencil& stencil, LebedevStencil& lebedevStencil, Camera& camera, StreamingType streamingType);
 	~Radiation();
 
 	Coord GetTempCoordinate(int i, int j, int k, double theta, double phi);
@@ -125,6 +129,7 @@ public:
 	void StreamGeodesicStatic();
 	void StreamGeodesicDynamic();
 	void Collide();
+	void TakePicture();
 
 	void RunSimulation(Config config);
 };

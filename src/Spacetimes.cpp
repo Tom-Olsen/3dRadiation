@@ -38,7 +38,7 @@ SchwarzSchild::SchwarzSchild(Grid& grid_, double m_, double a_) : Metric(grid_, 
 bool SchwarzSchild::InsideBH(const Coord& xyz)
 {
     // Buffer zone must be bigger here or geodesic equations dont converge.
-    return xyz.RadiusSquared() <= 2.2 * 2.2 * this->m * this->m;
+    return xyz.RadiusSquared() <= 2.4 * 2.4 * this->m * this->m;
 }
 std::string SchwarzSchild::Name()
 {

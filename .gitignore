@@ -6,6 +6,7 @@
 
 # Output:
 output/
+bigRuns/
 output.txt
 build/*
 

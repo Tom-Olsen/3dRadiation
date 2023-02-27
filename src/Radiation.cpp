@@ -18,8 +18,8 @@ std::string StreamingName(int n)
 
 
 
-Radiation::Radiation(Metric& metric_, Stencil& stencil_, LebedevStencil& lebedevStencil_, StreamingType streamingType_):
-grid(metric_.grid), metric(metric_), stencil(stencil_), lebedevStencil(lebedevStencil_), streamingType(streamingType_)
+Radiation::Radiation(Metric& metric, Stencil& stencil, LebedevStencil& lebedevStencil, Camera& camera, StreamingType streamingType):
+grid(metric.grid), metric(metric), stencil(stencil), lebedevStencil(lebedevStencil), camera(camera), streamingType(streamingType)
 {
 	isInitialGridPoint = new bool[grid.nxyz]();
 	initialE.resize(grid.nxyz);
@@ -126,15 +126,16 @@ void Radiation::LoadInitialData()
 	PARALLEL_FOR(1)
 	for(int ijk=0; ijk<grid.nxyz; ijk++)
 	{
+		kappa0[ijk] = initialKappa0[ijk];
+		kappa1[ijk] = initialKappa1[ijk];
+		kappaA[ijk] = initialKappaA[ijk];
+		eta[ijk] = initialEta[ijk];
+		
 		if(isInitialGridPoint[ijk])
 		{
 			nx[ijk] = initialNx[ijk];
 			ny[ijk] = initialNy[ijk];
 			nz[ijk] = initialNz[ijk];
-			kappa0[ijk] = initialKappa0[ijk];
-			kappa1[ijk] = initialKappa1[ijk];
-			kappaA[ijk] = initialKappaA[ijk];
-			eta[ijk] = initialEta[ijk];
 
 			if(nx[ijk] == 0 && ny[ijk] == 0 && nz[ijk] == 0)
 			{// Uniform intensity distribution:
@@ -885,6 +886,50 @@ void Radiation::Collide()
 
 
 
+void Radiation::TakePicture()
+{
+	#pragma omp parallel for
+	for(int ij=0; ij<camera.pixelCount; ij++)
+	{
+		Coord pixel = camera.xyz(ij);
+		if(grid.OutsideDomain(pixel))
+		{
+			camera.image[ij] = 0;
+			continue;
+		}
+
+		Tensor4x4 inverseTetrad = metric.GetTetrad(pixel).Invert();
+		Tensor3 vTempLF = camera.orthogonalPassThrough;
+		Tensor3 vTempIF = TransformLFtoIF(vTempLF, inverseTetrad);
+
+		// Get 8 nearest Grid Points:
+		double iTemp = grid.i(pixel[1]);
+		double jTemp = grid.j(pixel[2]);
+		double kTemp = grid.k(pixel[3]);
+		int i0 = std::floor(iTemp);	int i1 = i0 + 1;
+		int j0 = std::floor(jTemp);	int j1 = j0 + 1;
+		int k0 = std::floor(kTemp);	int k1 = k0 + 1;
+
+		// Intensity interpolation:
+		double alpha = metric.GetAlpha(pixel);
+		double intensityAt_i0j0k0 = MyPow<4>(alpha / metric.GetAlpha(grid.Index(i0,j0,k0))) * IntensityAt(grid.Index(i0,j0,k0),vTempIF);
+		double intensityAt_i0j0k1 = MyPow<4>(alpha / metric.GetAlpha(grid.Index(i0,j0,k1))) * IntensityAt(grid.Index(i0,j0,k1),vTempIF);
+		double intensityAt_i0j1k0 = MyPow<4>(alpha / metric.GetAlpha(grid.Index(i0,j1,k0))) * IntensityAt(grid.Index(i0,j1,k0),vTempIF);
+		double intensityAt_i0j1k1 = MyPow<4>(alpha / metric.GetAlpha(grid.Index(i0,j1,k1))) * IntensityAt(grid.Index(i0,j1,k1),vTempIF);
+		double intensityAt_i1j0k0 = MyPow<4>(alpha / metric.GetAlpha(grid.Index(i1,j0,k0))) * IntensityAt(grid.Index(i1,j0,k0),vTempIF);
+		double intensityAt_i1j0k1 = MyPow<4>(alpha / metric.GetAlpha(grid.Index(i1,j0,k1))) * IntensityAt(grid.Index(i1,j0,k1),vTempIF);
+		double intensityAt_i1j1k0 = MyPow<4>(alpha / metric.GetAlpha(grid.Index(i1,j1,k0))) * IntensityAt(grid.Index(i1,j1,k0),vTempIF);
+		double intensityAt_i1j1k1 = MyPow<4>(alpha / metric.GetAlpha(grid.Index(i1,j1,k1))) * IntensityAt(grid.Index(i1,j1,k1),vTempIF);	
+		
+		camera.image[ij]
+		= TrilinearInterpolation(iTemp-i0, jTemp-j0, kTemp-k0,
+		 intensityAt_i0j0k0, intensityAt_i0j0k1, intensityAt_i0j1k0, intensityAt_i0j1k1,
+		 intensityAt_i1j0k0, intensityAt_i1j0k1, intensityAt_i1j1k0, intensityAt_i1j1k1);
+	}
+}
+
+
+
 void Radiation::RunSimulation(Config config)
 {
 	// -------------------- Initialization --------------------
@@ -899,7 +944,7 @@ void Radiation::RunSimulation(Config config)
 	NormalizeInitialIntensities();
 	LoadInitialData(); // loads normalized data
 	UpdateSphericalHarmonicsCoefficients();
-
+	
 	// Initial data output:
 	if (config.printToTerminal)
 	{
@@ -911,6 +956,9 @@ void Radiation::RunSimulation(Config config)
 		std::cout << " nPh          = " << stencil.nPh << "\n";
 		std::cout << " nSphHarm     = " << lebedevStencil.nDir << "\n";
 		std::cout << " simTime      = " << config.simTime << "\n";
+		std::cout << " dx           = " << grid.dx << "\n";
+		std::cout << " dy           = " << grid.dy << "\n";
+		std::cout << " dz           = " << grid.dz << "\n";
 		std::cout << " dt           = " << grid.dt << "\n";
 		std::cout << " timeSteps    = " << timeSteps << "\n";
 		std::cout << " filesToWrite = " << timeSteps / config.writeFrequency << std::endl;
@@ -926,15 +974,20 @@ void Radiation::RunSimulation(Config config)
 		PROFILE_SCOPE("Total Time");
 		for(int n=0; n<timeSteps; n++)
 		{
-			if (config.printToTerminal)
+			if(config.printToTerminal)
 			{ std::cout << n << "," << std::flush; }
 			ComputeMomentsIF();
 			Collide();
 
-			if (config.writeData && (n % config.writeFrequency) == 0)
+			if(config.writeData && (n % config.writeFrequency) == 0)
 			{
 				ComputeMomentsLF();
 				grid.WriteFrametoCsv(n*grid.dt, E_LF, Fx_LF, Fy_LF, Fz_LF, n, logger.directoryPath + "/Moments", config.name);
+			}
+			if(config.useCamera && (n % config.writeFrequency) == 0)
+			{
+				TakePicture();
+				camera.WriteImagetoCsv(n*grid.dt, n, logger.directoryPath + "/CameraImages");
 			}
 
 			if (config.updateSphericalHarmonics)
@@ -943,7 +996,7 @@ void Radiation::RunSimulation(Config config)
 			SetIntensitiesNorthSouth();
 
 			// Streaming:
-			switch (streamingType)
+			switch(streamingType)
 			{
 				case(StreamingType::FlatStatic):		StreamFlatStatic();		 break;
 				case(StreamingType::FlatDynamic):		StreamFlatDynamic();	 break;
@@ -953,14 +1006,19 @@ void Radiation::RunSimulation(Config config)
 				case(StreamingType::CurvedDynamic):		StreamCurvedDynamic();	 break;
 			}
 
-			if (config.keepSourceNodesActive)
+			if(config.keepSourceNodesActive)
 			{ LoadInitialData(); }
 		}
 	
-		if (config.writeData)
+		if(config.writeData)
 		{
 			ComputeMomentsLF();
 			grid.WriteFrametoCsv(timeSteps*grid.dt, E_LF, Fx_LF, Fy_LF, Fz_LF, timeSteps, logger.directoryPath + "/Moments", config.name);
+		}
+		if(config.useCamera)
+		{
+			TakePicture();
+			camera.WriteImagetoCsv(timeSteps*grid.dt, timeSteps, logger.directoryPath + "/CameraImages");
 		}
 	}
 	// --------------------------------------------------------

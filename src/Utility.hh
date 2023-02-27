@@ -7,15 +7,9 @@
 #include <algorithm>            // clamp.
 #include <sstream>              // stringstream.
 #include <filesystem>           // Folder/file management.
-#include <vector>
+#include <vector>               // basic c++ vector
 #include "ControlFlow.hh"       // Template arguments and profiling macros.
 #include "eigen/Eigen/Dense"    // Eigen library for solving linear systems.
-
-
-
-#define STRINGIFY(X) #X
-#define PRAGMA(X) _Pragma(STRINGIFY(X))
-#define PARALLEL_FOR(N) PRAGMA(omp parallel for collapse(N) dynamic(500))
 
 
 
