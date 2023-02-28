@@ -79,6 +79,5 @@ public:
     static void GetCoefficients(const LebedevStencil& stencil, const double* data, int nCoefficients, double* coefficients);
     static double GetValue(double theta, double phi, const std::vector<double>& coefficients, int nCoefficients);
     static double GetValue(double theta, double phi, double* coefficients, int nCoefficients);
-    static double GetValue(double theta, double phi, const RealBuffer& coefficients, int nCoefficients);
 };
 #endif //__INCLUDE_GUARD_SphericalHarmonics_h__

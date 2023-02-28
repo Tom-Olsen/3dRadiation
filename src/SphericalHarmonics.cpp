@@ -217,16 +217,4 @@ double SphericalHarmonics::GetValue(double theta, double phi, double* coefficien
 
     return result;
 }
-double SphericalHarmonics::GetValue(double theta, double phi, const RealBuffer& coefficients, int nCoefficients)
-{
-    double x = std::sin(theta) * std::cos(phi);
-    double y = std::sin(theta) * std::sin(phi);
-    double z = std::cos(theta);
-    
-    double result = 0;
-    for(int i=0; i<nCoefficients; i++)
-        result += coefficients[i] * functions[i](x,y,z);
-
-    return result;
-}
 // ---------------------------------------------------------------------------------------------

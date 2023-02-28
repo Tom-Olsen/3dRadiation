@@ -775,8 +775,8 @@ void Test_StreamCurvedBeam(int nx, int ny, int nz, int nTh, int nPh, int sigma, 
     Camera camera(resX, resY, width, height, position, eulerAngles);
 
     // Radiation:
-    Radiation radiation(metric, stencil, lebedevStencil, camera, StreamingType::CurvedStatic);
-    // Radiation radiation(metric, stencil, lebedevStencil, camera, StreamingType::CurvedDynamic);
+    // Radiation radiation(metric, stencil, lebedevStencil, camera, StreamingType::CurvedStatic);
+    Radiation radiation(metric, stencil, lebedevStencil, camera, StreamingType::CurvedDynamic);
 
     // Initial Data:
     for(int k=0; k<grid.nz; k++)
@@ -811,10 +811,10 @@ void Test_StreamCurvedBeam(int nx, int ny, int nz, int nTh, int nPh, int sigma, 
     // Start simulation:
     Config config =
     {
-        .name = "Curved Beam Static " + metric.Name() + " " + std::to_string(stencil.nTh) + "." + std::to_string(stencil.nPh)
-              + " s" + std::to_string(sigma) + " Leb" + std::to_string(lebedevStencil.nOrder) + " t" + std::to_string(simTime),
-        // .name = "Curved Beam Dynamic " + metric.Name() + " " + std::to_string(stencil.nTh) + "." + std::to_string(stencil.nPh)
+        // .name = "Curved Beam Static " + metric.Name() + " " + std::to_string(stencil.nTh) + "." + std::to_string(stencil.nPh)
             //   + " s" + std::to_string(sigma) + " Leb" + std::to_string(lebedevStencil.nOrder) + " t" + std::to_string(simTime),
+        .name = "Curved Beam Dynamic " + metric.Name() + " " + std::to_string(stencil.nTh) + "." + std::to_string(stencil.nPh)
+              + " s" + std::to_string(sigma) + " Leb" + std::to_string(lebedevStencil.nOrder) + " t" + std::to_string(simTime),
         .simTime = (double)simTime,
         .writeFrequency = 20,
         .updateSphericalHarmonics = false,

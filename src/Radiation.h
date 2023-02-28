@@ -102,7 +102,6 @@ public:
 	RealBuffer coefficientsCx;
 	RealBuffer coefficientsCy;
 	RealBuffer coefficientsCz;
-	RealBuffer evaluationCoefficients;
 
 	double normThreshhold = 1e-4;
 

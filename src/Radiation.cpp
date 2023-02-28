@@ -71,7 +71,15 @@ grid(metric.grid), metric(metric), stencil(stencil), lebedevStencil(lebedevStenc
 	coefficientsCx.resize(grid.nxyz * lebedevStencil.nCoefficients);
 	coefficientsCy.resize(grid.nxyz * lebedevStencil.nCoefficients);
 	coefficientsCz.resize(grid.nxyz * lebedevStencil.nCoefficients);
-	evaluationCoefficients.resize(lebedevStencil.nCoefficients);
+	
+	// Initialize all stencil directions to north pole:
+	PARALLEL_FOR(1)
+	for(int ijk=0; ijk<grid.nxyz; ijk++)
+	{
+		nx[ijk] = 0;
+		ny[ijk] = 0;
+		nz[ijk] = 1;
+	}
 }
 
 
@@ -214,6 +222,7 @@ void Radiation::LoadInitialData()
 					nx[ijk] = n[1];
 					ny[ijk] = n[2];
 					nz[ijk] = n[3];
+					Marker();
 				}
 				else
 				{// Kent intensity distribution: https://en.wikipedia.org/wiki/Kent_distribution
@@ -222,18 +231,12 @@ void Radiation::LoadInitialData()
 				 	Tensor3 n = Tensor3(0,0,1);
 					Tensor3 p = stencil.Cxyz(d0,d1);
 					I[index] = initialE[ijk] * exp(stencil.sigma * Tensor3::Dot(n, p));
-
+					
 					// Orientation towards given initial n:
 					nx[ijk] = initialNx[ijk];
 					ny[ijk] = initialNy[ijk];
 					nz[ijk] = initialNz[ijk];
 				}
-			}
-			else
-			{
-				nx[ijk] = 0;
-				ny[ijk] = 0;
-				nz[ijk] = 1;
 			}
 		}
 	}
@@ -510,6 +513,7 @@ void Radiation::SetIntensitiesNorthSouth()
 Coord Radiation::GetTempCoordinate(int i, int j, int k, double theta, double phi)
 {
 	Coord xyzTemp;
+	double evaluationCoefficients[lebedevStencil.nCoefficients];
 
 	for(int f=0; f<lebedevStencil.nCoefficients; f++)
 		evaluationCoefficients[f] = coefficientsX[f + i*lebedevStencil.nCoefficients + j*lebedevStencil.nCoefficients*grid.nx + k*lebedevStencil.nCoefficients*grid.nxy];
@@ -526,6 +530,7 @@ Coord Radiation::GetTempCoordinate(int i, int j, int k, double theta, double phi
 Tensor3 Radiation::GetTemp3Velocity(int i, int j, int k, double theta, double phi)
 {
 	Tensor3 vTempIF;
+	double evaluationCoefficients[lebedevStencil.nCoefficients];
 
 	for(int f=0; f<lebedevStencil.nCoefficients; f++)
 		evaluationCoefficients[f] = coefficientsCx[f + i*lebedevStencil.nCoefficients + j*lebedevStencil.nCoefficients*grid.nx + k*lebedevStencil.nCoefficients*grid.nxy];
@@ -541,6 +546,7 @@ Tensor3 Radiation::GetTemp3Velocity(int i, int j, int k, double theta, double ph
 }
 double Radiation::GetFrequencyShift(int i, int j, int k, double theta, double phi)
 {
+	double evaluationCoefficients[lebedevStencil.nCoefficients];
 	for(int f=0; f<lebedevStencil.nCoefficients; f++)
 		evaluationCoefficients[f] = coefficientsS[f + i*lebedevStencil.nCoefficients + j*lebedevStencil.nCoefficients*grid.nx + k*lebedevStencil.nCoefficients*grid.nxy];
 	return SphericalHarmonics::GetValue(theta,phi,evaluationCoefficients,lebedevStencil.nCoefficients);

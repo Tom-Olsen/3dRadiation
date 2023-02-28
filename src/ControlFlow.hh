@@ -10,8 +10,8 @@ class LF {};
 
 
 // Data structure macro:
-#define ijkd0d1
-// #define d0d1ijk
+#define ijkd0d1 // faster
+// #define d0d1ijk  // slower
 
 
 
