@@ -468,12 +468,13 @@ void Test_StreamFlatStaticSphereWave()
     grid.SetCFL(0.5);
     Minkowski metric(grid, 1.0, 0.0);
     Stencil stencil(6,10);
-    stencil.sigma = 1.0;
+    stencil.sigma = 1.0;    // not used in this test due to direction: nx=ny=nz=0
     LebedevStencil3 lebedevStencil;
     Camera camera;
     Radiation radiation(metric, stencil, lebedevStencil, camera, StreamingType::FlatStatic);
 
     // Initial Data:
+    PARALLEL_FOR(3)
     for(int k=0; k<grid.nz; k++)
     for(int j=0; j<grid.ny; j++)
     for(int i=0; i<grid.nx; i++)
@@ -485,6 +486,13 @@ void Test_StreamFlatStaticSphereWave()
         {
             radiation.isInitialGridPoint[ijk] = true;
             radiation.initialE[ijk] = 1;
+            radiation.initialNx[ijk] = 0;
+            radiation.initialNy[ijk] = 0;
+            radiation.initialNz[ijk] = 0;
+            radiation.initialKappa0[ijk] = 0;
+            radiation.initialKappa1[ijk] = 0;
+            radiation.initialKappaA[ijk] = 0;
+            radiation.initialEta[ijk] = 0;
         }
     }
 
@@ -633,7 +641,7 @@ void Test_StreamFlatDynamicSphereWave()
     grid.SetCFL(0.5);
     Minkowski metric(grid, 1.0, 0.0);
     Stencil stencil(6,10);
-    stencil.sigma = 1.0;
+    stencil.sigma = 1.0;    // not used in this test due to direction: nx=ny=nz=0
     LebedevStencil3 lebedevStencil;
     Camera camera;
     Radiation radiation(metric, stencil, lebedevStencil, camera, StreamingType::FlatDynamic);
@@ -650,6 +658,13 @@ void Test_StreamFlatDynamicSphereWave()
         {
             radiation.isInitialGridPoint[ijk] = true;
             radiation.initialE[ijk] = 1;
+            radiation.initialNx[ijk] = 0;
+            radiation.initialNy[ijk] = 0;
+            radiation.initialNz[ijk] = 0;
+            radiation.initialKappa0[ijk] = 0;
+            radiation.initialKappa1[ijk] = 0;
+            radiation.initialKappaA[ijk] = 0;
+            radiation.initialEta[ijk] = 0;
         }
     }
 
@@ -708,6 +723,10 @@ void Test_StreamFlatBeam()
             radiation.initialNx[ijk] = 0;
             radiation.initialNy[ijk] = 0;
             radiation.initialNz[ijk] = 1;
+            radiation.initialKappa0[ijk] = 0;
+            radiation.initialKappa1[ijk] = 0;
+            radiation.initialKappaA[ijk] = 0;
+            radiation.initialEta[ijk] = 0;
         }
     }
 
@@ -756,8 +775,8 @@ void Test_StreamCurvedBeam(int nx, int ny, int nz, int nTh, int nPh, int sigma, 
     Camera camera(resX, resY, width, height, position, eulerAngles);
 
     // Radiation:
-    // Radiation radiation(metric, stencil, lebedevStencil, camera, StreamingType::CurvedStatic);
-    Radiation radiation(metric, stencil, lebedevStencil, camera, StreamingType::CurvedDynamic);
+    Radiation radiation(metric, stencil, lebedevStencil, camera, StreamingType::CurvedStatic);
+    // Radiation radiation(metric, stencil, lebedevStencil, camera, StreamingType::CurvedDynamic);
 
     // Initial Data:
     for(int k=0; k<grid.nz; k++)
@@ -792,9 +811,10 @@ void Test_StreamCurvedBeam(int nx, int ny, int nz, int nTh, int nPh, int sigma, 
     // Start simulation:
     Config config =
     {
-        // .name = "Test_StreamCurvedStaticBeam",
-        .name = "Curved Beam Dynamic " + metric.Name() + " " + std::to_string(stencil.nTh) + "." + std::to_string(stencil.nPh)
+        .name = "Curved Beam Static " + metric.Name() + " " + std::to_string(stencil.nTh) + "." + std::to_string(stencil.nPh)
               + " s" + std::to_string(sigma) + " Leb" + std::to_string(lebedevStencil.nOrder) + " t" + std::to_string(simTime),
+        // .name = "Curved Beam Dynamic " + metric.Name() + " " + std::to_string(stencil.nTh) + "." + std::to_string(stencil.nPh)
+            //   + " s" + std::to_string(sigma) + " Leb" + std::to_string(lebedevStencil.nOrder) + " t" + std::to_string(simTime),
         .simTime = (double)simTime,
         .writeFrequency = 20,
         .updateSphericalHarmonics = false,
@@ -1082,7 +1102,7 @@ int main()
     // Test_StreamFlatBeam();
 
   //Test_StreamCurvedBeam( nx, ny, nz, nTh,nPh, sigma,simTime);
-    // Test_StreamCurvedBeam( 25, 45, 50,  20, 40,    15,10);
+    Test_StreamCurvedBeam( 25, 45, 50,  20, 40,    15,10);
     // Test_StreamCurvedBeam( 50, 90,100,  20, 40,    15,10);
 
     // Test_Emission( 25, 45, 50,  20, 40,    15,10);
@@ -1090,5 +1110,5 @@ int main()
     // Test_Camera();
     // BlackHoleCsv();
   //Test_ThinDisk( nx, ny, nz, nTh,nPh, sigma,simTime);
-    Test_ThinDisk(106,136, 76,  20, 40,     1,200);
+    // Test_ThinDisk(106,136, 76,  20, 40,     1,200);
 }

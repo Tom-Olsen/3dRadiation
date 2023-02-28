@@ -102,12 +102,20 @@ public:
 	RealBuffer coefficientsCx;
 	RealBuffer coefficientsCy;
 	RealBuffer coefficientsCz;
+	RealBuffer evaluationCoefficients;
 
 	double normThreshhold = 1e-4;
 
 	Radiation() = delete;
 	Radiation(Metric& metric, Stencil& stencil, LebedevStencil& lebedevStencil, Camera& camera, StreamingType streamingType);
 	~Radiation();
+
+	int Index(int ijk, int d);
+	int Index(int ijk, int d0, int d1);
+	int Index(int i, int j, int k, int d);
+	int Index(int i, int j, int k, int d0, int d1);
+
+	void TestIndex();
 
 	Coord GetTempCoordinate(int i, int j, int k, double theta, double phi);
 	Tensor3 GetTemp3Velocity(int i, int j, int k, double theta, double phi);
@@ -122,12 +130,13 @@ public:
 	void ComputeMomentsIF();
 	void ComputeMomentsLF();
 	void SetIntensitiesNorthSouth();
-	void StreamCurvedStatic();
-	void StreamCurvedDynamic();
+	void GetNewRotation();
 	void StreamFlatStatic();
 	void StreamFlatDynamic();
 	void StreamGeodesicStatic();
 	void StreamGeodesicDynamic();
+	void StreamCurvedStatic();
+	void StreamCurvedDynamic();
 	void Collide();
 	void TakePicture();
 

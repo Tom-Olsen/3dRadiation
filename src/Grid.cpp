@@ -49,8 +49,6 @@ double Grid::GetCFL()
 // Grid Access Tools:
 int Grid::Index(int i, int j, int k)
 { return i + j * nx + k * nxy; }
-int Grid::Index(int i, int j, int k, int d)
-{ return i + j * nx + k * nxy + d * nxyz; }
 Coord Grid::xyz(int i, int j, int k)
 { return Coord(startx + i*dx, starty + j*dy, startz + k*dz); }
 Coord Grid::xyz(double i, double j, double k)

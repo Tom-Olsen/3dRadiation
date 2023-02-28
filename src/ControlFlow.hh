@@ -9,6 +9,12 @@ class LF {};
 
 
 
+// Data structure macro:
+#define ijkd0d1
+// #define d0d1ijk
+
+
+
 // omp parallel for macro:
 #define STRINGIFY(X) #X
 #define PRAGMA(X) _Pragma(STRINGIFY(X))

@@ -2,18 +2,18 @@
 
 std::string StreamingName(int n)
 {
-	std::string s("unknown");
+	std::string name("unknown");
 	switch (n)
 	{
-   		case 0: { s = "FlatStatic";	     } break;
-   		case 1: { s = "FlatDynamic";	 } break;
-   		case 2: { s = "GeodesicStatic";	 } break;
-   		case 3: { s = "GeodesicDynamic"; } break;
-   		case 4: { s = "CurvedStatic";    } break;
-   		case 5: { s = "CurvedDynamic";	 } break;
+   		case 0: { name = "FlatStatic";	     } break;
+   		case 1: { name = "FlatDynamic";	 } break;
+   		case 2: { name = "GeodesicStatic";	 } break;
+   		case 3: { name = "GeodesicDynamic"; } break;
+   		case 4: { name = "CurvedStatic";    } break;
+   		case 5: { name = "CurvedDynamic";	 } break;
 		default: { exit_on_error("Invalid StreamingType"); }
 	}
-	return s;
+	return name;
 }
 
 
@@ -71,15 +71,7 @@ grid(metric.grid), metric(metric), stencil(stencil), lebedevStencil(lebedevStenc
 	coefficientsCx.resize(grid.nxyz * lebedevStencil.nCoefficients);
 	coefficientsCy.resize(grid.nxyz * lebedevStencil.nCoefficients);
 	coefficientsCz.resize(grid.nxyz * lebedevStencil.nCoefficients);
-
-	// Initialize all stencil directions to north pole:
-	PARALLEL_FOR(1)
-	for(int ijk=0; ijk<grid.nxyz; ijk++)
-	{
-		nx[ijk] = 0;
-		ny[ijk] = 0;
-		nz[ijk] = 1;
-	}
+	evaluationCoefficients.resize(lebedevStencil.nCoefficients);
 }
 
 
@@ -87,6 +79,56 @@ grid(metric.grid), metric(metric), stencil(stencil), lebedevStencil(lebedevStenc
 Radiation::~Radiation()
 {
 	delete[] isInitialGridPoint;
+}
+
+
+
+int Radiation::Index(int ijk, int d)
+{
+	#ifdef ijkd0d1
+		return ijk + d * grid.nxyz;
+	#endif
+	
+	#ifdef d0d1ijk
+		return d + ijk * stencil.nThPh;
+	#endif
+}
+int Radiation::Index(int ijk, int d0, int d1)
+{
+	int d = stencil.Index(d0,d1);
+
+	#ifdef ijkd0d1
+		return ijk + d * grid.nxyz;
+	#endif
+	
+	#ifdef d0d1ijk
+		return d + ijk * stencil.nThPh;
+	#endif
+}
+int Radiation::Index(int i, int j, int k, int d)
+{
+	int ijk = grid.Index(i,j,k);
+
+	#ifdef ijkd0d1
+		return ijk + d * grid.nxyz;
+	#endif
+	
+	#ifdef d0d1ijk
+		return d + ijk * stencil.nThPh;
+	#endif
+}
+int Radiation::Index(int i, int j, int k, int d0, int d1)
+{
+	int ijk = grid.Index(i,j,k);
+	int d = stencil.Index(d0,d1);
+
+	#ifdef ijkd0d1
+		return ijk + d * grid.nxyz;
+	#endif
+	
+	#ifdef d0d1ijk
+		return d + ijk * stencil.nThPh;
+	#endif
 }
 
 
@@ -120,27 +162,50 @@ void Radiation::NormalizeInitialDirections()
 void Radiation::LoadInitialData()
 {
 	PROFILE_FUNCTION();
-	bool isDynamicStreaming = (streamingType == StreamingType::FlatDynamic || streamingType == StreamingType::GeodesicDynamic || streamingType == StreamingType::CurvedDynamic);
 	srand((unsigned) time(NULL));
 
 	PARALLEL_FOR(1)
 	for(int ijk=0; ijk<grid.nxyz; ijk++)
 	{
-		kappa0[ijk] = initialKappa0[ijk];
-		kappa1[ijk] = initialKappa1[ijk];
-		kappaA[ijk] = initialKappaA[ijk];
-		eta[ijk] = initialEta[ijk];
-		
 		if(isInitialGridPoint[ijk])
 		{
-			nx[ijk] = initialNx[ijk];
-			ny[ijk] = initialNy[ijk];
-			nz[ijk] = initialNz[ijk];
+			kappa0[ijk] = initialKappa0[ijk];
+			kappa1[ijk] = initialKappa1[ijk];
+			kappaA[ijk] = initialKappaA[ijk];
+			eta[ijk] = initialEta[ijk];
+		}
+	}
 
-			if(nx[ijk] == 0 && ny[ijk] == 0 && nz[ijk] == 0)
-			{// Uniform intensity distribution:
-				if (isDynamicStreaming)
-				{// Random direction for uniformity:
+	if(streamingType == StreamingType::FlatDynamic || streamingType == StreamingType::GeodesicDynamic || streamingType == StreamingType::CurvedDynamic)
+	{
+		#ifdef ijkd0d1
+		PARALLEL_FOR(5)
+		for(int d1=0; d1<stencil.nPh; d1++)
+		for(int d0=0; d0<stencil.nTh; d0++)
+		for(int k=0; k<grid.nz; k++)
+		for(int j=0; j<grid.ny; j++)
+		for(int i=0; i<grid.nx; i++)
+		#endif
+		#ifdef d0d1ijk
+		PARALLEL_FOR(5)
+		for(int k=0; k<grid.nz; k++)
+		for(int j=0; j<grid.ny; j++)
+		for(int i=0; i<grid.nx; i++)
+		for(int d1=0; d1<stencil.nPh; d1++)
+		for(int d0=0; d0<stencil.nTh; d0++)
+		#endif
+		{
+			int ijk = grid.Index(i,j,k);
+			int d = stencil.Index(d0,d1);
+			int index = Index(ijk,d);
+
+			if (isInitialGridPoint[ijk])
+			{
+				if (initialNx[ijk] == 0 && initialNy[ijk] == 0 && initialNz[ijk] == 0)
+				{// Uniform distribution:
+					I[index] = initialE[ijk];
+
+					// Random orientation:
 					Tensor3 n(0.0);
 					n[1] = 2.0 * ((float) rand() / RAND_MAX) - 1.0;
 					n[2] = 2.0 * ((float) rand() / RAND_MAX) - 1.0;
@@ -151,30 +216,68 @@ void Radiation::LoadInitialData()
 					nz[ijk] = n[3];
 				}
 				else
-				{// (0,0,0) is an invalid direction. Default direction is towards z:
-					nx[ijk] = 0;	
-					ny[ijk] = 0;	
-					nz[ijk] = 1;	
+				{// Kent intensity distribution: https://en.wikipedia.org/wiki/Kent_distribution
+					// In case of dynamic streaming the stencil is rotated such that its north pole points towards n, whenever cxyz is used.
+					// This means that the Kent distribution needs to point north for the dynamic streaming case.
+				 	Tensor3 n = Tensor3(0,0,1);
+					Tensor3 p = stencil.Cxyz(d0,d1);
+					I[index] = initialE[ijk] * exp(stencil.sigma * Tensor3::Dot(n, p));
+
+					// Orientation towards given initial n:
+					nx[ijk] = initialNx[ijk];
+					ny[ijk] = initialNy[ijk];
+					nz[ijk] = initialNz[ijk];
 				}
-				for(int d=0; d<stencil.nThPh; d++)
-					I[ijk + d*grid.nxyz] = initialE[ijk];
 			}
 			else
-			{// Kent intensity distribution:
-			 // https://en.wikipedia.org/wiki/Kent_distribution
-			 	Tensor3 n = (isDynamicStreaming) ? Tensor3(0,0,1) : Tensor3(nx[ijk],ny[ijk],nz[ijk]);
-				
-				// In case of dynamic streaming the stencil is rotated such that its north pole points towards n, whenever cxyz is used.
-				// This means that the Kent distribution needs to point north for the dynamic streaming case.
+			{
+				nx[ijk] = 0;
+				ny[ijk] = 0;
+				nz[ijk] = 1;
+			}
+		}
+	}
+	else
+	{
+		#ifdef ijkd0d1
+		PARALLEL_FOR(5)
+		for(int d1=0; d1<stencil.nPh; d1++)
+		for(int d0=0; d0<stencil.nTh; d0++)
+		for(int k=0; k<grid.nz; k++)
+		for(int j=0; j<grid.ny; j++)
+		for(int i=0; i<grid.nx; i++)
+		#endif
+		#ifdef d0d1ijk
+		PARALLEL_FOR(5)
+		for(int k=0; k<grid.nz; k++)
+		for(int j=0; j<grid.ny; j++)
+		for(int i=0; i<grid.nx; i++)
+		for(int d1=0; d1<stencil.nPh; d1++)
+		for(int d0=0; d0<stencil.nTh; d0++)
+		#endif
+		{
+			int ijk = grid.Index(i,j,k);
+			int d = stencil.Index(d0,d1);
+			int index = Index(ijk,d);
 
-				for(int d1=0; d1<stencil.nPh; d1++)
-				for(int d0=0; d0<stencil.nTh; d0++)
-				{
-					int d = stencil.Index(d0,d1);
+			if(isInitialGridPoint[ijk])
+			{
+				if(initialNx[ijk] == 0 && initialNy[ijk] == 0 && initialNz[ijk] == 0)
+				{// Uniform distribution:
+					I[index] = initialE[ijk];
+				}
+				else
+				{// Kent intensity distribution: https://en.wikipedia.org/wiki/Kent_distribution
+				 	Tensor3 n = Tensor3(initialNx[ijk],initialNy[ijk],initialNz[ijk]);
 					Tensor3 p = stencil.Cxyz(d0,d1);
-					I[ijk + d*grid.nxyz] = initialE[ijk] * exp(stencil.sigma * Tensor3::Dot(n, p)) / (4.0 * M_PI * sinh(stencil.sigma));
+					I[index] = initialE[ijk] * exp(stencil.sigma * Tensor3::Dot(n, p));
 				}
 			}
+	
+			// Orientation of static stencils is always north:
+			nx[ijk] = 0;
+			ny[ijk] = 0;
+			nz[ijk] = 1;
 		}
 	}
 }
@@ -262,7 +365,6 @@ void Radiation::UpdateSphericalHarmonicsCoefficients()
 void Radiation::ComputeMomentsIF()
 {
 	PROFILE_FUNCTION();
-	constexpr double fourPiInv = 1.0 / (4.0 * M_PI);
 	
 	PARALLEL_FOR(1)
 	for(int ijk=0; ijk<grid.nxyz; ijk++)
@@ -277,25 +379,50 @@ void Radiation::ComputeMomentsIF()
 		Pyy[ijk] = 0.0;
 		Pyz[ijk] = 0.0;
 		Pzz[ijk] = 0.0;
+	}
+	
+	#ifdef ijkd0d1
+	PARALLEL_FOR(5)
+	for(int d1=0; d1<stencil.nPh; d1++)
+	for(int d0=0; d0<stencil.nTh; d0++)
+	for(int k=0; k<grid.nz; k++)
+	for(int j=0; j<grid.ny; j++)
+	for(int i=0; i<grid.nx; i++)
+	#endif
+	#ifdef d0d1ijk
+	PARALLEL_FOR(5)
+	for(int k=0; k<grid.nz; k++)
+	for(int j=0; j<grid.ny; j++)
+	for(int i=0; i<grid.nx; i++)
+	for(int d1=0; d1<stencil.nPh; d1++)
+	for(int d0=0; d0<stencil.nTh; d0++)
+	#endif
+	{
+		int ijk = grid.Index(i,j,k);
+		int d = stencil.Index(d0,d1);
+		int index = Index(ijk,d);
+
 		glm::vec3 from(0,0,1);
 		glm::vec3 to(nx[ijk],ny[ijk],nz[ijk]);
 		glm::quat q(from,to);
-		for(int d1=0; d1<stencil.nPh; d1++)
-		for(int d0=0; d0<stencil.nTh; d0++)
-		{
-			Tensor3 cxyz = q * stencil.Cxyz(d0,d1);
-			int d = stencil.Index(d0,d1);
-			E[ijk]   += stencil.W(d0,d1) * I[ijk + d*grid.nxyz];
-			Fx[ijk]  += stencil.W(d0,d1) * I[ijk + d*grid.nxyz] * cxyz[1];
-			Fy[ijk]  += stencil.W(d0,d1) * I[ijk + d*grid.nxyz] * cxyz[2];
-			Fz[ijk]  += stencil.W(d0,d1) * I[ijk + d*grid.nxyz] * cxyz[3];
-			Pxx[ijk] += stencil.W(d0,d1) * I[ijk + d*grid.nxyz] * cxyz[1] * cxyz[1];
-			Pxy[ijk] += stencil.W(d0,d1) * I[ijk + d*grid.nxyz] * cxyz[1] * cxyz[2];
-			Pxz[ijk] += stencil.W(d0,d1) * I[ijk + d*grid.nxyz] * cxyz[1] * cxyz[3];
-			Pyy[ijk] += stencil.W(d0,d1) * I[ijk + d*grid.nxyz] * cxyz[2] * cxyz[2];
-			Pyz[ijk] += stencil.W(d0,d1) * I[ijk + d*grid.nxyz] * cxyz[2] * cxyz[3];
-			Pzz[ijk] += stencil.W(d0,d1) * I[ijk + d*grid.nxyz] * cxyz[3] * cxyz[3];
-		}
+		Tensor3 cxyz = q * stencil.Cxyz(d0,d1);
+
+		E[ijk]   += stencil.W(d0,d1) * I[index];
+		Fx[ijk]  += stencil.W(d0,d1) * I[index] * cxyz[1];
+		Fy[ijk]  += stencil.W(d0,d1) * I[index] * cxyz[2];
+		Fz[ijk]  += stencil.W(d0,d1) * I[index] * cxyz[3];
+		Pxx[ijk] += stencil.W(d0,d1) * I[index] * cxyz[1] * cxyz[1];
+		Pxy[ijk] += stencil.W(d0,d1) * I[index] * cxyz[1] * cxyz[2];
+		Pxz[ijk] += stencil.W(d0,d1) * I[index] * cxyz[1] * cxyz[3];
+		Pyy[ijk] += stencil.W(d0,d1) * I[index] * cxyz[2] * cxyz[2];
+		Pyz[ijk] += stencil.W(d0,d1) * I[index] * cxyz[2] * cxyz[3];
+		Pzz[ijk] += stencil.W(d0,d1) * I[index] * cxyz[3] * cxyz[3];
+	}
+
+	constexpr double fourPiInv = 1.0 / (4.0 * M_PI);
+	PARALLEL_FOR(1)
+	for(int ijk=0; ijk<grid.nxyz; ijk++)
+	{
         E[ijk]   *= fourPiInv;
         Fx[ijk]  *= fourPiInv;
         Fy[ijk]  *= fourPiInv;
@@ -339,74 +466,84 @@ void Radiation::ComputeMomentsLF()
 void Radiation::SetIntensitiesNorthSouth()
 {
 	PROFILE_FUNCTION();
+
 	int d0north = 0;
 	int d0south = stencil.nTh - 1;
+	
+	PARALLEL_FOR(1)
+	for(int ijk=0; ijk<grid.nxyz; ijk++)
+		Inorth[ijk] = Isouth[ijk] = 0;
+
+	#ifdef ijkd0d1
+	PARALLEL_FOR(4)
+	for(int d1=0; d1<stencil.nPh; d1++)
+	for(int k=0; k<grid.nz; k++)
+	for(int j=0; j<grid.ny; j++)
+	for(int i=0; i<grid.nx; i++)
+	#endif
+	#ifdef d0d1ijk
+	PARALLEL_FOR(4)
+	for(int k=0; k<grid.nz; k++)
+	for(int j=0; j<grid.ny; j++)
+	for(int i=0; i<grid.nx; i++)
+	for(int d1=0; d1<stencil.nPh; d1++)
+	#endif
+	{
+		int ijk = grid.Index(i,j,k);
+		int dnorth = stencil.Index(d0north,d1);
+		int dsouth = stencil.Index(d0south,d1);
+
+		Inorth[ijk] += I[Index(ijk,dnorth)];
+		Isouth[ijk] += I[Index(ijk,dsouth)];
+	}
+
 	PARALLEL_FOR(1)
 	for(int ijk=0; ijk<grid.nxyz; ijk++)
 	{
-		Inorth[ijk] = Isouth[ijk] = 0;
-		for(int d1=0; d1<stencil.nPh; d1++)
-		{
-			Inorth[ijk] += I[ijk + stencil.Index(d0north,d1) * grid.nxyz];
-			Isouth[ijk] += I[ijk + stencil.Index(d0south,d1) * grid.nxyz];
-		}
 		Inorth[ijk] /= stencil.nPh;
 		Isouth[ijk] /= stencil.nPh;
 	}
-	//for(int k = 0; k < metric.grid.nz; k++)
-	//{
-	//	for(int j = 0; j < metric.grid.ny; j++)
-	//	{
-	//		for(int i = 0; i < metric.grid.nx; i++)
-	//		{
-	//			int ijk = grid.Index(i,j,k);
-	//			std::cout << Format(Inorth[ijk],2) << ", ";
-	//		}
-	//		std::cout << std::endl;
-	//	}
-	//	std::cout << std::endl;
-	//	std::cout << std::endl;
-	//}
 }
 
 
 
 Coord Radiation::GetTempCoordinate(int i, int j, int k, double theta, double phi)
 {
-	std::vector<double> cx(lebedevStencil.nCoefficients);
-	std::vector<double> cy(lebedevStencil.nCoefficients);
-	std::vector<double> cz(lebedevStencil.nCoefficients);
+	Coord xyzTemp;
+
 	for(int f=0; f<lebedevStencil.nCoefficients; f++)
-	{
-		cx[f] = coefficientsX[f + i*lebedevStencil.nCoefficients + j*lebedevStencil.nCoefficients*grid.nx + k*lebedevStencil.nCoefficients*grid.nxy];
-		cy[f] = coefficientsY[f + i*lebedevStencil.nCoefficients + j*lebedevStencil.nCoefficients*grid.nx + k*lebedevStencil.nCoefficients*grid.nxy];
-		cz[f] = coefficientsZ[f + i*lebedevStencil.nCoefficients + j*lebedevStencil.nCoefficients*grid.nx + k*lebedevStencil.nCoefficients*grid.nxy];
-	}
-	return Coord(SphericalHarmonics::GetValue(theta,phi,cx,lebedevStencil.nCoefficients),
-				 SphericalHarmonics::GetValue(theta,phi,cy,lebedevStencil.nCoefficients),
-				 SphericalHarmonics::GetValue(theta,phi,cz,lebedevStencil.nCoefficients));
+		evaluationCoefficients[f] = coefficientsX[f + i*lebedevStencil.nCoefficients + j*lebedevStencil.nCoefficients*grid.nx + k*lebedevStencil.nCoefficients*grid.nxy];
+	xyzTemp[1] = SphericalHarmonics::GetValue(theta,phi,evaluationCoefficients,lebedevStencil.nCoefficients);
+	for(int f=0; f<lebedevStencil.nCoefficients; f++)
+		evaluationCoefficients[f] = coefficientsY[f + i*lebedevStencil.nCoefficients + j*lebedevStencil.nCoefficients*grid.nx + k*lebedevStencil.nCoefficients*grid.nxy];
+	xyzTemp[2] = SphericalHarmonics::GetValue(theta,phi,evaluationCoefficients,lebedevStencil.nCoefficients);
+	for(int f=0; f<lebedevStencil.nCoefficients; f++)
+		evaluationCoefficients[f] = coefficientsZ[f + i*lebedevStencil.nCoefficients + j*lebedevStencil.nCoefficients*grid.nx + k*lebedevStencil.nCoefficients*grid.nxy];
+	xyzTemp[3] = SphericalHarmonics::GetValue(theta,phi,evaluationCoefficients,lebedevStencil.nCoefficients);
+
+	return xyzTemp;
 }
 Tensor3 Radiation::GetTemp3Velocity(int i, int j, int k, double theta, double phi)
 {
-	std::vector<double> cCx(lebedevStencil.nCoefficients);
-	std::vector<double> cCy(lebedevStencil.nCoefficients);
-	std::vector<double> cCz(lebedevStencil.nCoefficients);
+	Tensor3 vTempIF;
+
 	for(int f=0; f<lebedevStencil.nCoefficients; f++)
-	{
-		cCx[f] = coefficientsCx[f + i*lebedevStencil.nCoefficients + j*lebedevStencil.nCoefficients*grid.nx + k*lebedevStencil.nCoefficients*grid.nxy];
-		cCy[f] = coefficientsCy[f + i*lebedevStencil.nCoefficients + j*lebedevStencil.nCoefficients*grid.nx + k*lebedevStencil.nCoefficients*grid.nxy];
-		cCz[f] = coefficientsCz[f + i*lebedevStencil.nCoefficients + j*lebedevStencil.nCoefficients*grid.nx + k*lebedevStencil.nCoefficients*grid.nxy];
-	}
-	return Tensor3(SphericalHarmonics::GetValue(theta,phi,cCx,lebedevStencil.nCoefficients),
-				   SphericalHarmonics::GetValue(theta,phi,cCy,lebedevStencil.nCoefficients),
-				   SphericalHarmonics::GetValue(theta,phi,cCz,lebedevStencil.nCoefficients));
+		evaluationCoefficients[f] = coefficientsCx[f + i*lebedevStencil.nCoefficients + j*lebedevStencil.nCoefficients*grid.nx + k*lebedevStencil.nCoefficients*grid.nxy];
+	vTempIF[1] = SphericalHarmonics::GetValue(theta,phi,evaluationCoefficients,lebedevStencil.nCoefficients);
+	for(int f=0; f<lebedevStencil.nCoefficients; f++)
+		evaluationCoefficients[f] = coefficientsCy[f + i*lebedevStencil.nCoefficients + j*lebedevStencil.nCoefficients*grid.nx + k*lebedevStencil.nCoefficients*grid.nxy];
+	vTempIF[2] = SphericalHarmonics::GetValue(theta,phi,evaluationCoefficients,lebedevStencil.nCoefficients);
+	for(int f=0; f<lebedevStencil.nCoefficients; f++)
+		evaluationCoefficients[f] = coefficientsCz[f + i*lebedevStencil.nCoefficients + j*lebedevStencil.nCoefficients*grid.nx + k*lebedevStencil.nCoefficients*grid.nxy];
+	vTempIF[3] = SphericalHarmonics::GetValue(theta,phi,evaluationCoefficients,lebedevStencil.nCoefficients);
+
+	return vTempIF;
 }
 double Radiation::GetFrequencyShift(int i, int j, int k, double theta, double phi)
 {
-	std::vector<double> cs(lebedevStencil.nCoefficients);
 	for(int f=0; f<lebedevStencil.nCoefficients; f++)
-		cs[f] = coefficientsS[f + i*lebedevStencil.nCoefficients + j*lebedevStencil.nCoefficients*grid.nx + k*lebedevStencil.nCoefficients*grid.nxy];
-	return SphericalHarmonics::GetValue(theta,phi,cs,lebedevStencil.nCoefficients);
+		evaluationCoefficients[f] = coefficientsS[f + i*lebedevStencil.nCoefficients + j*lebedevStencil.nCoefficients*grid.nx + k*lebedevStencil.nCoefficients*grid.nxy];
+	return SphericalHarmonics::GetValue(theta,phi,evaluationCoefficients,lebedevStencil.nCoefficients);
 }
 
 
@@ -430,12 +567,12 @@ double Radiation::IntensityAt(int ijk, Tensor3 vTempIF)
     int ph1 = (ph0 + 1) % stencil.nPh;
 
 	// Get intensities at nearest directions. Use north pole for t0==-1 and south pole for t1==nTh.
-    double I00 = (th0 == -1)          ? Inorth[ijk] : I[ijk + stencil.Index(th0,ph0) * grid.nxyz];
-    double I01 = (th0 == -1)          ? Inorth[ijk] : I[ijk + stencil.Index(th0,ph1) * grid.nxyz];
-    double I10 = (th1 == stencil.nTh) ? Isouth[ijk] : I[ijk + stencil.Index(th1,ph0) * grid.nxyz];
-    double I11 = (th1 == stencil.nTh) ? Isouth[ijk] : I[ijk + stencil.Index(th1,ph1) * grid.nxyz];
+    double I00 = (th0 == -1)          ? Inorth[ijk] : I[Index(ijk,th0,ph0)];
+    double I01 = (th0 == -1)          ? Inorth[ijk] : I[Index(ijk,th0,ph1)];
+    double I10 = (th1 == stencil.nTh) ? Isouth[ijk] : I[Index(ijk,th1,ph0)];
+    double I11 = (th1 == stencil.nTh) ? Isouth[ijk] : I[Index(ijk,th1,ph1)];
 
-	// Fractional part of sphere grid index. Near poles it must be streched:
+	// Fractional part of sphere grid index. Near poles it must be stretched:
 	// North: from [0.5, 1.0] to [0.0, 1.0]
 	// South: from [0.0, 0.5] to [0.0, 1.0]
 	double tfrac = th - floor(th);
@@ -471,19 +608,48 @@ Tensor3 Radiation::AverageF(int i, int j, int k)
 
 
 
+void Radiation::GetNewRotation()
+{
+	PROFILE_FUNCTION();
+	PARALLEL_FOR(3)
+	for(int k=2; k<grid.nz-2; k++)
+	for(int j=2; j<grid.ny-2; j++)
+	for(int i=2; i<grid.nx-2; i++)
+	{
+		int ijk = grid.Index(i,j,k);
+		Tensor3 averageF = AverageF(i,j,k);
+		Tensor3 n = (averageF.EuklNorm()>normThreshhold) ? averageF.EuklNormalized() : Tensor3(nx[ijk],ny[ijk],nz[ijk]);
+		nxNew[ijk] = n[1];
+		nyNew[ijk] = n[2];
+		nzNew[ijk] = n[3];
+	}
+}
+
+
+
 void Radiation::StreamFlatStatic()
 {
 	PROFILE_FUNCTION();
+	#ifdef ijkd0d1
 	PARALLEL_FOR(5)
 	for(int d1=0; d1<stencil.nPh; d1++)
 	for(int d0=0; d0<stencil.nTh; d0++)
 	for(int k=2; k<grid.nz-2; k++)
 	for(int j=2; j<grid.ny-2; j++)
 	for(int i=2; i<grid.nx-2; i++)
+	#endif
+	#ifdef d0d1ijk
+	PARALLEL_FOR(5)
+	for(int k=2; k<grid.nz-2; k++)
+	for(int j=2; j<grid.ny-2; j++)
+	for(int i=2; i<grid.nx-2; i++)
+	for(int d1=0; d1<stencil.nPh; d1++)
+	for(int d0=0; d0<stencil.nTh; d0++)
+	#endif
 	{
-		int d = stencil.Index(d0,d1);	// Index of direction d
 		int ijk = grid.Index(i,j,k);	// Index of lattice point ijk
-		int ijkd = grid.Index(i,j,k,d);	// Index of population d at lattice point ijk
+		int d = stencil.Index(d0,d1);	// Index of direction d
+		int index = Index(ijk,d);		// Index of population d at lattice point ijk
 		
 		// Flat Streaming:
 		Tensor3 vTempIF = stencil.Cxyz(d0,d1);
@@ -501,33 +667,36 @@ void Radiation::StreamFlatStatic()
 		int k0 = std::floor(kTemp);	int k1 = k0 + 1;
 
 		// Interpolate intensity from neighbouring 8 lattice points to temporary point:
-		Inew[ijkd]
+		Inew[index]
 		= TrilinearInterpolation(iTemp-i0, jTemp-j0, kTemp-k0,
-		 I[grid.Index(i0,j0,k0,d)], I[grid.Index(i0,j0,k1,d)], I[grid.Index(i0,j1,k0,d)], I[grid.Index(i0,j1,k1,d)],
-		 I[grid.Index(i1,j0,k0,d)], I[grid.Index(i1,j0,k1,d)], I[grid.Index(i1,j1,k0,d)], I[grid.Index(i1,j1,k1,d)]);
+		 I[Index(i0,j0,k0,d)], I[Index(i0,j0,k1,d)], I[Index(i0,j1,k0,d)], I[Index(i0,j1,k1,d)],
+		 I[Index(i1,j0,k0,d)], I[Index(i1,j0,k1,d)], I[Index(i1,j1,k0,d)], I[Index(i1,j1,k1,d)]);
 	}
 	std::swap(I,Inew);
 }
 void Radiation::StreamFlatDynamic()
 {
 	PROFILE_FUNCTION();
+	#ifdef ijkd0d1
 	PARALLEL_FOR(5)
 	for(int d1=0; d1<stencil.nPh; d1++)
 	for(int d0=0; d0<stencil.nTh; d0++)
 	for(int k=2; k<grid.nz-2; k++)
 	for(int j=2; j<grid.ny-2; j++)
 	for(int i=2; i<grid.nx-2; i++)
+	#endif
+	#ifdef d0d1ijk
+	PARALLEL_FOR(5)
+	for(int k=2; k<grid.nz-2; k++)
+	for(int j=2; j<grid.ny-2; j++)
+	for(int i=2; i<grid.nx-2; i++)
+	for(int d1=0; d1<stencil.nPh; d1++)
+	for(int d0=0; d0<stencil.nTh; d0++)
+	#endif
 	{
-		int d = stencil.Index(d0,d1);	// Index of direction d
 		int ijk = grid.Index(i,j,k);	// Index of lattice point ijk
-		int ijkd = grid.Index(i,j,k,d);	// Index of population d at lattice point ijk
-		
-		// Find new stencil direction:
-		Tensor3 averageF = AverageF(i,j,k);
-		Tensor3 n = (averageF.EuklNorm()>normThreshhold) ? averageF.EuklNormalized() : Tensor3(nx[ijk],ny[ijk],nz[ijk]);
-		nxNew[ijk] = n[1];
-		nyNew[ijk] = n[2];
-		nzNew[ijk] = n[3];
+		int d = stencil.Index(d0,d1);	// Index of direction d
+		int index = Index(ijk,d);		// Index of population d at lattice point ijk
 
 		// Flat Streaming:
 		glm::vec3 from(0,0,1);
@@ -548,7 +717,7 @@ void Radiation::StreamFlatDynamic()
 		int k0 = std::floor(kTemp);	int k1 = k0 + 1;
 
 		// Interpolate intensity from neighbouring 8 lattice points to temporary point:
-		Inew[ijkd]
+		Inew[index]
 		= TrilinearInterpolation(iTemp-i0, jTemp-j0, kTemp-k0,
 		 IntensityAt(grid.Index(i0,j0,k0), vTempIF), IntensityAt(grid.Index(i0,j0,k1), vTempIF), IntensityAt(grid.Index(i0,j1,k0), vTempIF), IntensityAt(grid.Index(i0,j1,k1), vTempIF),
 		 IntensityAt(grid.Index(i1,j0,k0), vTempIF), IntensityAt(grid.Index(i1,j0,k1), vTempIF), IntensityAt(grid.Index(i1,j1,k0), vTempIF), IntensityAt(grid.Index(i1,j1,k1), vTempIF));
@@ -564,135 +733,10 @@ void Radiation::StreamFlatDynamic()
 void Radiation::StreamGeodesicStatic()
 {
 	exit_on_error("StreamGeodesicDynamic not supported yet.");
-	//PROFILE_FUNCTION();
-	//PARALLEL_FOR
-	//for(int d=0; d<nDir; d++)
-	//for(int j=2; j<grid.n2-2; j++)
-	//for(int i=2; i<grid.n1-2; i++)
-	//{
-	//	int ijk = grid.Index(i,j,k);		// Index of lattice point ijk
-	//	int ijd = grid.Index(i,j,d);	// Index of population d at lattice point ijk
-	//
-	//	// Skip LPs which are inside BH:
-	//	if(metric.InsideBH(i,j))
-	//	{
-	//		Inew[ijd] = 0;
-	//		continue;
-	//	}
-	//
-	//	// Geodesic Streaming:
-	//	double s = 1;
-	//	double alpha = metric.GetAlpha(ijk);
-	//	Coordinate2<Coord> xTemp = grid.x12Coord(i,j);
-    //    Tensor2<xy,IF> cxy = stencil.Cxy(d);
-    //    Tensor2<Coord,IF> c = cxy.template Transform<Coord>(grid.xyCoord(i,j));
-    //    Tensor3<Coord,IF> uIF(alpha, c[1]*alpha, c[2]*alpha);
-    //    Tensor2<Coord,LF> vTempLF = Vec2ObservedByEulObs<Coord,IF,LF>(uIF,xTemp,metric);
-	//	if(!metric.InsideBH(xTemp))
-    //		s /= RK45_GeodesicEquation<-1>(grid.dt,xTemp,vTempLF,metric);
-	//	Tensor2<Coord,IF> vTempIF = vTempLF.template Transform<IF>(metric.GetTetrad(xTemp));
-	//	Tensor2<xy,IF> vTempIFxy = vTempIF.template Transform<xy>(xTemp);
-	//
-	//	// Skip temporary Grid Points inside BH:
-	//	if(metric.InsideBH(xTemp))
-	//	{
-	//		Inew[ijd] = 0;
-	//		continue;
-	//	}
-	//
-	//	// Get 4 nearest Grid Points:
-	//	double iTemp = grid.i(xTemp[1]);
-	//	double jTemp = grid.j(xTemp[2]);
-	//	int i0 = std::floor(iTemp);	int i1 = i0 + 1;
-	//	int j0 = std::floor(jTemp);	int j1 = j0 + 1;
-	//
-	//	// Intensity interpolation:
-	//	double angle = vTempIFxy.Angle();
-	//	double intensityAt_i0j0 = MyPow<4>(alpha / metric.GetAlpha(grid.Index(i0,j0))) * IntensityAt(grid.Index(i0,j0),angle);
-	//	double intensityAt_i0j1 = MyPow<4>(alpha / metric.GetAlpha(grid.Index(i0,j1))) * IntensityAt(grid.Index(i0,j1),angle);
-	//	double intensityAt_i1j0 = MyPow<4>(alpha / metric.GetAlpha(grid.Index(i1,j0))) * IntensityAt(grid.Index(i1,j0),angle);
-	//	double intensityAt_i1j1 = MyPow<4>(alpha / metric.GetAlpha(grid.Index(i1,j1))) * IntensityAt(grid.Index(i1,j1),angle);
-	//
-	//	// Interpolate intensity from neighbouring 4 lattice points to temporary point:
-	//	Inew[ijd]
-	//	= (s*s*s*s) * BilinearInterpolation(iTemp-i0,jTemp-j0,
-	//	 intensityAt_i0j0,intensityAt_i0j1,
-	//	 intensityAt_i1j0,intensityAt_i1j1);
-	//}
-	//// swap old with new array:
-	//std::swap(I,Inew);
 }
 void Radiation::StreamGeodesicDynamic()
 {
 	exit_on_error("StreamGeodesicDynamic not supported yet.");
-	//PROFILE_FUNCTION();
-	//PARALLEL_FOR
-	//for(int j=2; j<grid.n2-2; j++)
-	//for(int i=2; i<grid.n1-2; i++)
-	//{
-	//	int ijk = grid.Index(i,j,k);
-	//	Tensor2<Coord,IF> averageF = AverageF(i,j);
-	//	constexpr double rotationThreshold = 1e-3;
-	//	rotationNew[ijk] = (averageF.EuklNorm()>rotationThreshold) ? averageF.Angle() : rotation[ijk];
-	//}
-	//
-	//PARALLEL_FOR
-	//for(int d=0; d<nDir; d++)
-	//for(int j=2; j<grid.n2-2; j++)
-	//for(int i=2; i<grid.n1-2; i++)
-	//{
-	//	int ijk = grid.Index(i,j,k);		// Index of lattice point ijk
-	//	int ijd = grid.Index(i,j,d);	// Index of population d at lattice point ijk
-	//
-	//	// Skip LPs which are inside BH:
-	//	if(metric.InsideBH(i,j))
-	//	{
-	//		Inew[ijd] = 0;
-	//		continue;
-	//	}
-	//
-	//	// Geodesic Streaming:
-	//	double s = 1;
-	//	double alpha = metric.GetAlpha(ijk);
-	//	Coordinate2<Coord> xTemp = grid.x12Coord(i,j);
-    //    Tensor2<xy,IF> cxy = stencil.Cxy(d,rotationNew[ijk]);
-    //    Tensor2<Coord,IF> c = cxy.template Transform<Coord>(grid.xyCoord(i,j));
-    //    Tensor3<Coord,IF> uIF(alpha, c[1]*alpha, c[2]*alpha);
-    //    Tensor2<Coord,LF> vTempLF = Vec2ObservedByEulObs<Coord,IF,LF>(uIF,xTemp,metric);
-	//	if(!metric.InsideBH(xTemp))
-    //		s /= RK45_GeodesicEquation<-1>(grid.dt,xTemp,vTempLF,metric);
-	//	Tensor2<Coord,IF> vTempIF = vTempLF.template Transform<IF>(metric.GetTetrad(xTemp));
-	//	Tensor2<xy,IF> vTempIFxy = vTempIF.template Transform<xy>(xTemp);
-	//
-	//	// Skip temporary Grid Points inside BH:
-	//	if(metric.InsideBH(xTemp))
-	//	{
-	//		Inew[ijd] = 0;
-	//		continue;
-	//	}
-	//
-	//	// Get 4 nearest Grid Points:
-	//	double iTemp = grid.i(xTemp[1]);
-	//	double jTemp = grid.j(xTemp[2]);
-	//	int i0 = std::floor(iTemp);	int i1 = i0 + 1;
-	//	int j0 = std::floor(jTemp);	int j1 = j0 + 1;
-	//
-	//	// Intensity interpolation:
-	//	double angle = vTempIFxy.Angle();
-	//	double intensityAt_i0j0 = MyPow<4>(alpha / metric.GetAlpha(grid.Index(i0,j0))) * IntensityAt(grid.Index(i0,j0),angle);
-	//	double intensityAt_i0j1 = MyPow<4>(alpha / metric.GetAlpha(grid.Index(i0,j1))) * IntensityAt(grid.Index(i0,j1),angle);
-	//	double intensityAt_i1j0 = MyPow<4>(alpha / metric.GetAlpha(grid.Index(i1,j0))) * IntensityAt(grid.Index(i1,j0),angle);
-	//	double intensityAt_i1j1 = MyPow<4>(alpha / metric.GetAlpha(grid.Index(i1,j1))) * IntensityAt(grid.Index(i1,j1),angle);
-	//
-	//	// Interpolate intensity from neighbouring 4 lattice points to temporary point:
-	//	Inew[ijd]
-	//	= (s*s*s*s) * BilinearInterpolation(iTemp-i0,jTemp-j0,
-	//	 intensityAt_i0j0,intensityAt_i0j1,
-	//	 intensityAt_i1j0,intensityAt_i1j1);
-	//}
-	//// swap old with new arrays:
-	//std::swap(I,Inew);
-	//std::swap(rotation,rotationNew);
 }
 
 
@@ -700,21 +744,31 @@ void Radiation::StreamGeodesicDynamic()
 void Radiation::StreamCurvedStatic()
 {
 	PROFILE_FUNCTION();
+	#ifdef ijkd0d1
 	PARALLEL_FOR(5)
 	for(int d1=0; d1<stencil.nPh; d1++)
 	for(int d0=0; d0<stencil.nTh; d0++)
 	for(int k=2; k<grid.nz-2; k++)
 	for(int j=2; j<grid.ny-2; j++)
 	for(int i=2; i<grid.nx-2; i++)
+	#endif
+	#ifdef d0d1ijk
+	PARALLEL_FOR(5)
+	for(int k=2; k<grid.nz-2; k++)
+	for(int j=2; j<grid.ny-2; j++)
+	for(int i=2; i<grid.nx-2; i++)
+	for(int d1=0; d1<stencil.nPh; d1++)
+	for(int d0=0; d0<stencil.nTh; d0++)
+	#endif
 	{
-		int d = stencil.Index(d0,d1);	// Index of direction d
 		int ijk = grid.Index(i,j,k);	// Index of lattice point ijk
-		int ijkd = grid.Index(i,j,k,d);	// Index of population d at lattice point ijk
+		int d = stencil.Index(d0,d1);	// Index of direction d
+		int index = Index(ijk,d);		// Index of population d at lattice point ijk
 	
 		// Skip LPs which are inside BH:
 		if(metric.InsideBH(grid.xyz(i,j,k)))
 		{
-			Inew[ijkd] = 0;
+			Inew[index] = 0;
 			continue;
 		}
 
@@ -727,7 +781,7 @@ void Radiation::StreamCurvedStatic()
 		// Skip temporary Grid Points inside BH:
 		if(metric.InsideBH(xyzTemp))
 		{
-			Inew[ijkd] = 0;
+			Inew[index] = 0;
 			continue;
 		}
 	
@@ -755,7 +809,7 @@ void Radiation::StreamCurvedStatic()
 		double intensityAt_i1j1k1 = MyPow<4>(alpha / metric.GetAlpha(grid.Index(i1,j1,k1))) * IntensityAt(grid.Index(i1,j1,k1),vTempIF);
 	
 		// Interpolate intensity from neighbouring 4 lattice points to temporary point:
-		Inew[ijkd]
+		Inew[index]
 		= MyPow<4>(s) * TrilinearInterpolation(iTemp-i0, jTemp-j0, kTemp-k0,
 		 intensityAt_i0j0k0, intensityAt_i0j0k1, intensityAt_i0j1k0, intensityAt_i0j1k1,
 		 intensityAt_i1j0k0, intensityAt_i1j0k1, intensityAt_i1j1k0, intensityAt_i1j1k1);
@@ -765,28 +819,31 @@ void Radiation::StreamCurvedStatic()
 void Radiation::StreamCurvedDynamic()
 {
 	PROFILE_FUNCTION();
+	#ifdef ijkd0d1
 	PARALLEL_FOR(5)
 	for(int d1=0; d1<stencil.nPh; d1++)
 	for(int d0=0; d0<stencil.nTh; d0++)
 	for(int k=2; k<grid.nz-2; k++)
 	for(int j=2; j<grid.ny-2; j++)
 	for(int i=2; i<grid.nx-2; i++)
+	#endif
+	#ifdef d0d1ijk
+	PARALLEL_FOR(5)
+	for(int k=2; k<grid.nz-2; k++)
+	for(int j=2; j<grid.ny-2; j++)
+	for(int i=2; i<grid.nx-2; i++)
+	for(int d1=0; d1<stencil.nPh; d1++)
+	for(int d0=0; d0<stencil.nTh; d0++)
+	#endif
 	{
-		int d = stencil.Index(d0,d1);	// Index of direction d
 		int ijk = grid.Index(i,j,k);	// Index of lattice point ijk
-		int ijkd = grid.Index(i,j,k,d);	// Index of population d at lattice point ijk
+		int d = stencil.Index(d0,d1);	// Index of direction d
+		int index = Index(ijk,d);		// Index of population d at lattice point ijk
 	
-		// Find new stencil direction:
-		Tensor3 averageF = AverageF(i,j,k);
-		Tensor3 n = (averageF.EuklNorm()>normThreshhold) ? averageF.EuklNormalized() : Tensor3(nx[ijk],ny[ijk],nz[ijk]);
-		nxNew[ijk] = n[1];
-		nyNew[ijk] = n[2];
-		nzNew[ijk] = n[3];
-
 		// Skip LPs which are inside BH:
 		if(metric.InsideBH(grid.xyz(i,j,k)))
 		{
-			Inew[ijkd] = 0;
+			Inew[index] = 0;
 			continue;
 		}
 
@@ -801,11 +858,11 @@ void Radiation::StreamCurvedDynamic()
 		double phi = cxyz.Phi();
 		double s = GetFrequencyShift(i, j, k, theta, phi);
 		Coord xyzTemp = GetTempCoordinate(i, j, k, theta, phi);
-	
+
 		// Skip temporary Grid Points inside BH:
 		if(metric.InsideBH(xyzTemp))
 		{
-			Inew[ijkd] = 0;
+			Inew[index] = 0;
 			continue;
 		}
 	
@@ -833,7 +890,7 @@ void Radiation::StreamCurvedDynamic()
 		double intensityAt_i1j1k1 = MyPow<4>(alpha / metric.GetAlpha(grid.Index(i1,j1,k1))) * IntensityAt(grid.Index(i1,j1,k1),vTempIF);
 	
 		// Interpolate intensity from neighbouring 4 lattice points to temporary point:
-		Inew[ijkd]
+		Inew[index]
 		= MyPow<4>(s) * TrilinearInterpolation(iTemp-i0, jTemp-j0, kTemp-k0,
 		 intensityAt_i0j0k0, intensityAt_i0j0k1, intensityAt_i0j1k0, intensityAt_i0j1k1,
 		 intensityAt_i1j0k0, intensityAt_i1j0k1, intensityAt_i1j1k0, intensityAt_i1j1k1);
@@ -847,19 +904,37 @@ void Radiation::StreamCurvedDynamic()
 
 
 void Radiation::Collide()
-{
+{/*
 	PROFILE_FUNCTION();
 	// TODO: Steife DGL?
 	
-	PARALLEL_FOR(3)
-	for(int k = 0; k < metric.grid.nz; k++)
-	for(int j = 0; j < metric.grid.ny; j++)
-	for(int i = 0; i < metric.grid.nx; i++)
+	PARALLEL_FOR(1)
+	for(int ijkd=0; ijkd<grid.nxyz*stencil.nThPh; ijkd++)
+		Inew[ijkd] = I[ijkd];
+
+	#ifdef ijkd0d1
+	PARALLEL_FOR(5)
+	for(int d1=0; d1<stencil.nPh; d1++)
+	for(int d0=0; d0<stencil.nTh; d0++)
+	for(int k=0; k<grid.nz; k++)
+	for(int j=0; j<grid.ny; j++)
+	for(int i=0; i<grid.nx; i++)
+	#endif
+	#ifdef d0d1ijk
+	PARALLEL_FOR(5)
+	for(int k=0; k<grid.nz; k++)
+	for(int j=0; j<grid.ny; j++)
+	for(int i=0; i<grid.nx; i++)
+	for(int d1=0; d1<stencil.nPh; d1++)
+	for(int d0=0; d0<stencil.nTh; d0++)
+	#endif
 	{
 		if(metric.InsideBH(grid.xyz(i,j,k)))
 			continue;
 
 		int ijk = grid.Index(i,j,k);
+		int d = stencil.Index(d0,d1);
+		int index = Index(ijk,d);
 
 		// Simulate stationary fluid, u^k=(0,0):
 		double alpha = metric.GetAlpha(ijk);
@@ -870,18 +945,12 @@ void Radiation::Collide()
 		Pxx_LF[ijk] * u[1] * u[1] + Pyy_LF[ijk] * u[2] * u[2] + Pzz_LF[ijk] * u[3] * u[3]
 		+ 2.0 * (Pxy_LF[ijk] * u[1] * u[2] + Pxz_LF[ijk] * u[1] * u[3] + Pyz_LF[ijk] * u[2] * u[3]);	// P^ij u_i u_j
 		double fluidE = W * W * (E_LF[ijk] - 2.0 * uDotF + uuDotP);
-		
-		for(int d1 = 0; d1 < stencil.nPh; d1++)
-		for(int d0 = 0; d0 < stencil.nTh; d0++)
-		{
-			int d = stencil.Index(d0,d1);
-			int ijd = ijk + d*metric.grid.nxyz;
-			double A = W * (1.0 - Tensor3::Dot(stencil.Cxyz(d0,d1), u));
+		double A = W * (1.0 - Tensor3::Dot(stencil.Cxyz(d0,d1), u));
 
-			double Gamma = stencil.W(d0,d1) * (eta[ijk] + kappa0[ijk]*fluidE) / (A*A*A) - A*I[ijd] * (kappaA[ijk] + kappa0[ijk]);
-			I[ijd] += alpha * metric.grid.dt * Gamma;
-		}
+		double Gamma = stencil.W(d0,d1) * (eta[ijk] + kappa0[ijk]*fluidE) / (A*A*A) - A*I[index] * (kappaA[ijk] + kappa0[ijk]);
+		Inew[index] += alpha * metric.grid.dt * Gamma;
 	}
+	std::swap(I,Inew);*/
 }
 
 
@@ -930,8 +999,36 @@ void Radiation::TakePicture()
 
 
 
+void Radiation::TestIndex()
+{
+	#ifdef ijkd0d1
+	for(int d1=0; d1<stencil.nPh; d1++)
+	for(int d0=0; d0<stencil.nTh; d0++)
+	for(int k=0; k<grid.nz; k++)
+	for(int j=0; j<grid.ny; j++)
+	for(int i=0; i<grid.nx; i++)
+	#endif
+	#ifdef d0d1ijk
+	for(int k=0; k<grid.nz; k++)
+	for(int j=0; j<grid.ny; j++)
+	for(int i=0; i<grid.nx; i++)
+	for(int d1=0; d1<stencil.nPh; d1++)
+	for(int d0=0; d0<stencil.nTh; d0++)
+	#endif
+	{
+		int ijk = grid.Index(i,j,k);
+		int d = stencil.Index(d0,d1);
+		int index = Index(ijk,d);
+		Tensor3(ijk,d,index).Print("ijk,d,index");
+	}
+	exit_on_error("Test Index complete.");
+}
+
+
+
 void Radiation::RunSimulation(Config config)
 {
+	// TestIndex();
 	// -------------------- Initialization --------------------
 	int timeSteps = ceil(config.simTime / grid.dt);
 	config.simTime = timeSteps * grid.dt;
@@ -998,12 +1095,12 @@ void Radiation::RunSimulation(Config config)
 			// Streaming:
 			switch(streamingType)
 			{
-				case(StreamingType::FlatStatic):		StreamFlatStatic();		 break;
-				case(StreamingType::FlatDynamic):		StreamFlatDynamic();	 break;
-				case(StreamingType::GeodesicStatic):	StreamGeodesicStatic();	 break;
-				case(StreamingType::GeodesicDynamic):	StreamGeodesicDynamic(); break;
-				case(StreamingType::CurvedStatic):		StreamCurvedStatic();	 break;
-				case(StreamingType::CurvedDynamic):		StreamCurvedDynamic();	 break;
+				case(StreamingType::FlatStatic):		StreamFlatStatic();		 					break;
+				case(StreamingType::FlatDynamic):		GetNewRotation(); StreamFlatDynamic();		break;
+				case(StreamingType::GeodesicStatic):	StreamGeodesicStatic();	 					break;
+				case(StreamingType::GeodesicDynamic):	GetNewRotation(); StreamGeodesicDynamic();	break;
+				case(StreamingType::CurvedStatic):		StreamCurvedStatic();	 					break;
+				case(StreamingType::CurvedDynamic):		GetNewRotation(); StreamCurvedDynamic();	break;
 			}
 
 			if(config.keepSourceNodesActive)
