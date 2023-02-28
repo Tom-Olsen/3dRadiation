@@ -95,8 +95,6 @@ public:
 	RealBuffer Inew;
 	RealBuffer Inorth;
 	RealBuffer Isouth;
-	RealBuffer InorthNew;
-	RealBuffer IsouthNew;
 	RealBuffer coefficientsS;
 	RealBuffer coefficientsX;
 	RealBuffer coefficientsY;

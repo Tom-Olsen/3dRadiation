@@ -1084,7 +1084,7 @@ int main()
     // Test_StreamFlatBeam();
 
   //Test_StreamCurvedBeam( nx, ny, nz, nTh,nPh, sigma,simTime);
-    Test_StreamCurvedBeam( 25, 45, 50,  20, 40,    15,10);
+    // Test_StreamCurvedBeam( 25, 45, 50,  20, 40,    15,10);
     // Test_StreamCurvedBeam( 50, 90,100,  20, 40,    15,10);
 
     // Test_Emission( 25, 45, 50,  20, 40,    15,10);
@@ -1093,4 +1093,18 @@ int main()
     // BlackHoleCsv();
   //Test_ThinDisk( nx, ny, nz, nTh,nPh, sigma,simTime);
     // Test_ThinDisk(106,136, 76,  20, 40,     1,200);
+
+
+    int n = 5;
+    int m = 3;
+    RealBuffer buffers[n];
+    for(int i=0; i<n; i++)
+        buffers[i].resize(m);
+
+    for(int i=0; i<n; i++)
+    for(int j=0; j<m; j++)
+        buffers[i][j] = j;
+
+    for(int i=0; i<n; i++)
+    Print(buffers[i], "buffer" + std::to_string(i));
 }

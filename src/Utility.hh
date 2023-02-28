@@ -15,13 +15,13 @@
 
 // Felix:
 template <class T>
-class AlignedAllocator
+class AlignedArrayAllocator
 {
 public:
     using value_type = T;
 
     // Constructor:
-    T * allocate(size_t size)
+    T* allocate(size_t size)
     { return static_cast<T *>(std::aligned_alloc(64,size * sizeof(T))); }
 
     // Descturctor:
@@ -34,11 +34,20 @@ public:
     { *p = 0; }
 
     // Needed for std::swap(..., ...):
-    bool operator==(const AlignedAllocator &)
+    bool operator==(const AlignedArrayAllocator &)
     { return true; }
 };
-using RealBuffer = std::vector<double,AlignedAllocator<double>>;
+using RealBuffer = std::vector<double,AlignedArrayAllocator<double>>;
 
+
+void inline Print(const RealBuffer& buffer, std::string name)
+{
+    std::cout << name << ":\n";
+    int n = buffer.size() - 1;
+    for(int i=0; i<n; i++)
+        std::cout << buffer[i] << ",";
+    std::cout << buffer[n] << "\n";
+}
 
 
 // Fast integer exponentiation.
