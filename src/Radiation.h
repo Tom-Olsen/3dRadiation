@@ -109,9 +109,16 @@ public:
 	Radiation(Metric& metric, Stencil& stencil, LebedevStencil& lebedevStencil, Camera& camera, StreamingType streamingType);
 	~Radiation();
 
-	Coord GetTempCoordinate(int i, int j, int k, double theta, double phi);
-	Tensor3 GetTemp3Velocity(int i, int j, int k, double theta, double phi);
-	double GetFrequencyShift(int i, int j, int k, double theta, double phi);
+	int Index(int ijk, int d);
+	int Index(int ijk, int d0, int d1);
+	int Index(int i, int j, int k, int d);
+	int Index(int i, int j, int k, int d0, int d1);
+
+	int HarmonicIndex(int f, int ijk);
+
+	Coord GetTempCoordinate(int ijk, double theta, double phi);
+	Tensor3 GetTemp3Velocity(int ijk, double theta, double phi);
+	double GetFrequencyShift(int ijk, double theta, double phi);
 	double IntensityAt(int ijk, Tensor3 vTempIF);
 	Tensor3 AverageF(int i, int j, int k);
 
