@@ -9,10 +9,21 @@ class LF {};
 
 
 
+// IntensityTypes:
+class Bulk {};
+class North {};
+class South {};
+
+// StaticOrDynamic:
+class Static {};
+class Dynamic {};
+
+
+
 // omp parallel for macro:
 #define STRINGIFY(X) #X
 #define PRAGMA(X) _Pragma(STRINGIFY(X))
-#define PARALLEL_FOR(N) PRAGMA(omp parallel for collapse(N) schedule(dynamic,500))
+#define PARALLEL_FOR(N) PRAGMA(omp parallel for collapse(N) schedule(dynamic,50))
 
 
 
@@ -27,5 +38,15 @@ class LF {};
 #endif
 
 
+
+// Output current function:
+// #define DEBUG_MODE 1
+#ifdef DEBUG_MODE
+    #define DEBUG_REPORT(name) std::cout << name << "\n"
+    #define DEBUG_FUNCTION() DEBUG_REPORT(__PRETTY_FUNCTION__)
+#else
+    #define DEBUG_REPORT(name)
+    #define DEBUG_FUNCTION()
+#endif
 
 #endif //__INCLUDE_GUARD_ControlFlow_hh__

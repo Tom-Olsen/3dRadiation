@@ -13,6 +13,15 @@
 
 
 
+// Exit programm with Error Message.
+inline void exit_on_error(const char* const msg="")
+{
+    fprintf(stderr, "ERROR: %s\n", msg);
+    exit(errno);
+}
+
+
+
 // Felix:
 template <class T>
 class AlignedArrayAllocator
@@ -40,23 +49,211 @@ public:
 using RealBuffer = std::vector<double,AlignedArrayAllocator<double>>;
 
 
-void inline Print(const RealBuffer& buffer, std::string name)
-{
-    std::cout << name << ":\n";
-    int n = buffer.size() - 1;
-    for(int i=0; i<n; i++)
-        std::cout << buffer[i] << ",";
-    std::cout << buffer[n] << "\n";
-}
 
-
-// Fast integer exponentiation.
+// Fast integer exponentiation:
 template<int N>
 inline double MyPow(double a)
 { return a * MyPow<N-1>(a); }
 template<>
 inline double MyPow<0>(double a)
 { return 1; }
+
+
+
+/// @brief Approximates atan(z) much faster then std libraries.
+/// @tparam Order Polynomial approximation order [0,3,5,7,9,11]. Use 0 for rational approximation.
+/// @param z bound to [-1,1].
+/// @return 
+template<int Order>
+inline double MyAtan(double z)
+{
+    // Rational approximation:
+    // maxError = 0.0048829, averageError = 0.0046227
+    if constexpr(Order == 0)
+    {
+        const double a = 1.0;
+        const double b = 0.28;
+        return z / (a + b * z * z);
+    }
+
+    // Polynomial approximations can be found in:
+    // Approximations for digital computers,
+    // https://blasingame.engr.tamu.edu/z_zCourse_Archive/P620_18C/P620_zReference/PDF_Txt_Hst_Apr_Cmp_(1955).pdf
+
+    // maxError = 0.0049493, averageError = 0.0062662
+    if constexpr(Order == 3)
+    {
+        const double a1 =  0.97239411;
+        const double a3 = -0.19194795;
+        double zz = z * z;
+        return z * (a1 + zz * a3);
+    }
+    
+    // maxError = ???, averageError = ???
+    if constexpr(Order == 5)
+    {
+        const double a1 =  0.995354;
+        const double a3 = -0.288679;
+        const double a5 =  0.079331;
+        double zz = z * z;
+        return z * (a1 + zz * (a3 + zz * a5));
+    }
+    
+    // maxError = ???, averageError = ???
+    if constexpr(Order == 7)
+    {
+        const double a1 =  0.9992150;
+        const double a3 = -0.3211819;
+        const double a5 =  0.1462766;
+        const double a7 = -0.0389929;
+        double zz = z * z;
+        return z * (a1 + zz * (a3 + zz * (a5 + zz * a7)));
+    }
+    
+    // maxError = ???, averageError = ???
+    if constexpr(Order == 9)
+    {
+        const double a1 =  0.9998660;
+        const double a3 = -0.3302995;
+        const double a5 =  0.1801410;
+        const double a7 = -0.0851330;
+        const double a9 =  0.0208351;
+        double zz = z * z;
+        return z * (a1 + zz * (a3 + zz * (a5 + zz * (a7 + zz * a9))));
+    }
+
+
+    // maxError = ???, averageError = ???
+    if constexpr(Order == 11)
+    {
+        const double a1  =  0.99997726;
+        const double a3  = -0.33262347;
+        const double a5  =  0.19354346;
+        const double a7  = -0.11643287;
+        const double a9  =  0.05265332;
+        const double a11 = -0.01172120;
+        double zz = z * z;
+        return z * (a1 + zz * (a3 + zz * (a5 + zz * (a7 + zz * (a9 + zz * a11)))));
+    }
+}
+
+
+
+/// @brief Approximates atan2(y,x) much faster then std libraries. Returns 0 for all edge cases.
+/// @param y coordinate on 2D Cartesian plane.
+/// @param x coordinate on 2D Cartesian plane.
+/// @return 
+inline double MyAtan2(double y, double x)
+{// https://www.dsprelated.com/showarticle/1052.php
+    constexpr int order = 9;
+    constexpr double pi = M_PI;
+    constexpr double pi_2 = M_PI_2;
+    if (x != 0.0)
+    {
+        if (fabsf(x) > fabsf(y))
+        {
+            const double z = y / x;
+            if (x > 0.0)
+                return MyAtan<order>(z);
+            else if (y >= 0.0)
+                return MyAtan<order>(z) + pi;
+            else
+                return MyAtan<order>(z) - pi;
+        }
+        else // Use property atan(y/x) = PI/2 - atan(x/y) if |y/x| > 1.
+        {
+            const double z = x / y;
+            if (y > 0.0)
+                return -MyAtan<order>(z) + pi_2;
+            else
+                return -MyAtan<order>(z) - pi_2;
+        }
+    }
+    else
+    {
+        if (y > 0.0)
+            return pi_2;
+        else if (y < 0.0)
+            return -pi_2;
+    }
+    return 0.0; // x,y = 0. Could return NaN instead.
+}
+
+
+
+/// @brief Approximates sin(x) much faster then std libraries.
+/// @tparam Order Polynomial approximation order [5,7,9]
+/// @param x angle in radians. Bound to [-pi/2,5pi/2].
+/// @return 
+template<int Order>
+inline double MySin(double x)
+{
+    // Polynomial approximations can be found in:
+    // Approximations for digital computers,
+    // https://blasingame.engr.tamu.edu/z_zCourse_Archive/P620_18C/P620_zReference/PDF_Txt_Hst_Apr_Cmp_(1955).pdf
+
+    constexpr double pi = M_PI;
+    constexpr double pi_2 = M_PI_2;
+    
+    if      (-pi_2 <= x && x <= pi_2) {}
+    else if ( pi_2 <= x && x <= 3.0 * pi_2)
+        x = -(x - pi);
+    else if ( 3.0 * pi_2 <= x && x <= 5.0 * pi_2)
+        x = x - 2.0 * pi;
+    else
+        exit_on_error("sin input outside domain.");
+    
+    x *= 2.0f / M_PI;
+
+    if constexpr(Order == 5)
+    {
+        const double a1 =  1.5706268;
+        const double a3 = -0.6432292;
+        const double a5 =  0.0727102;
+        double xx = x * x;
+        return x * (a1 + xx * (a3 + xx * a5));
+    }
+
+    if constexpr(Order == 7)
+    {
+        const double a1 =  1.570794852;
+        const double a3 = -0.645920978;
+        const double a5 =  0.079487663;
+        const double a7 = -0.004362476;
+        double xx = x * x;
+        return x * (a1 + xx * (a3 + xx * (a5 + xx * a7)));
+    }
+
+    if constexpr(Order == 9)
+    {
+        const double a1 =  1.57079631847;
+        const double a3 = -0.64596371106;
+        const double a5 =  0.07968967928;
+        const double a7 = -0.00467376557;
+        const double a9 =  0.00015148419;
+        double xx = x * x;
+        return x * (a1 + xx * (a3 + xx * (a5 + xx * (a7 + xx * a9))));
+    }
+}
+
+
+
+/// @brief Approximates cos(x) much faster then std libraries.
+/// @tparam Order Polynomial approximation order [5,7,9]
+/// @param x angle in radians. Bound to [-pi/2,5pi/2].
+/// @return 
+template<int Order>
+inline float MyCos(float x)
+{
+    constexpr float pi = M_PI;
+    constexpr float pi_2 = M_PI_2;
+    if (x >= pi)
+        return -MySin<Order>(x - pi_2);
+    else
+        return MySin<Order>(x + pi_2);
+}
+
+
 
 // Get sign of T
 template <typename T>
@@ -139,15 +336,6 @@ inline void PrintDouble(const double d, std::string name, bool newline=false, co
 {
     std::cout << name << " = "<< Format(d,precision) << "\n";
     if(newline) std::cout << "\n";
-}
-
-
-
-// Exit programm with Error Message.
-inline void exit_on_error(const char* const msg="")
-{
-    fprintf(stderr, "ERROR: %s\n", msg);
-    exit(errno);
 }
 
 

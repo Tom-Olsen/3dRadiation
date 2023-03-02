@@ -5,6 +5,9 @@
 double SphericalHarmonics::Y00(double x, double y, double z)
 { return 0.5 * sqrt(1.0 / M_PI); }
 
+double SphericalHarmonics::Y00(const Tensor3& xyz)
+{ return 0.5 * sqrt(1.0 / M_PI); }
+
 // l = 1:
 double SphericalHarmonics::Y1m1(double x, double y, double z)
 { return sqrt(3.0 / (4.0 * M_PI)) * y; }
@@ -121,7 +124,7 @@ double SphericalHarmonics::Y4p4(const Tensor3& xyz)
 
 
 
-std::vector<double (*)(double, double, double)> SphericalHarmonics::functions =
+std::vector<double (*)(double, double, double)> SphericalHarmonics::Harmonics =
 { &SphericalHarmonics::Y00, 
   &SphericalHarmonics::Y1m1, &SphericalHarmonics::Y10 , &SphericalHarmonics::Y1p1,
   &SphericalHarmonics::Y2m2, &SphericalHarmonics::Y2m1, &SphericalHarmonics::Y20 , &SphericalHarmonics::Y2p1, &SphericalHarmonics::Y2p2,
@@ -145,7 +148,7 @@ std::vector<double> SphericalHarmonics::GetCoefficients(const Stencil& stencil, 
         double c = data[d] * stencil.W(d0,d1);
 
         for(int i=0; i<nCoefficients; i++)
-            coefficients[i] += c * functions[i](x,y,z);
+            coefficients[i] += c * Harmonics[i](x,y,z);
     }
     return coefficients;
 }
@@ -160,7 +163,7 @@ std::vector<double> SphericalHarmonics::GetCoefficients(const LebedevStencil& st
         double c = data[d] * stencil.W(d);
 
         for(int i=0; i<nCoefficients; i++)
-            coefficients[i] += c * functions[i](x,y,z);
+            coefficients[i] += c * Harmonics[i](x,y,z);
     }
     return coefficients;
 }
@@ -176,7 +179,7 @@ void SphericalHarmonics::GetCoefficients(const Stencil& stencil, const double* d
         double c = data[d] * stencil.W(d0,d1);
 
         for(int i=0; i<nCoefficients; i++)
-            coefficients[i] += c * functions[i](x,y,z);
+            coefficients[i] += c * Harmonics[i](x,y,z);
     }
 }
 void SphericalHarmonics::GetCoefficients(const LebedevStencil& stencil, const double* data, int nCoefficients, double* coefficients)
@@ -189,30 +192,49 @@ void SphericalHarmonics::GetCoefficients(const LebedevStencil& stencil, const do
         double c = data[d] * stencil.W(d);
 
         for(int i=0; i<nCoefficients; i++)
-            coefficients[i] += c * functions[i](x,y,z);
+            coefficients[i] += c * Harmonics[i](x,y,z);
     }
+}
+
+
+
+double SphericalHarmonics::GetValue(Tensor3 direction, const std::vector<double>& coefficients, int nCoefficients)
+{
+    double result = 0;
+    for(int i=0; i<nCoefficients; i++)
+        result += coefficients[i] * Harmonics[i](direction[1], direction[2], direction[3]);
+
+    return result;
+}
+double SphericalHarmonics::GetValue(Tensor3 direction, double* coefficients, int nCoefficients)
+{
+    double result = 0;
+    for(int i=0; i<nCoefficients; i++)
+        result += coefficients[i] * Harmonics[i](direction[1], direction[2], direction[3]);
+
+    return result;
 }
 double SphericalHarmonics::GetValue(double theta, double phi, const std::vector<double>& coefficients, int nCoefficients)
 {
-    double x = std::sin(theta) * std::cos(phi);
-    double y = std::sin(theta) * std::sin(phi);
-    double z = std::cos(theta);
+    double x = MySin<9>(theta) * MyCos<9>(phi);
+    double y = MySin<9>(theta) * MySin<9>(phi);
+    double z = MyCos<9>(theta);
     
     double result = 0;
     for(int i=0; i<nCoefficients; i++)
-        result += coefficients[i] * functions[i](x,y,z);
+        result += coefficients[i] * Harmonics[i](x,y,z);
 
     return result;
 }
 double SphericalHarmonics::GetValue(double theta, double phi, double* coefficients, int nCoefficients)
 {
-    double x = std::sin(theta) * std::cos(phi);
-    double y = std::sin(theta) * std::sin(phi);
-    double z = std::cos(theta);
+    double x = MySin<9>(theta) * MyCos<9>(phi);
+    double y = MySin<9>(theta) * MySin<9>(phi);
+    double z = MyCos<9>(theta);
     
     double result = 0;
     for(int i=0; i<nCoefficients; i++)
-        result += coefficients[i] * functions[i](x,y,z);
+        result += coefficients[i] * Harmonics[i](x,y,z);
 
     return result;
 }

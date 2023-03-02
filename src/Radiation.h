@@ -21,7 +21,7 @@
 
 
 // Input system:
-enum StreamingType { FlatStatic, FlatDynamic, GeodesicStatic, GeodesicDynamic, CurvedStatic, CurvedDynamic };
+enum StreamingType { FlatStatic, FlatDynamic, CurvedStatic, CurvedDynamic };
 std::string StreamingName(int n);
 
 
@@ -116,9 +116,9 @@ public:
 
 	int HarmonicIndex(int f, int ijk);
 
-	Coord GetTempCoordinate(int ijk, double theta, double phi);
-	Tensor3 GetTemp3Velocity(int ijk, double theta, double phi);
-	double GetFrequencyShift(int ijk, double theta, double phi);
+	Coord GetTempCoordinate(int ijk, Tensor3 direction);
+	Tensor3 GetTemp3Velocity(int ijk, Tensor3 direction);
+	double GetFrequencyShift(int ijk, Tensor3 direction);
 	double IntensityAt(int ijk, Tensor3 vTempIF);
 	Tensor3 AverageF(int i, int j, int k);
 
@@ -128,13 +128,17 @@ public:
 	void UpdateSphericalHarmonicsCoefficients();
 	void ComputeMomentsIF();
 	void ComputeMomentsLF();
-	void SetIntensitiesNorthSouth();
-	void StreamCurvedStatic();
-	void StreamCurvedDynamic();
+	void GetNewRotation();
+
+	template<class IntensityType, class StaticOrDynamic>
+	void StreamFlatKernal(int i, int j, int k, int d0, int d1);
+	template<class IntensityType, class StaticOrDynamic>
+	void StreamCurvedKernal(int i, int j, int k, int d0, int d1);
+
 	void StreamFlatStatic();
 	void StreamFlatDynamic();
-	void StreamGeodesicStatic();
-	void StreamGeodesicDynamic();
+	void StreamCurvedStatic();
+	void StreamCurvedDynamic();
 	void Collide();
 	void TakePicture();
 

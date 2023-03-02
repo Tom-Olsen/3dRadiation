@@ -8,6 +8,7 @@
 #include "TensorTypes.hh"   // General relativity tensors.
 
 // This namespace holds the Spherical Harmonics Ylm
+// Note that inputs (x,y,z) or xyz must always be normalized!
 class SphericalHarmonics
 {
 public:
@@ -71,12 +72,14 @@ public:
     static double Y4p3(const Tensor3& xyz);
     static double Y4p4(const Tensor3& xyz);
 
-    static std::vector<double (*)(double, double, double)> functions;
+    static std::vector<double (*)(double, double, double)> Harmonics;
 
     static std::vector<double> GetCoefficients(const Stencil& stencil, const double* data, int nCoefficients);
     static std::vector<double> GetCoefficients(const LebedevStencil& stencil, const double* data, int nCoefficients);
     static void GetCoefficients(const Stencil& stencil, const double* data, int nCoefficients, double* coefficients);
     static void GetCoefficients(const LebedevStencil& stencil, const double* data, int nCoefficients, double* coefficients);
+    static double GetValue(Tensor3 direction, const std::vector<double>& coefficients, int nCoefficients);
+    static double GetValue(Tensor3 direction, double* coefficients, int nCoefficients);
     static double GetValue(double theta, double phi, const std::vector<double>& coefficients, int nCoefficients);
     static double GetValue(double theta, double phi, double* coefficients, int nCoefficients);
 };

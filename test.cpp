@@ -420,11 +420,10 @@ void Test_SphericalHarmonicsExpansion()
         {
             // Get pos and vel by Spherical Harmonic Expansion:
             {
-                double theta = stencil.Theta(d0,d1);
-                double phi = stencil.Phi(d0,d1);
-                double s = radiation.GetFrequencyShift(ijk,theta,phi);
-                Coord xyz = radiation.GetTempCoordinate(ijk,theta,phi);
-                Tensor3 v = radiation.GetTemp3Velocity(ijk,theta,phi);
+                Tensor3 direction = stencil.Cxyz(d0,d1);
+                double s = radiation.GetFrequencyShift(ijk,direction);
+                Coord xyz = radiation.GetTempCoordinate(ijk,direction);
+                Tensor3 v = radiation.GetTemp3Velocity(ijk,direction);
                 if(!metric.InsideBH(xyz))
                 {
                     file0 << xyz[1] << ", " << xyz[2] << ", " << xyz[3] << ", " << s << "\n";
@@ -1063,8 +1062,62 @@ void Test_ThinDisk(int nx, int ny, int nz, int nTh, int nPh, int sigma, int simT
 }
 
 
+void Test_MyAtan2()
+{
+    int n = 5;
+    std::cout << "atan2f(y,x):" << std::endl;
+    for(int j=0; j<n; j++)
+    {
+        float y = -2.0 * j / (n-1.0) + 1.0;
+        for(int i=0; i<n; i++)
+        {
+            float x = 2.0 * i / (n-1.0) - 1.0;
+            float atan2 = atan2f(y,x);
+            std::cout << "(" << Format(x,3) << "," << Format(y,3) << "," << Format(atan2,3) << ") ";
+        }
+        std::cout << std::endl;
+    }
+    std::cout << std::endl;
+    std::cout << std::endl;
+    
+    std::cout << "MyAtan2(y,x):" << std::endl;
+    for(int j=0; j<n; j++)
+    {
+        float y = -2.0 * j / (n-1.0) + 1.0;
+        for(int i=0; i<n; i++)
+        {
+            float x = 2.0 * i / (n-1.0) - 1.0;
+            float atan2 = MyAtan2(y,x);
+            std::cout << "(" << Format(x,3) << "," << Format(y,3) << "," << Format(atan2,3) << ") ";
+        }
+        std::cout << std::endl;
+    }
+}
+void Test_MySin_MyCos()
+{
+    int n = 20;
+    for(int i=0; i<n; i++)
+    {
+        float phi = 2 * M_PI * i / (n - 1.0);
+        Tensor3(phi, sin(phi), MySin<9>(phi)).Print("(phi, sin, MySin)");
+    }
+
+    std::cout << std::endl << std::endl;
+    
+    for(int i=0; i<n; i++)
+    {
+        float phi = 2 * M_PI * i / (n - 1.0);
+        Tensor3(phi, cos(phi), MyCos<9>(phi)).Print("(phi, cos, MyCos)");
+    }
+}
+
 // Note:
 // -Schwarzschild InsideBH has been modified to 2.4.
+
+// TODO:
+// -test new kernal versions of curved beam static/dynamic
+// -test kerr metric once more
+// -test increse of nThPh with new version (north and south streaming)
 int main()
 {
     // Test_TensorTypes();
@@ -1084,7 +1137,7 @@ int main()
     // Test_StreamFlatBeam();
 
   //Test_StreamCurvedBeam( nx, ny, nz, nTh,nPh, sigma,simTime);
-    // Test_StreamCurvedBeam( 25, 45, 50,  20, 40,    15,10);
+    Test_StreamCurvedBeam( 25, 45, 50,  20, 40,    15,10);
     // Test_StreamCurvedBeam( 50, 90,100,  20, 40,    15,10);
 
     // Test_Emission( 25, 45, 50,  20, 40,    15,10);
@@ -1094,17 +1147,6 @@ int main()
   //Test_ThinDisk( nx, ny, nz, nTh,nPh, sigma,simTime);
     // Test_ThinDisk(106,136, 76,  20, 40,     1,200);
 
-
-    int n = 5;
-    int m = 3;
-    RealBuffer buffers[n];
-    for(int i=0; i<n; i++)
-        buffers[i].resize(m);
-
-    for(int i=0; i<n; i++)
-    for(int j=0; j<m; j++)
-        buffers[i][j] = j;
-
-    for(int i=0; i<n; i++)
-    Print(buffers[i], "buffer" + std::to_string(i));
+    // Test_MyAtan2()
+    // Test_MySin_MyCos();
 }

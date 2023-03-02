@@ -4,6 +4,9 @@ cmake_minimum_required(VERSION 3.16)
 # Set output path:
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/..)
 
+# Enable Debug Symbols:
+set(CMAKE_BUILD_TYPE Debug) # has had no impact on performance yet
+
 # Set cpp version:
 set(CMAKE_CXX_STANDARD 17)
 

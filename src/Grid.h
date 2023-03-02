@@ -43,7 +43,6 @@ public:
 
     // Grid Access Tools:
     int Index(int i, int j, int k);
-    int Index(int i, int j, int k, int d);
     Coord xyz(int i, int j, int k);
     Coord xyz(double i, double j, double k);
     double i(double x);

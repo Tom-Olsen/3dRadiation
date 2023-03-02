@@ -36,7 +36,7 @@ struct Stencil
         w0 = 0;
         for(int d1=0; d1<nPh; d1++)
         for(int d0=0; d0<nTh; d0++)
-            w0 += sin(Theta(d0,d1));
+            w0 += MySin<9>(Theta(d0,d1));
         w0 = 4.0 * M_PI / w0;
     }
 
@@ -50,26 +50,26 @@ struct Stencil
     double Theta(double d0, double d1) const
     { return M_PI * (d0 + 0.5) / nTh; }
     double Theta(double x, double y, double z)
-    { return atan2(sqrt(x * x + y * y), z); }
+    { return MyAtan2(sqrt(x * x + y * y), z); }
 
     double Phi(double d0, double d1) const
     { return 2.0 * M_PI * (d1 + 0.5) / nPh; }
     double Phi(double x, double y, double z)
     {
-        double phi = atan2(y, x);
+        double phi = MyAtan2(y, x);
         return (phi < 0) ? phi + 2 * M_PI : phi;
     }
 
     double W(int d0, int d1) const
-    { return w0 * sin(Theta(d0,d1)); }
+    { return w0 * MySin<9>(Theta(d0,d1)); }
 
     // Velocity vector.
     double Cx(double d0, double d1) const
-    { return sin(Theta(d0,d1)) * cos(Phi(d0,d1)); }
+    { return MySin<9>(Theta(d0,d1)) * MyCos<9>(Phi(d0,d1)); }
     double Cy(double d0, double d1) const
-    { return sin(Theta(d0,d1)) * sin(Phi(d0,d1)); }
+    { return MySin<9>(Theta(d0,d1)) * MySin<9>(Phi(d0,d1)); }
     double Cz(double d0, double d1) const
-    { return cos(Theta(d0,d1)); }
+    { return MyCos<9>(Theta(d0,d1)); }
 
     Tensor3 Cxyz(double d0, double d1) const
     { return Tensor3(Cx(d0,d1), Cy(d0,d1), Cz(d0,d1)); }
@@ -109,12 +109,12 @@ protected:
 
 public:
     double Theta(double x, double y, double z)
-    { return atan2(sqrt(x * x + y * y), z); }
+    { return MyAtan2(sqrt(x * x + y * y), z); }
     double Theta(int d)
     { return Theta(Cx(d), Cy(d), Cz(d)); }
     double Phi(double x, double y, double z)
     {
-        double phi = atan2(y, x);
+        double phi = MyAtan2(y, x);
         return (phi < 0) ? phi + 2 * M_PI : phi;
     }
     double Phi(int d)
