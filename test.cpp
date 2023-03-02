@@ -1133,11 +1133,11 @@ int main()
     // Test_StreamFlatStaticSphereWave();
     // Test_QuaternionRotation();
     // Test_IntensityAt();
-    // Test_StreamFlatDynamicSphereWave();
+    Test_StreamFlatDynamicSphereWave();
     // Test_StreamFlatBeam();
 
   //Test_StreamCurvedBeam( nx, ny, nz, nTh,nPh, sigma,simTime);
-    Test_StreamCurvedBeam( 25, 45, 50,  20, 40,    15,10);
+    // Test_StreamCurvedBeam( 25, 45, 50,  20, 40,    15,10);
     // Test_StreamCurvedBeam( 50, 90,100,  20, 40,    15,10);
 
     // Test_Emission( 25, 45, 50,  20, 40,    15,10);
