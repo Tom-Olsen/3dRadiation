@@ -28,12 +28,8 @@ grid(metric.grid), metric(metric), stencil(stencil), lebedevStencil(lebedevStenc
 	initialKappa1.resize(grid.nxyz);
 	initialKappaA.resize(grid.nxyz);
 	initialEta.resize(grid.nxyz);
-	nx.resize(grid.nxyz);
-	ny.resize(grid.nxyz);
-	nz.resize(grid.nxyz);
-	nxNew.resize(grid.nxyz);
-	nyNew.resize(grid.nxyz);
-	nzNew.resize(grid.nxyz);
+	qOld.resize(grid.nxyz);
+	qNew.resize(grid.nxyz);
 	E.resize(grid.nxyz);
 	Fx.resize(grid.nxyz);
 	Fy.resize(grid.nxyz);
@@ -70,18 +66,14 @@ grid(metric.grid), metric(metric), stencil(stencil), lebedevStencil(lebedevStenc
 	coefficientsCy.resize(grid.nxyz * lebedevStencil.nCoefficients);
 	coefficientsCz.resize(grid.nxyz * lebedevStencil.nCoefficients);
 
-	// Initialize all stencil directions to north pole:
+	// Initialize all Quaternions to identity:
 	PARALLEL_FOR(1)
 	for(int ijk=0; ijk<grid.nxyz; ijk++)
 	{
-		nx[ijk] = 0;
-		ny[ijk] = 0;
-		nz[ijk] = 1;
+		qOld[ijk] = glm::quat(1,0,0,0);
+		qNew[ijk] = glm::quat(1,0,0,0);
 	}
 }
-
-
-
 Radiation::~Radiation()
 {
 	delete[] isInitialGridPoint;
@@ -110,13 +102,9 @@ int Radiation::Index(int i, int j, int k, int d0, int d1)
 	int d = stencil.Index(d0,d1);
 	return ijk + d * grid.nxyz;
 }
-
 int Radiation::HarmonicIndex(int f, int ijk)
 {
-	// faster:
 	return f + ijk * lebedevStencil.nCoefficients;
-	// slower:
-	// return f * grid.nxyz + ijk;
 }
 
 
@@ -165,11 +153,7 @@ void Radiation::LoadInitialData()
 		
 		if(isInitialGridPoint[ijk])
 		{
-			nx[ijk] = initialNx[ijk];
-			ny[ijk] = initialNy[ijk];
-			nz[ijk] = initialNz[ijk];
-
-			if(nx[ijk] == 0 && ny[ijk] == 0 && nz[ijk] == 0)
+			if(initialNx[ijk] == 0 && initialNy[ijk] == 0 && initialNz[ijk] == 0)
 			{// Uniform intensity distribution:
 				if (isDynamicStreaming)
 				{// Random direction for uniformity:
@@ -178,16 +162,14 @@ void Radiation::LoadInitialData()
 					n[2] = 2.0 * ((float) rand() / RAND_MAX) - 1.0;
 					n[3] = 2.0 * ((float) rand() / RAND_MAX) - 1.0;
 					n = n.EuklNormalized();
-					nx[ijk] = n[1];
-					ny[ijk] = n[2];
-					nz[ijk] = n[3];
+
+					glm::vec3 from(0,0,1);
+					glm::vec3 to(n[1],n[2],n[3]);
+					qOld[ijk] = glm::quat(from,to);
 				}
-				else
-				{// (0,0,0) is an invalid direction. Default direction is towards z:
-					nx[ijk] = 0;	
-					ny[ijk] = 0;	
-					nz[ijk] = 1;	
-				}
+				else	// (0,0,0) is an invalid direction. Set to identity:
+					qOld[ijk] = glm::quat(1,0,0,0);
+
 				for(int d=0; d<stencil.nThPh; d++)
 					I[Index(ijk,d)] = initialE[ijk];
 				Inorth[ijk] = initialE[ijk];
@@ -196,7 +178,10 @@ void Radiation::LoadInitialData()
 			else
 			{// Kent intensity distribution:
 			 // https://en.wikipedia.org/wiki/Kent_distribution
-			 	Tensor3 n = (isDynamicStreaming) ? Tensor3(0,0,1) : Tensor3(nx[ijk],ny[ijk],nz[ijk]);
+			 	Tensor3 n = (isDynamicStreaming) ? Tensor3(0,0,1) : Tensor3(initialNx[ijk],initialNy[ijk],initialNz[ijk]);
+				glm::vec3 from(0,0,1);
+				glm::vec3 to(n[1],n[2],n[3]);
+				qOld[ijk] = glm::quat(from,to);
 				
 				// In case of dynamic streaming the stencil is rotated such that its north pole points towards n, whenever cxyz is used.
 				// This means that the Kent distribution needs to point north for the dynamic streaming case.
@@ -316,13 +301,10 @@ void Radiation::ComputeMomentsIF()
 		Pyy[ijk] = 0.0;
 		Pyz[ijk] = 0.0;
 		Pzz[ijk] = 0.0;
-		glm::vec3 from(0,0,1);
-		glm::vec3 to(nx[ijk],ny[ijk],nz[ijk]);
-		glm::quat q(from,to);
 		for(int d1=0; d1<stencil.nPh; d1++)
 		for(int d0=0; d0<stencil.nTh; d0++)
 		{
-			Tensor3 cxyz = q * stencil.Cxyz(d0,d1);
+			Tensor3 cxyz = qOld[ijk] * stencil.Cxyz(d0,d1);
 			int d = stencil.Index(d0,d1);
 			int index = Index(ijk,d);
 			double c = stencil.W(d0,d1) * I[index];
@@ -425,10 +407,7 @@ double Radiation::GetFrequencyShift(int ijk, Tensor3 direction)
 double Radiation::IntensityAt(int ijk, Tensor3 vTempIF)
 {
 	// vTempIF is given in world space. Transform it to local space by applying inverse quaternion:
-	glm::vec3 from(0,0,1);
-	glm::vec3 to(nx[ijk],ny[ijk],nz[ijk]);
-	glm::quat q(to,from);	// from and to are swapped to get inverse rotation.
-	vTempIF = q * vTempIF;
+	vTempIF = Invert(qOld[ijk]) * vTempIF;
 
 	// Index on (old) sphere grid of point (theta,phi).
 	double th = stencil.d0(vTempIF.Theta());
@@ -482,7 +461,7 @@ Tensor3 Radiation::AverageF(int i, int j, int k)
 
 
 
-void Radiation::GetNewRotation()
+void Radiation::UpdateQuaternions()
 {
 	PROFILE_FUNCTION();
 	DEBUG_FUNCTION();
@@ -493,10 +472,16 @@ void Radiation::GetNewRotation()
 	{
 		int ijk = grid.Index(i,j,k);
 		Tensor3 averageF = AverageF(i,j,k);
-		Tensor3 n = (averageF.EuklNorm()>normThreshhold) ? averageF.EuklNormalized() : Tensor3(nx[ijk],ny[ijk],nz[ijk]);
-		nxNew[ijk] = n[1];
-		nyNew[ijk] = n[2];
-		nzNew[ijk] = n[3];
+		double norm = averageF.EuklNorm();
+
+		if (norm > normThreshhold)
+		{
+			glm::vec3 from(0,0,1);
+			glm::vec3 to(averageF[1]/norm,averageF[2]/norm,averageF[3]/norm);
+			qNew[ijk] = glm::quat(from,to);
+		}
+		else
+			qNew[ijk] = qOld[ijk];
 	}
 }
 
@@ -541,9 +526,7 @@ void Radiation::StreamFlatDynamic()
 		StreamFlatKernal<South,Dynamic>(i,j,k,0,0);
 
 	std::swap(I,Inew);
-	std::swap(nx,nxNew);
-	std::swap(ny,nyNew);
-	std::swap(nz,nzNew);
+	std::swap(qOld,qNew);
 }
 template<class IntensityType, class StaticOrDynamic>
 void Radiation::StreamFlatKernal(int i, int j, int k, int d0, int d1)
@@ -552,21 +535,16 @@ void Radiation::StreamFlatKernal(int i, int j, int k, int d0, int d1)
 	int d = stencil.Index(d0,d1);	// Index of direction d
 	int index = Index(ijk,d);		// Index of population d at lattice point ijk
 
-	// Flat Streaming:
-	glm::vec3 from(0,0,1);
-	glm::vec3 to(nxNew[ijk],nyNew[ijk],nzNew[ijk]);
-	glm::quat q(from,to);
-
 	// Get temp velocity:
 	Tensor3 vTempIF;
 	if constexpr(std::is_same<StaticOrDynamic,Dynamic>::value)
 	{
 		if constexpr(std::is_same<IntensityType,Bulk>::value)
-			vTempIF = q * stencil.Cxyz(d0,d1);
+			vTempIF = qNew[ijk] * stencil.Cxyz(d0,d1);
 		if constexpr(std::is_same<IntensityType,North>::value)
-			vTempIF = q * Tensor3(0,0,1);
+			vTempIF = qNew[ijk] * Tensor3(0,0,1);
 		if constexpr(std::is_same<IntensityType,South>::value)
-			vTempIF = q * Tensor3(0,0,-1);
+			vTempIF = qNew[ijk] * Tensor3(0,0,-1);
 	}
 	if constexpr(std::is_same<StaticOrDynamic,Static>::value)
 		vTempIF = stencil.Cxyz(d0,d1);
@@ -664,9 +642,7 @@ void Radiation::StreamCurvedDynamic()
 		StreamCurvedKernal<South,Dynamic>(i,j,k,0,0);
 
 	std::swap(I,Inew);
-	std::swap(nx,nxNew);
-	std::swap(ny,nyNew);
-	std::swap(nz,nzNew);
+	std::swap(qOld,qNew);
 }
 template<class IntensityType, class StaticOrDynamic>
 void Radiation::StreamCurvedKernal(int i, int j, int k, int d0, int d1)
@@ -686,18 +662,12 @@ void Radiation::StreamCurvedKernal(int i, int j, int k, int d0, int d1)
 	Tensor3 direction;
 	if constexpr(std::is_same<StaticOrDynamic,Dynamic>::value)
 	{
-		// Prepare stencil rotation via quaternion:
-		glm::vec3 from(0,0,1);
-		glm::vec3 to(nxNew[ijk],nyNew[ijk],nzNew[ijk]);
-		glm::quat q(from,to);
-
-		// Get temp velocity in local inertial frame:
 		if constexpr(std::is_same<IntensityType,Bulk>::value)
-			direction = q * stencil.Cxyz(d0,d1);
+			direction = qNew[ijk] * stencil.Cxyz(d0,d1);
 		if constexpr(std::is_same<IntensityType,North>::value)
-			direction = q * Tensor3(0,0,1);
+			direction = qNew[ijk] * Tensor3(0,0,1);
 		if constexpr(std::is_same<IntensityType,South>::value)
-			direction = q * Tensor3(0,0,-1);
+			direction = qNew[ijk] * Tensor3(0,0,-1);
 	}
 	if constexpr(std::is_same<StaticOrDynamic,Static>::value)
 	{
@@ -914,9 +884,9 @@ void Radiation::RunSimulation(Config config)
 			switch(streamingType)
 			{
 				case(StreamingType::FlatStatic):		StreamFlatStatic();							break;
-				case(StreamingType::FlatDynamic):		GetNewRotation(); StreamFlatDynamic();		break;
+				case(StreamingType::FlatDynamic):		UpdateQuaternions(); StreamFlatDynamic();	break;
 				case(StreamingType::CurvedStatic):		StreamCurvedStatic();	 					break;
-				case(StreamingType::CurvedDynamic):		GetNewRotation(); StreamCurvedDynamic();	break;
+				case(StreamingType::CurvedDynamic):		UpdateQuaternions(); StreamCurvedDynamic();	break;
 			}
 
 			if(config.keepSourceNodesActive)

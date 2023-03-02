@@ -5,6 +5,7 @@
 #include <fstream>					// File input/output.
 #include <vector>					// Basic vectors.
 #include <string>					// Basic strings.
+#include <glm/gtc/quaternion.hpp>   // Quaternions.
 #include "ControlFlow.hh"			// Template arguments and profiling macros.
 #include "Utility.hh"				// Utility functions.
 #include "TensorTypes.hh" 			// General relativity tensors.
@@ -61,12 +62,8 @@ public:
 	RealBuffer initialKappaA;
 	RealBuffer initialEta;
 
-	RealBuffer nx;
-	RealBuffer ny;
-	RealBuffer nz;
-	RealBuffer nxNew;
-	RealBuffer nyNew;
-	RealBuffer nzNew;
+	QuatBuffer qOld;
+	QuatBuffer qNew;
 	RealBuffer E;
 	RealBuffer Fx;
 	RealBuffer Fy;
@@ -128,7 +125,7 @@ public:
 	void UpdateSphericalHarmonicsCoefficients();
 	void ComputeMomentsIF();
 	void ComputeMomentsLF();
-	void GetNewRotation();
+	void UpdateQuaternions();
 
 	template<class IntensityType, class StaticOrDynamic>
 	void StreamFlatKernal(int i, int j, int k, int d0, int d1);

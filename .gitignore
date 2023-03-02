@@ -9,6 +9,8 @@ output/
 Benchmarking/
 output.txt
 build/*
+perf.data
+report.txt
 
 # Binaries:
 test

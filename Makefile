@@ -27,3 +27,7 @@ runTestPerf:
 	sudo env OMP_PLACES=threads env OMP_PROC_BIND=true perf record  ./test
 	sudo chmod -R 777 .
 # For some reason 'sudo perf record <programm>' changes the ownership of files.
+
+.Phony: perfReport
+perfReport:
+	sudo perf report -i perf.data > report.txt

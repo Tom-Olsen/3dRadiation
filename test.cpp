@@ -1145,7 +1145,7 @@ int main()
     // Test_Camera();
     // BlackHoleCsv();
   //Test_ThinDisk( nx, ny, nz, nTh,nPh, sigma,simTime);
-    // Test_ThinDisk(106,136, 76,  20, 40,     1,200);
+    // Test_ThinDisk(106,136, 76,  20, 40,     1,100);
 
     // Test_MyAtan2()
     // Test_MySin_MyCos();

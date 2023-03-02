@@ -1,15 +1,16 @@
 #ifndef __INCLUDE_GUARD_Utility_hh__
 #define __INCLUDE_GUARD_Utility_hh__
-#include <iomanip>              // std::setprecision(), std::put:time
-#include <iostream>             // Output to terminal.
-#include <fstream>              // File input/output.
-#include <cmath>                // signbit.
-#include <algorithm>            // clamp.
-#include <sstream>              // stringstream.
-#include <filesystem>           // Folder/file management.
-#include <vector>               // basic c++ vector
-#include "ControlFlow.hh"       // Template arguments and profiling macros.
-#include "eigen/Eigen/Dense"    // Eigen library for solving linear systems.
+#include <iomanip>                  // std::setprecision(), std::put:time
+#include <iostream>                 // Output to terminal.
+#include <fstream>                  // File input/output.
+#include <cmath>                    // signbit.
+#include <algorithm>                // clamp.
+#include <sstream>                  // stringstream.
+#include <filesystem>               // Folder/file management.
+#include <vector>                   // basic c++ vector
+#include <glm/gtc/quaternion.hpp>   // Quaternions.
+#include "ControlFlow.hh"           // Template arguments and profiling macros.
+#include "eigen/Eigen/Dense"        // Eigen library for solving linear systems.
 
 
 
@@ -40,13 +41,19 @@ public:
     // Initialize each element:
     template<class U, class... Args>
     void construct(U* p, Args&&... args)
-    { *p = 0; }
+    {
+        if constexpr(std::is_same<U,glm::quat>::value)
+            *p = glm::quat(1,0,0,0);
+        else
+            *p = 0;
+    }
 
     // Needed for std::swap(..., ...):
     bool operator==(const AlignedArrayAllocator &)
     { return true; }
 };
 using RealBuffer = std::vector<double,AlignedArrayAllocator<double>>;
+using QuatBuffer = std::vector<glm::quat,AlignedArrayAllocator<glm::quat>>;
 
 
 
@@ -251,6 +258,15 @@ inline float MyCos(float x)
         return -MySin<Order>(x - pi_2);
     else
         return MySin<Order>(x + pi_2);
+}
+
+
+
+// Invert quaternion.
+inline glm::quat Invert(const glm::quat& q)
+{
+    double a = q.w * q.w + q.x * q.x + q.y * q.y + q.z * q.z;
+    return glm::quat(q.w/a, -q.x/a, -q.y/a, -q.z/a);
 }
 
 

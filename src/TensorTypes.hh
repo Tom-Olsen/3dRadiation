@@ -3,7 +3,6 @@
 #include <iomanip>                  // std::setprecision().
 #include <iostream>                 // Output to terminal.
 #include <glm/gtc/quaternion.hpp>   // Quaternions.
-#include <glm/gtx/quaternion.hpp>   // Quaternions.
 #include "ControlFlow.hh"           // Template arguments and profiling macros.
 #include "Utility.hh"               // Utility functions.
 #include "eigen/Eigen/Dense"        // Eigen library for solving linear systems.
