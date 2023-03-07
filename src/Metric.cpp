@@ -79,6 +79,10 @@ Metric::Metric(Grid& grid_, double m_, double a_) : grid(grid_), m(m_), a(a_)
     tetrad10_ul.resize(grid.nxyz);    tetrad11_ul.resize(grid.nxyz);    tetrad12_ul.resize(grid.nxyz);    tetrad13_ul.resize(grid.nxyz);
     tetrad20_ul.resize(grid.nxyz);    tetrad21_ul.resize(grid.nxyz);    tetrad22_ul.resize(grid.nxyz);    tetrad23_ul.resize(grid.nxyz);
     tetrad30_ul.resize(grid.nxyz);    tetrad31_ul.resize(grid.nxyz);    tetrad32_ul.resize(grid.nxyz);    tetrad33_ul.resize(grid.nxyz);
+    tetrad00_lu.resize(grid.nxyz);    tetrad01_lu.resize(grid.nxyz);    tetrad02_lu.resize(grid.nxyz);    tetrad03_lu.resize(grid.nxyz);
+    tetrad10_lu.resize(grid.nxyz);    tetrad11_lu.resize(grid.nxyz);    tetrad12_lu.resize(grid.nxyz);    tetrad13_lu.resize(grid.nxyz);
+    tetrad20_lu.resize(grid.nxyz);    tetrad21_lu.resize(grid.nxyz);    tetrad22_lu.resize(grid.nxyz);    tetrad23_lu.resize(grid.nxyz);
+    tetrad30_lu.resize(grid.nxyz);    tetrad31_lu.resize(grid.nxyz);    tetrad32_lu.resize(grid.nxyz);    tetrad33_lu.resize(grid.nxyz);
 }
 
 
@@ -154,6 +158,12 @@ void Metric::InitializeBoostedTetradOnGrid()
         tetrad10_ul[ijk]=n4[1];    tetrad11_ul[ijk]=n3[1];  tetrad12_ul[ijk] = 0;       tetrad13_ul[ijk] = 0;
         tetrad20_ul[ijk]=n4[2];    tetrad21_ul[ijk]=n3[2];  tetrad22_ul[ijk] = n2[2];   tetrad23_ul[ijk] = 0;
         tetrad30_ul[ijk]=n4[3];    tetrad31_ul[ijk]=n3[3];  tetrad32_ul[ijk] = n2[3];   tetrad33_ul[ijk] = n1;
+
+        Tensor4x4 inverseTetrad = GetTetrad(ijk).Invert();
+        tetrad00_lu[ijk]=inverseTetrad[{0,0}];    tetrad01_lu[ijk] = inverseTetrad[{0,1}];  tetrad02_lu[ijk] = inverseTetrad[{0,2}];   tetrad03_lu[ijk] = inverseTetrad[{0,3}];
+        tetrad10_lu[ijk]=inverseTetrad[{1,0}];    tetrad11_lu[ijk] = inverseTetrad[{1,1}];  tetrad12_lu[ijk] = inverseTetrad[{1,2}];   tetrad13_lu[ijk] = inverseTetrad[{1,3}];
+        tetrad20_lu[ijk]=inverseTetrad[{2,0}];    tetrad21_lu[ijk] = inverseTetrad[{2,1}];  tetrad22_lu[ijk] = inverseTetrad[{2,2}];   tetrad23_lu[ijk] = inverseTetrad[{2,3}];
+        tetrad30_lu[ijk]=inverseTetrad[{3,0}];    tetrad31_lu[ijk] = inverseTetrad[{3,1}];  tetrad32_lu[ijk] = inverseTetrad[{3,2}];   tetrad33_lu[ijk] = inverseTetrad[{3,3}];
     }
 }
 
@@ -604,6 +614,7 @@ Tensor4x4x4 Metric::GetDerivMetric_luu(const Coord& xyz)
 }
 
 
+
 Tensor4x4 Metric::GetTetrad(int ijk)
 {
     return Tensor4x4
@@ -612,7 +623,6 @@ Tensor4x4 Metric::GetTetrad(int ijk)
      tetrad20_ul[ijk], tetrad21_ul[ijk], tetrad22_ul[ijk], tetrad23_ul[ijk],
      tetrad30_ul[ijk], tetrad31_ul[ijk], tetrad32_ul[ijk], tetrad33_ul[ijk]);
 }
-
 Tensor4x4 Metric::GetTetrad(const Coord& xyz)
 {
     if(grid.OutsideDomain(xyz))
@@ -627,6 +637,33 @@ Tensor4x4 Metric::GetTetrad(const Coord& xyz)
          InterpolateArrayTo_ijk(tetrad30_ul,ijk), InterpolateArrayTo_ijk(tetrad31_ul,ijk), InterpolateArrayTo_ijk(tetrad32_ul,ijk), InterpolateArrayTo_ijk(tetrad33_ul,ijk));
     }
 }
+
+
+
+Tensor4x4 Metric::GetTetradInverse(int ijk)
+{
+    return Tensor4x4
+    (tetrad00_lu[ijk], tetrad01_lu[ijk], tetrad02_lu[ijk], tetrad03_lu[ijk],
+     tetrad10_lu[ijk], tetrad11_lu[ijk], tetrad12_lu[ijk], tetrad13_lu[ijk],
+     tetrad20_lu[ijk], tetrad21_lu[ijk], tetrad22_lu[ijk], tetrad23_lu[ijk],
+     tetrad30_lu[ijk], tetrad31_lu[ijk], tetrad32_lu[ijk], tetrad33_lu[ijk]);
+}
+Tensor4x4 Metric::GetTetradInverse(const Coord& xyz)
+{
+    if(grid.OutsideDomain(xyz))
+        return Tensor4x4(1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1);
+    else
+    {
+        Coord ijk = grid.ijk(xyz);
+        return Tensor4x4
+        (InterpolateArrayTo_ijk(tetrad00_lu,ijk), InterpolateArrayTo_ijk(tetrad01_lu,ijk), InterpolateArrayTo_ijk(tetrad02_lu,ijk), InterpolateArrayTo_ijk(tetrad03_lu,ijk),
+         InterpolateArrayTo_ijk(tetrad10_lu,ijk), InterpolateArrayTo_ijk(tetrad11_lu,ijk), InterpolateArrayTo_ijk(tetrad12_lu,ijk), InterpolateArrayTo_ijk(tetrad13_lu,ijk),
+         InterpolateArrayTo_ijk(tetrad20_lu,ijk), InterpolateArrayTo_ijk(tetrad21_lu,ijk), InterpolateArrayTo_ijk(tetrad22_lu,ijk), InterpolateArrayTo_ijk(tetrad23_lu,ijk),
+         InterpolateArrayTo_ijk(tetrad30_lu,ijk), InterpolateArrayTo_ijk(tetrad31_lu,ijk), InterpolateArrayTo_ijk(tetrad32_lu,ijk), InterpolateArrayTo_ijk(tetrad33_lu,ijk));
+    }
+}
+
+
 
 // ADM getters:
 double Metric::GetAlpha(int ijk)

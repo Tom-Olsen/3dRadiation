@@ -100,7 +100,7 @@ Tensor3 Vec3ObservedByEulObs(const Tensor4& u, const Coord& xyz, Metric& metric)
         double alpha = metric.GetAlpha(xyz);
         Tensor3 beta_u = metric.GetBeta_u(xyz);
         Tensor3 v((u[1] + beta_u[1]) / alpha, (u[2] + beta_u[2]) / alpha, (u[3] + beta_u[3]) / alpha);
-        return TransformLFtoIF(v, metric.GetTetrad(xyz).Invert());
+        return TransformLFtoIF(v, metric.GetTetradInverse(xyz));
     }
     if constexpr(std::is_same<FrameIn,LF>::value && std::is_same<FrameOut,LF>::value)
     {// LF -> LF

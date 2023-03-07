@@ -93,6 +93,10 @@ public:
     RealBuffer tetrad10_ul;    RealBuffer tetrad11_ul;    RealBuffer tetrad12_ul;    RealBuffer tetrad13_ul;
     RealBuffer tetrad20_ul;    RealBuffer tetrad21_ul;    RealBuffer tetrad22_ul;    RealBuffer tetrad23_ul;
     RealBuffer tetrad30_ul;    RealBuffer tetrad31_ul;    RealBuffer tetrad32_ul;    RealBuffer tetrad33_ul;
+    RealBuffer tetrad00_lu;    RealBuffer tetrad01_lu;    RealBuffer tetrad02_lu;    RealBuffer tetrad03_lu;
+    RealBuffer tetrad10_lu;    RealBuffer tetrad11_lu;    RealBuffer tetrad12_lu;    RealBuffer tetrad13_lu;
+    RealBuffer tetrad20_lu;    RealBuffer tetrad21_lu;    RealBuffer tetrad22_lu;    RealBuffer tetrad23_lu;
+    RealBuffer tetrad30_lu;    RealBuffer tetrad31_lu;    RealBuffer tetrad32_lu;    RealBuffer tetrad33_lu;
 
 public:
     // Constructors/Destructor:
@@ -134,6 +138,8 @@ public:
     Tensor4x4x4 GetDerivMetric_luu(const Coord& xyz);
     Tensor4x4 GetTetrad(int ijk);
     Tensor4x4 GetTetrad(const Coord& xyz);
+    Tensor4x4 GetTetradInverse(int ijk);
+    Tensor4x4 GetTetradInverse(const Coord& xyz);
 
     // ADM getters:
     double GetAlpha(int ijk);

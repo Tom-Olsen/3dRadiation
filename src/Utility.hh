@@ -15,9 +15,9 @@
 
 
 // Exit programm with Error Message.
-inline void exit_on_error(const char* const msg="")
+inline void exit_on_error(std::string msg="")
 {
-    fprintf(stderr, "ERROR: %s\n", msg);
+    std::cout << "ERROR: " + msg + "\n";
     exit(errno);
 }
 
@@ -208,7 +208,7 @@ inline double MySin(double x)
     else if ( 3.0 * pi_2 <= x && x <= 5.0 * pi_2)
         x = x - 2.0 * pi;
     else
-        exit_on_error("sin input outside domain.");
+        exit_on_error("sin input outside domain: " + std::to_string(x));
     
     x *= 2.0f / M_PI;
 

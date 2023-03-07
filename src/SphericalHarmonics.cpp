@@ -167,6 +167,22 @@ std::vector<double> SphericalHarmonics::GetCoefficients(const LebedevStencil& st
     }
     return coefficients;
 }
+std::vector<double> SphericalHarmonics::GetCoefficients(const GaussLegendreStencil& stencil, const double* data, int nCoefficients)
+{
+    std::vector<double> coefficients(nCoefficients);
+    for(int d=0; d<stencil.nDir; d++)
+    {
+        double x = stencil.Cx(d);
+        double y = stencil.Cy(d);
+        double z = stencil.Cz(d);
+        double c = data[d] * stencil.W(d);
+
+        for(int i=0; i<nCoefficients; i++)
+            coefficients[i] += c * Harmonics[i](x,y,z);
+    }
+    return coefficients;
+}
+
 void SphericalHarmonics::GetCoefficients(const Stencil& stencil, const double* data, int nCoefficients, double* coefficients)
 {
     for(int d1=0; d1<stencil.nPh; d1++)
@@ -183,6 +199,19 @@ void SphericalHarmonics::GetCoefficients(const Stencil& stencil, const double* d
     }
 }
 void SphericalHarmonics::GetCoefficients(const LebedevStencil& stencil, const double* data, int nCoefficients, double* coefficients)
+{
+    for(int d=0; d<stencil.nDir; d++)
+    {
+        double x = stencil.Cx(d);
+        double y = stencil.Cy(d);
+        double z = stencil.Cz(d);
+        double c = data[d] * stencil.W(d);
+
+        for(int i=0; i<nCoefficients; i++)
+            coefficients[i] += c * Harmonics[i](x,y,z);
+    }
+}
+void SphericalHarmonics::GetCoefficients(const GaussLegendreStencil& stencil, const double* data, int nCoefficients, double* coefficients)
 {
     for(int d=0; d<stencil.nDir; d++)
     {

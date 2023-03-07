@@ -76,8 +76,10 @@ public:
 
     static std::vector<double> GetCoefficients(const Stencil& stencil, const double* data, int nCoefficients);
     static std::vector<double> GetCoefficients(const LebedevStencil& stencil, const double* data, int nCoefficients);
+    static std::vector<double> GetCoefficients(const GaussLegendreStencil& stencil, const double* data, int nCoefficients);
     static void GetCoefficients(const Stencil& stencil, const double* data, int nCoefficients, double* coefficients);
     static void GetCoefficients(const LebedevStencil& stencil, const double* data, int nCoefficients, double* coefficients);
+    static void GetCoefficients(const GaussLegendreStencil& stencil, const double* data, int nCoefficients, double* coefficients);
     static double GetValue(Tensor3 direction, const std::vector<double>& coefficients, int nCoefficients);
     static double GetValue(Tensor3 direction, double* coefficients, int nCoefficients);
     static double GetValue(double theta, double phi, const std::vector<double>& coefficients, int nCoefficients);

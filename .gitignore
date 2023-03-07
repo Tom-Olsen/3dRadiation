@@ -10,6 +10,7 @@ Benchmarking/
 output.txt
 build/*
 perf.data
+perf.data.old
 report.txt
 
 # Binaries:

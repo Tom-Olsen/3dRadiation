@@ -124,7 +124,6 @@ void Grid::WriteFrametoJson
     jsonData["resolution"] = resolution;
     
     // write json to file:
-    // TODO: check if directory exists and dont create it if not necessary
     CreateDirectory(directory);
     name = (name == "") ? "data" :  name;
 
