@@ -539,54 +539,6 @@ void Test_SphericalHarmonicsExpansion()
 
 
 
-void Test_StreamFlatStaticSphereWave()
-{
-    // Create Radiation object:
-    int nx, ny, nz;
-    nx = ny = nz = 50;
-    Coord start(-1,-1,-1);
-    Coord end(1,1,1);
-    Grid grid(nx, ny, nz, start, end);
-    grid.SetCFL(0.5);
-    Minkowski metric(grid, 1.0, 0.0);
-    Stencil stencil(7);
-    stencil.sigma = 1.0;
-    LebedevStencil3 lebedevStencil;
-    Camera camera;
-    Radiation radiation(metric, stencil, lebedevStencil, camera, StreamingType::FlatStatic);
-
-    // Initial Data:
-    for(int k=0; k<grid.nz; k++)
-    for(int j=0; j<grid.ny; j++)
-    for(int i=0; i<grid.nx; i++)
-    {
-        int ijk = grid.Index(i,j,k);
-        Coord xyz = grid.xyz(i,j,k);
-        double r = xyz.Radius();
-        if (r < 0.1)
-        {
-            radiation.isInitialGridPoint[ijk] = true;
-            radiation.initialE[ijk] = 1;
-        }
-    }
-
-    // Start simulation:
-    Config config =
-    {
-        .name = "Test_StreamFlatStaticSphereWave",
-        .simTime = 1,
-        .writeFrequency = 5,
-        .updateSphericalHarmonics = false,
-        .keepSourceNodesActive = false,
-        .writeData = true,
-        .printToTerminal = true,
-        .useCamera = false
-    };
-    radiation.RunSimulation(config);
-}
-
-
-
 void Test_QuaternionRotation()
 {
     using namespace glm;
@@ -704,7 +656,311 @@ void Test_IntensityAt()
 
 
 
-void Test_StreamFlatDynamicSphereWave()
+void Test_Camera()
+{
+    // Black Hole with Thin Disk Camera Settings:
+    {
+        int resX = 400;
+        int resY = 200;
+        int width = 28;
+        int height = 14;
+
+        Coord position(0,20,3);
+        double degreeToRadians = 2.0 * M_PI / 360.0;
+        double angleX = 100 * degreeToRadians;
+        double angleY = 0 * degreeToRadians;
+        double angleZ = 0 * degreeToRadians;
+        glm::vec3 eulerAngles(angleX,angleY,angleZ);
+
+        Camera camera(resX, resY, width, height, position, eulerAngles);
+
+        for(int ij=0; ij<camera.pixelCount; ij++)
+        {
+            int i = ij % camera.resX;
+            int j = ij / camera.resX;
+            camera.image[ij] = i / (resX-1.0) * j / (resY-1.0);
+        }
+
+        camera.WriteImagetoCsv(0, 0, "output");
+    }
+    
+    // Curved Beam Close Settings:
+    {
+        int resX = 100;
+        int resY = 50;
+        int width = 2;
+        int height = 1;
+
+        Coord position(0,3/sqrt(2.0),3/sqrt(2.0));
+        double degreeToRadians = 2.0 * M_PI / 360.0;
+        double angleX = -145 * degreeToRadians;
+        double angleY = 0 * degreeToRadians;
+        double angleZ = 0 * degreeToRadians;
+        glm::vec3 eulerAngles(angleX,angleY,angleZ);
+
+        Camera camera(resX, resY, width, height, position, eulerAngles);
+
+        for(int ij=0; ij<camera.pixelCount; ij++)
+        {
+            int i = ij % camera.resX;
+            int j = ij / camera.resX;
+            camera.image[ij] = i / (resX-1.0) * j / (resY-1.0);
+        }
+
+        camera.WriteImagetoCsv(0, 0, "output");
+    }
+}
+
+
+
+void Test_Emission(int nx, int ny, int nz, int nTh, int sigma, int simTime)
+{
+    // Grid, Metric, Stencil:
+    Coord start(-1,0,-0.1);
+    Coord end(1,3.6,3.9);
+    Grid grid(nx, ny, nz, start, end);
+    grid.SetCFL(0.5);
+    SchwarzSchild metric(grid, 1.0, 0.0);
+    // KerrSchild metric(grid, 1.0, 0.0);
+    Stencil stencil(nTh);
+    stencil.sigma = sigma;
+    LebedevStencil5 lebedevStencil;
+
+    // Camera:
+    int resX = 100;
+    int resY = 200;
+    int width = 2;
+    int height = 4;
+    Coord position(0,2,2);
+    double degreeToRadians = 2.0 * M_PI / 360.0;
+    double angleX = -135 * degreeToRadians;
+    double angleY = 0 * degreeToRadians;
+    double angleZ = 0 * degreeToRadians;
+    glm::vec3 eulerAngles(angleX,angleY,angleZ);
+    Camera camera(resX, resY, width, height, position, eulerAngles);
+
+    // Radiation:
+    // Radiation radiation(metric, stencil, lebedevStencil, camera, StreamingType::CurvedStatic);
+    Radiation radiation(metric, stencil, lebedevStencil, camera, StreamingType::CurvedDynamic);
+
+    // Initial Data:
+    for(int k=0; k<grid.nz; k++)
+    for(int j=0; j<grid.ny; j++)
+    for(int i=0; i<grid.nx; i++)
+    {
+        int ijk = grid.Index(i,j,k);
+        Coord xyz = grid.xyz(i,j,k);
+        double x = xyz[1];
+        double y = xyz[2];
+        double z = xyz[3];
+        if (-0.25 < x && x < 0.25
+          && 3.00 < y && y < 3.50
+          && z < 0.00)
+        {
+            radiation.isInitialGridPoint[ijk] = false;
+            radiation.initialE[ijk] = 0;
+            radiation.initialNx[ijk] = 0;
+            radiation.initialNy[ijk] = 0;
+            radiation.initialNz[ijk] = 0;
+            radiation.initialKappa0[ijk] = 0;
+            radiation.initialKappa1[ijk] = 0;
+            radiation.initialKappaA[ijk] = 0;
+            radiation.initialEta[ijk] = 1;
+        }
+    }
+
+    // Start simulation:
+    Config config =
+    {
+        // .name = "Test_StreamCurvedStaticBeam",
+        .name = "Emission " + metric.Name() + " " + std::to_string(stencil.nTh) + "." + std::to_string(stencil.nPh)
+              + " s" + std::to_string(sigma) + " Leb" + std::to_string(lebedevStencil.nOrder) + " t" + std::to_string(simTime),
+        .simTime = (double)simTime,
+        .writeFrequency = 20,
+        .updateSphericalHarmonics = false,
+        .keepSourceNodesActive = false,
+        .writeData = true,
+        .printToTerminal = true,
+        .useCamera = true
+    };
+    radiation.RunSimulation(config);
+}
+
+
+
+void Test_MyAtan2()
+{
+    int n = 5;
+    std::cout << "atan2f(y,x):" << std::endl;
+    for(int j=0; j<n; j++)
+    {
+        float y = -2.0 * j / (n-1.0) + 1.0;
+        for(int i=0; i<n; i++)
+        {
+            float x = 2.0 * i / (n-1.0) - 1.0;
+            float atan2 = atan2f(y,x);
+            std::cout << "(" << Format(x,3) << "," << Format(y,3) << "," << Format(atan2,3) << ") ";
+        }
+        std::cout << std::endl;
+    }
+    std::cout << std::endl;
+    std::cout << std::endl;
+    
+    std::cout << "MyAtan2(y,x):" << std::endl;
+    for(int j=0; j<n; j++)
+    {
+        float y = -2.0 * j / (n-1.0) + 1.0;
+        for(int i=0; i<n; i++)
+        {
+            float x = 2.0 * i / (n-1.0) - 1.0;
+            float atan2 = MyAtan2(y,x);
+            std::cout << "(" << Format(x,3) << "," << Format(y,3) << "," << Format(atan2,3) << ") ";
+        }
+        std::cout << std::endl;
+    }
+}
+
+
+
+void Test_MySin_MyCos()
+{
+    int n = 20;
+    for(int i=0; i<n; i++)
+    {
+        float phi = 2 * M_PI * i / (n - 1.0);
+        Tensor3(phi, sin(phi), MySin<9>(phi)).Print("(phi, sin, MySin)");
+    }
+
+    std::cout << std::endl << std::endl;
+    
+    for(int i=0; i<n; i++)
+    {
+        float phi = 2 * M_PI * i / (n - 1.0);
+        Tensor3(phi, cos(phi), MyCos<9>(phi)).Print("(phi, cos, MyCos)");
+    }
+}
+
+
+
+void Test_PhotonFourVelocity()
+{
+    // Grid, Metric, Stencil:
+    Coord start(2,2,2);
+    Coord end(3,3,3);
+    Grid grid(50, 50, 50, start, end);
+    SchwarzSchild metric(grid, 1.0, 0.0);
+    // KerrSchild metric(grid, 1.0, 0.0);
+
+    Coord x(2.2,2.3,2.4);
+    double alpha = metric.GetAlpha(x);
+    Tensor4x4 g_ll = metric.GetMetric_ll(x);
+
+    Tensor4 u(1,0,0,1);
+    u = NullNormalize(u,g_ll);
+    double uNorm2 = Norm2(u,g_ll);
+    Tensor4 h(1,0,0,alpha);
+    double hNorm2 = Norm2(h,g_ll);
+
+    u.Print("u");
+    PrintDouble(uNorm2,"|u|^2");
+    h.Print("h");
+    PrintDouble(hNorm2,"|h|^2");
+}
+
+
+
+void BlackHoleCsv()
+{
+    // Grid:
+    Coord start(-12,-12,-12);
+    Coord end(12,12,12);
+    Grid grid(100,100,100,start,end);
+
+    // Black Hole Geometry:
+    double m = 1;
+    double r = 2 * m;
+    double diskInner = 3 * r;
+    double diskOuter = 6 * r;
+
+    ofstream file0("output/BlackHole.csv");
+    ofstream file1("output/ThinDisk.csv");
+    file0 << "#x,y,z,value\n";
+    file1 << "#x,y,z,value\n";
+
+    // Add one point with different value so min != max.
+    file0 << "0,0,0,1" << "\n";
+    file1 << "0,0,0,0" << "\n";
+
+    for(int k=0; k<grid.nz; k++)
+    for(int j=0; j<grid.ny; j++)
+    for(int i=0; i<grid.nx; i++)
+    {
+        Coord xyz = grid.xyz(i,j,k);
+        double radius = xyz.Radius();
+
+        // Black Hole:
+        if(radius <= r)
+            file0 << xyz[1] << "," << xyz[2] << "," << xyz[3] << "," << 0 << "\n";
+        // Disk:
+        if(diskInner <= radius && radius <= diskOuter && abs(xyz[3]) < 0.2)
+            file1 << xyz[1] << "," << xyz[2] << "," << xyz[3] << "," << 1 << "\n";
+    }
+
+    file0.close();
+    file1.close();
+}
+
+
+
+void StreamFlatStaticSphereWave()
+{
+    // Create Radiation object:
+    int nx, ny, nz;
+    nx = ny = nz = 50;
+    Coord start(-1,-1,-1);
+    Coord end(1,1,1);
+    Grid grid(nx, ny, nz, start, end);
+    grid.SetCFL(0.5);
+    Minkowski metric(grid, 1.0, 0.0);
+    Stencil stencil(7);
+    stencil.sigma = 1.0;
+    LebedevStencil3 lebedevStencil;
+    Camera camera;
+    Radiation radiation(metric, stencil, lebedevStencil, camera, StreamingType::FlatStatic);
+
+    // Initial Data:
+    for(int k=0; k<grid.nz; k++)
+    for(int j=0; j<grid.ny; j++)
+    for(int i=0; i<grid.nx; i++)
+    {
+        int ijk = grid.Index(i,j,k);
+        Coord xyz = grid.xyz(i,j,k);
+        double r = xyz.Radius();
+        if (r < 0.1)
+        {
+            radiation.isInitialGridPoint[ijk] = true;
+            radiation.initialE[ijk] = 1;
+        }
+    }
+
+    // Start simulation:
+    Config config =
+    {
+        .name = "Test_StreamFlatStaticSphereWave",
+        .simTime = 1,
+        .writeFrequency = 5,
+        .updateSphericalHarmonics = false,
+        .keepSourceNodesActive = false,
+        .writeData = true,
+        .printToTerminal = true,
+        .useCamera = false
+    };
+    radiation.RunSimulation(config);
+}
+
+
+
+void StreamFlatDynamicSphereWave()
 {
     // Create Radiation object:
     int nx, ny, nz;
@@ -752,7 +1008,7 @@ void Test_StreamFlatDynamicSphereWave()
 
 
 
-void Test_StreamFlatBeam()
+void StreamFlatBeam()
 {
     // Create Radiation object:
     int nx, ny, nz;
@@ -811,7 +1067,7 @@ void Test_StreamFlatBeam()
 
 
 
-void Test_StreamCurvedBeam(int nx, int ny, int nz, int nTh, int sigma, int simTime)
+void StreamCurvedBeam(int nx, int ny, int nz, int nTh, int sigma, int simTime)
 {
     // Grid, Metric, Stencil:
     Coord start(-1,0,-0.1);
@@ -893,182 +1149,7 @@ void Test_StreamCurvedBeam(int nx, int ny, int nz, int nTh, int sigma, int simTi
 
 
 
-void Test_Camera()
-{
-    // Black Hole with Thin Disk Camera Settings:
-    {
-        int resX = 400;
-        int resY = 200;
-        int width = 28;
-        int height = 14;
-
-        Coord position(0,20,3);
-        double degreeToRadians = 2.0 * M_PI / 360.0;
-        double angleX = 100 * degreeToRadians;
-        double angleY = 0 * degreeToRadians;
-        double angleZ = 0 * degreeToRadians;
-        glm::vec3 eulerAngles(angleX,angleY,angleZ);
-
-        Camera camera(resX, resY, width, height, position, eulerAngles);
-
-        for(int ij=0; ij<camera.pixelCount; ij++)
-        {
-            int i = ij % camera.resX;
-            int j = ij / camera.resX;
-            camera.image[ij] = i / (resX-1.0) * j / (resY-1.0);
-        }
-
-        camera.WriteImagetoCsv(0, 0, "output");
-    }
-    
-    // Curved Beam Close Settings:
-    {
-        int resX = 100;
-        int resY = 50;
-        int width = 2;
-        int height = 1;
-
-        Coord position(0,3/sqrt(2.0),3/sqrt(2.0));
-        double degreeToRadians = 2.0 * M_PI / 360.0;
-        double angleX = -145 * degreeToRadians;
-        double angleY = 0 * degreeToRadians;
-        double angleZ = 0 * degreeToRadians;
-        glm::vec3 eulerAngles(angleX,angleY,angleZ);
-
-        Camera camera(resX, resY, width, height, position, eulerAngles);
-
-        for(int ij=0; ij<camera.pixelCount; ij++)
-        {
-            int i = ij % camera.resX;
-            int j = ij / camera.resX;
-            camera.image[ij] = i / (resX-1.0) * j / (resY-1.0);
-        }
-
-        camera.WriteImagetoCsv(0, 0, "output");
-    }
-}
-
-
-
-void BlackHoleCsv()
-{
-    // Grid:
-    Coord start(-12,-12,-12);
-    Coord end(12,12,12);
-    Grid grid(100,100,100,start,end);
-
-    // Black Hole Geometry:
-    double m = 1;
-    double r = 2 * m;
-    double diskInner = 3 * r;
-    double diskOuter = 6 * r;
-
-    ofstream file0("output/BlackHole.csv");
-    ofstream file1("output/ThinDisk.csv");
-    file0 << "#x,y,z,value\n";
-    file1 << "#x,y,z,value\n";
-
-    // Add one point with different value so min != max.
-    file0 << "0,0,0,1" << "\n";
-    file1 << "0,0,0,0" << "\n";
-
-    for(int k=0; k<grid.nz; k++)
-    for(int j=0; j<grid.ny; j++)
-    for(int i=0; i<grid.nx; i++)
-    {
-        Coord xyz = grid.xyz(i,j,k);
-        double radius = xyz.Radius();
-
-        // Black Hole:
-        if(radius <= r)
-            file0 << xyz[1] << "," << xyz[2] << "," << xyz[3] << "," << 0 << "\n";
-        // Disk:
-        if(diskInner <= radius && radius <= diskOuter && abs(xyz[3]) < 0.2)
-            file1 << xyz[1] << "," << xyz[2] << "," << xyz[3] << "," << 1 << "\n";
-    }
-
-    file0.close();
-    file1.close();
-}
-
-
-
-void Test_Emission(int nx, int ny, int nz, int nTh, int sigma, int simTime)
-{
-    // Grid, Metric, Stencil:
-    Coord start(-1,0,-0.1);
-    Coord end(1,3.6,3.9);
-    Grid grid(nx, ny, nz, start, end);
-    grid.SetCFL(0.5);
-    SchwarzSchild metric(grid, 1.0, 0.0);
-    // KerrSchild metric(grid, 1.0, 0.0);
-    Stencil stencil(nTh);
-    stencil.sigma = sigma;
-    LebedevStencil5 lebedevStencil;
-
-    // Camera:
-    int resX = 100;
-    int resY = 200;
-    int width = 2;
-    int height = 4;
-    Coord position(0,2,2);
-    double degreeToRadians = 2.0 * M_PI / 360.0;
-    double angleX = -135 * degreeToRadians;
-    double angleY = 0 * degreeToRadians;
-    double angleZ = 0 * degreeToRadians;
-    glm::vec3 eulerAngles(angleX,angleY,angleZ);
-    Camera camera(resX, resY, width, height, position, eulerAngles);
-
-    // Radiation:
-    // Radiation radiation(metric, stencil, lebedevStencil, camera, StreamingType::CurvedStatic);
-    Radiation radiation(metric, stencil, lebedevStencil, camera, StreamingType::CurvedDynamic);
-
-    // Initial Data:
-    for(int k=0; k<grid.nz; k++)
-    for(int j=0; j<grid.ny; j++)
-    for(int i=0; i<grid.nx; i++)
-    {
-        int ijk = grid.Index(i,j,k);
-        Coord xyz = grid.xyz(i,j,k);
-        double x = xyz[1];
-        double y = xyz[2];
-        double z = xyz[3];
-        if (-0.25 < x && x < 0.25
-          && 3.00 < y && y < 3.50
-          && z < 0.00)
-        {
-            radiation.isInitialGridPoint[ijk] = false;
-            radiation.initialE[ijk] = 0;
-            radiation.initialNx[ijk] = 0;
-            radiation.initialNy[ijk] = 0;
-            radiation.initialNz[ijk] = 0;
-            radiation.initialKappa0[ijk] = 0;
-            radiation.initialKappa1[ijk] = 0;
-            radiation.initialKappaA[ijk] = 0;
-            radiation.initialEta[ijk] = 1;
-        }
-    }
-
-    // Start simulation:
-    Config config =
-    {
-        // .name = "Test_StreamCurvedStaticBeam",
-        .name = "Emission " + metric.Name() + " " + std::to_string(stencil.nTh) + "." + std::to_string(stencil.nPh)
-              + " s" + std::to_string(sigma) + " Leb" + std::to_string(lebedevStencil.nOrder) + " t" + std::to_string(simTime),
-        .simTime = (double)simTime,
-        .writeFrequency = 20,
-        .updateSphericalHarmonics = false,
-        .keepSourceNodesActive = false,
-        .writeData = true,
-        .printToTerminal = true,
-        .useCamera = true
-    };
-    radiation.RunSimulation(config);
-}
-
-
-
-void Test_ThinDisk(int nx, int ny, int nz, int nTh, int sigma, int simTime)
+void ThinDisk(int nx, int ny, int nz, int nTh, int sigma, int simTime, bool diskIsHomogeneous)
 {
     // Black Hole and Thin Disk:
     double m = 1;
@@ -1124,7 +1205,14 @@ void Test_ThinDisk(int nx, int ny, int nz, int nTh, int sigma, int simTime)
             radiation.initialKappa0[ijk] = 0;
             radiation.initialKappa1[ijk] = 0;
             radiation.initialKappaA[ijk] = 0;
-            radiation.initialEta[ijk] = 1;
+            if (diskIsHomogeneous)
+                radiation.initialEta[ijk] = 1;
+            EIGEN_DEFAULT_SETTINGS_H
+            {
+                // s goes from 0 to 1.
+                double s = (diskOuter - xyz[2]) / (2.0 * diskOuter);
+                radiation.initialEta[ijk] = 0.1 + 0.9*s*s*s;
+            }
         }
     }
 
@@ -1132,7 +1220,8 @@ void Test_ThinDisk(int nx, int ny, int nz, int nTh, int sigma, int simTime)
     Config config =
     {
         .name = "Thin Disk " + metric.Name() + " " + std::to_string(stencil.nTh) + "." + std::to_string(stencil.nPh)
-              + " s" + std::to_string(sigma) + " Leb" + std::to_string(lebedevStencil.nOrder) + " t" + std::to_string(simTime),
+              + " s" + std::to_string(sigma) + " Leb" + std::to_string(lebedevStencil.nOrder) + " t" + std::to_string(simTime)
+              + ((diskIsHomogeneous) ? "homogeneous" : "inhomogeneous"),
         .simTime = (double)simTime,
         .writeFrequency = 20,
         .updateSphericalHarmonics = false,
@@ -1145,83 +1234,6 @@ void Test_ThinDisk(int nx, int ny, int nz, int nTh, int sigma, int simTime)
     radiation.RunSimulation(config);
 }
 
-
-void Test_MyAtan2()
-{
-    int n = 5;
-    std::cout << "atan2f(y,x):" << std::endl;
-    for(int j=0; j<n; j++)
-    {
-        float y = -2.0 * j / (n-1.0) + 1.0;
-        for(int i=0; i<n; i++)
-        {
-            float x = 2.0 * i / (n-1.0) - 1.0;
-            float atan2 = atan2f(y,x);
-            std::cout << "(" << Format(x,3) << "," << Format(y,3) << "," << Format(atan2,3) << ") ";
-        }
-        std::cout << std::endl;
-    }
-    std::cout << std::endl;
-    std::cout << std::endl;
-    
-    std::cout << "MyAtan2(y,x):" << std::endl;
-    for(int j=0; j<n; j++)
-    {
-        float y = -2.0 * j / (n-1.0) + 1.0;
-        for(int i=0; i<n; i++)
-        {
-            float x = 2.0 * i / (n-1.0) - 1.0;
-            float atan2 = MyAtan2(y,x);
-            std::cout << "(" << Format(x,3) << "," << Format(y,3) << "," << Format(atan2,3) << ") ";
-        }
-        std::cout << std::endl;
-    }
-}
-void Test_MySin_MyCos()
-{
-    int n = 20;
-    for(int i=0; i<n; i++)
-    {
-        float phi = 2 * M_PI * i / (n - 1.0);
-        Tensor3(phi, sin(phi), MySin<9>(phi)).Print("(phi, sin, MySin)");
-    }
-
-    std::cout << std::endl << std::endl;
-    
-    for(int i=0; i<n; i++)
-    {
-        float phi = 2 * M_PI * i / (n - 1.0);
-        Tensor3(phi, cos(phi), MyCos<9>(phi)).Print("(phi, cos, MyCos)");
-    }
-}
-
-
-
-void Test_PhotonFourVelocity()
-{
-    // Grid, Metric, Stencil:
-    Coord start(2,2,2);
-    Coord end(3,3,3);
-    Grid grid(50, 50, 50, start, end);
-    SchwarzSchild metric(grid, 1.0, 0.0);
-    // KerrSchild metric(grid, 1.0, 0.0);
-
-    Coord x(2.2,2.3,2.4);
-    double alpha = metric.GetAlpha(x);
-    Tensor4x4 g_ll = metric.GetMetric_ll(x);
-
-    Tensor4 u(1,0,0,1);
-    u = NullNormalize(u,g_ll);
-    double uNorm2 = Norm2(u,g_ll);
-    Tensor4 h(1,0,0,alpha);
-    double hNorm2 = Norm2(h,g_ll);
-
-    u.Print("u");
-    PrintDouble(uNorm2,"|u|^2");
-    h.Print("h");
-    PrintDouble(hNorm2,"|h|^2");
-}
-
 // Note:
 // -Schwarzschild InsideBH has been modified to 2.4.
 
@@ -1231,6 +1243,7 @@ void Test_PhotonFourVelocity()
 // -check out itp servers
 int main()
 {
+    // Tests:
     // Test_TensorTypes();
     // Test_Grid();
     // Test_Interpolation();
@@ -1241,28 +1254,46 @@ int main()
     // Test_Quadrature();
     // Test_QuadratureLebedev();
     // Test_QuadratureGaussLegendre();
-    // Test_MyQuadrature();
     // Test_SphericalHarmonicsExpansion();
-    // Test_StreamFlatStaticSphereWave();
     // Test_QuaternionRotation();
     // Test_IntensityAt();
-    // Test_StreamFlatDynamicSphereWave();
-    // Test_StreamFlatBeam();
     // Test_PhotonFourVelocity();
+    // Test_MyAtan2();
+    // Test_MySin_MyCos();
+    // Test_Camera();
+    // Test_Emission( 25, 45, 50,  20,    15,10);
+
+    // Visualization data:
+    // BlackHoleCsv();
+
+    // Runs:
+    // StreamFlatBeam();
+    // StreamFlatStaticSphereWave();
+    // StreamFlatDynamicSphereWave();
 
   //Test_StreamCurvedBeam( nx, ny, nz, nTh, sigma,simTime);
     // Test_StreamCurvedBeam( 26, 46, 51,  15,    15,10);
     // Test_StreamCurvedBeam( 26, 46, 51,  19,   20,10);
 
-    Test_StreamCurvedBeam( 51, 91, 101,  15,    15,10);
+    // Test_StreamCurvedBeam( 51, 91, 101,  15,    15,10);
+    // Test_StreamCurvedBeam( 51, 91, 101,  19,    20,10);
 
-    // Test_Emission( 25, 45, 50,  20,    15,10);
 
-    // Test_Camera();
-    // BlackHoleCsv();
-  //Test_ThinDisk( nx, ny, nz, nTh, sigma,simTime);
-    // Test_ThinDisk(106,136, 76,  20,     1,100);
 
-    // Test_MyAtan2()
-    // Test_MySin_MyCos();
+  //ThinDisk( nx, ny, nz, nTh, sigma,simTime, diskHomogeneous?);
+    // Low res, low dir:
+    ThinDisk(106,136, 76,  15,     1,80, true);
+    // ThinDisk(106,136, 76,  15,     1,80, false); // done
+
+    // Low res, high dir:
+    ThinDisk(106,136, 76,  19,     1,80, true);
+    // ThinDisk(106,136, 76,  19,     1,80, false); // done
+
+    // high res, low dir:
+    ThinDisk(211,271, 151,  15,     1,80, true);
+    ThinDisk(211,271, 151,  15,     1,80, false);
+
+    // high res, high dir:
+    ThinDisk(211,271, 151,  19,     1,80, true);
+    ThinDisk(211,271, 151,  19,     1,80, false);
 }

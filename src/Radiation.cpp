@@ -449,13 +449,9 @@ double Radiation::IntensityAt(int ijk, Tensor3 vTempIF)
 	// do not correspond to north and south pole.
 	double tfrac = th - floor(th);
 	double pfrac = ph - floor(ph);
-    //if (th0 == -1)					// North
-    //    tfrac = 2.0 * (tfrac - 0.5);
-    //else if (th1 == stencil.nTh)	// South
-    //    tfrac *= 2.0;
 	double d00 = stencil.d0(0);
     if (th0 == -1)					// North
-        tfrac = 1.0 / abs(d00) * (tfrac - (1.0 + stencil.d0(0)));
+        tfrac = 1.0 / abs(d00) * (tfrac - (1.0 + d00));
     else if (th1 == stencil.nTh)	// South
         tfrac /= abs(d00);
 
