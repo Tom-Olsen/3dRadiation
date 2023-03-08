@@ -79,58 +79,6 @@ bool Grid::OutsideDomain(double i, double j, double k)
 }
 
 // Write Data to file:
-void Grid::WriteFrametoJson
-(float time, const RealBuffer& r, const RealBuffer& g, const RealBuffer& b, const RealBuffer& a,
- const int frameNumber, std::string directory, std::string name)
-{
-    PROFILE_FUNCTION();
-    // main body:
-    Json::Value jsonData;
-
-    // primitive types:
-    jsonData["meshType"] = 0;
-    jsonData["time"] = time;
-
-    // arrays:
-    Json::Value colors(Json::arrayValue);
-    for(int ijk=0; ijk<nxyz; ijk++)
-    {
-        Json::Value Color;
-        Color["r"] = r[ijk];
-        Color["g"] = g[ijk];
-        Color["b"] = b[ijk];
-        Color["a"] = a[ijk];
-        colors.append(Color);
-    }
-    jsonData["colors"] = colors;
-
-    // structs:
-    Json::Value start;
-    start["x"] = startx;
-    start["y"] = starty;
-    start["z"] = startz;
-    jsonData["start"] = start;
-    
-    Json::Value end;
-    end["x"] = endx;
-    end["y"] = endy;
-    end["z"] = endz;
-    jsonData["end"] = end;
-    
-    Json::Value resolution;
-    resolution["x"] = nx;
-    resolution["y"] = ny;
-    resolution["z"] = nz;
-    jsonData["resolution"] = resolution;
-    
-    // write json to file:
-    CreateDirectory(directory);
-    name = (name == "") ? "data" :  name;
-
-    std::ofstream fileOut(directory + "/" + name + FrameNumber(frameNumber) + ".json");
-    fileOut << jsonData;
-    fileOut.close();
-}
 void Grid::WriteFrametoCsv
 (float time, const RealBuffer& r, const RealBuffer& g, const RealBuffer& b, const RealBuffer& a,
  const int frameNumber, std::string directory, std::string name)
