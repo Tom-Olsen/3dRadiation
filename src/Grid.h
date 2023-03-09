@@ -15,11 +15,11 @@ private:
     double m_cfl=1;
 public:
     // Members:
-    int nx;
-    int ny;
-    int nz;
-    int nxy;
-    int nxyz;
+    size_t nx;
+    size_t ny;
+    size_t nz;
+    size_t nxy;
+    size_t nxyz;
     double dx;
     double dy;
     double dz;
@@ -33,7 +33,7 @@ public:
 
     // Constructors:
     Grid() = delete;
-    Grid(int nx, int ny, int nz, Coord start, Coord end);
+    Grid(size_t nx, size_t ny, size_t nz, Coord start, Coord end);
     Grid(const Grid& grid);
 
     // Setters/Getters:
@@ -41,8 +41,8 @@ public:
     double GetCFL();
 
     // Grid Access Tools:
-    int Index(int i, int j, int k);
-    Coord xyz(int i, int j, int k);
+    size_t Index(size_t i, size_t j, size_t k);
+    Coord xyz(size_t i, size_t j, size_t k);
     Coord xyz(double i, double j, double k);
     double i(double x);
     double j(double y);

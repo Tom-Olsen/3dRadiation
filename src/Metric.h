@@ -122,52 +122,52 @@ public:
     virtual bool InsideBH(const Coord& xyz);
 
     // Tensor getters:
-    Tensor4 uEulObs(int ijk);
+    Tensor4 uEulObs(size_t ijk);
     Tensor4 uEulObs(const Coord& xyz);
-    Tensor4x4 GetMetric_ll(int ijk);
+    Tensor4x4 GetMetric_ll(size_t ijk);
     Tensor4x4 GetMetric_ll(const Coord& xyz);
-    Tensor4x4 GetMetric_uu(int ijk);
+    Tensor4x4 GetMetric_uu(size_t ijk);
     Tensor4x4 GetMetric_uu(const Coord& xyz);
-    Tensor4x4 GetMinkowskiMetric_ll(int ijk);
+    Tensor4x4 GetMinkowskiMetric_ll(size_t ijk);
     Tensor4x4 GetMinkowskiMetric_ll(const Coord& xyz);
-    Tensor4x4 GetMinkowskiMetric_uu(int ijk);
+    Tensor4x4 GetMinkowskiMetric_uu(size_t ijk);
     Tensor4x4 GetMinkowskiMetric_uu(const Coord& xyz);
-    Tensor4x4x4 GetDerivMetric_lll(int ijk);
+    Tensor4x4x4 GetDerivMetric_lll(size_t ijk);
     Tensor4x4x4 GetDerivMetric_lll(const Coord& xyz);
-    Tensor4x4x4 GetDerivMetric_luu(int ijk);
+    Tensor4x4x4 GetDerivMetric_luu(size_t ijk);
     Tensor4x4x4 GetDerivMetric_luu(const Coord& xyz);
-    Tensor4x4 GetTetrad(int ijk);
+    Tensor4x4 GetTetrad(size_t ijk);
     Tensor4x4 GetTetrad(const Coord& xyz);
-    Tensor4x4 GetTetradInverse(int ijk);
+    Tensor4x4 GetTetradInverse(size_t ijk);
     Tensor4x4 GetTetradInverse(const Coord& xyz);
 
     // ADM getters:
-    double GetAlpha(int ijk);
+    double GetAlpha(size_t ijk);
     double GetAlpha(const Coord& xyz);
-    Tensor3 GetBeta_u(int ijk);
+    Tensor3 GetBeta_u(size_t ijk);
     Tensor3 GetBeta_u(const Coord& xyz);
-    Tensor3 GetBeta_l(int ijk);
+    Tensor3 GetBeta_l(size_t ijk);
     Tensor3 GetBeta_l(const Coord& xyz);
-    Tensor3x3 GetGamma_ll(int ijk);
+    Tensor3x3 GetGamma_ll(size_t ijk);
     Tensor3x3 GetGamma_ll(const Coord& xyz);
-    Tensor3x3 GetGamma_uu(int ijk);
+    Tensor3x3 GetGamma_uu(size_t ijk);
     Tensor3x3 GetGamma_uu(const Coord& xyz);
-    Tensor3x3 GetMinkowskiGamma_ll(int ijk);
+    Tensor3x3 GetMinkowskiGamma_ll(size_t ijk);
     Tensor3x3 GetMinkowskiGamma_ll(const Coord& xyz);
-    Tensor3x3 GetMinkowskiGamma_uu(int ijk);
+    Tensor3x3 GetMinkowskiGamma_uu(size_t ijk);
     Tensor3x3 GetMinkowskiGamma_uu(const Coord& xyz);
 
-    Tensor3 GetDerivAlpha_l(int ijk);
+    Tensor3 GetDerivAlpha_l(size_t ijk);
     Tensor3 GetDerivAlpha_l(const Coord& xyz);
-    Tensor3x3 GetDerivBeta_lu(int ijk);
+    Tensor3x3 GetDerivBeta_lu(size_t ijk);
     Tensor3x3 GetDerivBeta_lu(const Coord& xyz);
-    Tensor3x3 GetDerivBeta_ll(int ijk);
+    Tensor3x3 GetDerivBeta_ll(size_t ijk);
     Tensor3x3 GetDerivBeta_ll(const Coord& xyz);
-    Tensor3x3x3 GetDerivGamma_lll(int ijk);
+    Tensor3x3x3 GetDerivGamma_lll(size_t ijk);
     Tensor3x3x3 GetDerivGamma_lll(const Coord& xyz);
-    Tensor3x3x3 GetDerivGamma_luu(int ijk);
+    Tensor3x3x3 GetDerivGamma_luu(size_t ijk);
     Tensor3x3x3 GetDerivGamma_luu(const Coord& xyz);
-    Tensor3x3 GetExtrCurv_ll(int ijk);
+    Tensor3x3 GetExtrCurv_ll(size_t ijk);
     Tensor3x3 GetExtrCurv_ll(const Coord& xyz);
 };
 #endif //__INCLUDE_GUARD_Metric_h__

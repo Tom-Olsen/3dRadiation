@@ -103,14 +103,14 @@ Tensor4x4 Metric::MetricFunction(const Coord& xyz)
 void Metric::InitializeMetricOnGrid()
 {
     PARALLEL_FOR(3)
-    for(int k=0; k<grid.nz; k++)
-    for(int j=0; j<grid.ny; j++)
-    for(int i=0; i<grid.nx; i++)
+    for(size_t k=0; k<grid.nz; k++)
+    for(size_t j=0; j<grid.ny; j++)
+    for(size_t i=0; i<grid.nx; i++)
     {
         Coord xyz = grid.xyz(i,j,k);
         Tensor4x4 g_ll = MetricFunction(xyz);
         Tensor4x4 g_uu = g_ll.Invert();
-        int ijk = grid.Index(i,j,k);
+        size_t ijk = grid.Index(i,j,k);
 
         g00_ll[ijk] = g_ll[{0,0}];    g00_uu[ijk] = g_uu[{0,0}];
         g01_ll[ijk] = g_ll[{0,1}];    g01_uu[ijk] = g_uu[{0,1}];
@@ -128,11 +128,11 @@ void Metric::InitializeMetricOnGrid()
 void Metric::InitializeBoostedTetradOnGrid()
 {
     PARALLEL_FOR(3)
-    for(int k=0; k<grid.nz; k++)
-    for(int j=0; j<grid.ny; j++)
-    for(int i=0; i<grid.nx; i++)
+    for(size_t k=0; k<grid.nz; k++)
+    for(size_t j=0; j<grid.ny; j++)
+    for(size_t i=0; i<grid.nx; i++)
     {
-        int ijk = grid.Index(i,j,k);
+        size_t ijk = grid.Index(i,j,k);
         
 
         // Sub matrizes and inverses:
@@ -204,9 +204,9 @@ Tensor4x4 Metric::InverseMetricDeriv(const Coord& xyz)
 void Metric::InitializeMetricDerivativesOnGrid()
 {
     PARALLEL_FOR(3)
-    for(int k=0; k<grid.nz; k++)
-    for(int j=0; j<grid.ny; j++)
-    for(int i=0; i<grid.nx; i++)
+    for(size_t k=0; k<grid.nz; k++)
+    for(size_t j=0; j<grid.ny; j++)
+    for(size_t i=0; i<grid.nx; i++)
     {
         Coord xyz = grid.xyz(i,j,k);
         Tensor4x4 dt_gll(0.0);
@@ -218,7 +218,7 @@ void Metric::InitializeMetricDerivativesOnGrid()
         Tensor4x4 dy_guu = InverseMetricDeriv<2>(xyz);
         Tensor4x4 dz_guu = InverseMetricDeriv<3>(xyz);
 
-        int ijk = grid.Index(i,j,k);
+        size_t ijk = grid.Index(i,j,k);
         d0_g00_lll[ijk] = dt_gll[{0,0}];    d1_g00_lll[ijk] = dx_gll[{0,0}];     d2_g00_lll[ijk] = dy_gll[{0,0}];     d3_g00_lll[ijk] = dz_gll[{0,0}];
         d0_g01_lll[ijk] = dt_gll[{0,1}];    d1_g01_lll[ijk] = dx_gll[{0,1}];     d2_g01_lll[ijk] = dy_gll[{0,1}];     d3_g01_lll[ijk] = dz_gll[{0,1}];
         d0_g02_lll[ijk] = dt_gll[{0,2}];    d1_g02_lll[ijk] = dx_gll[{0,2}];     d2_g02_lll[ijk] = dy_gll[{0,2}];     d3_g02_lll[ijk] = dz_gll[{0,2}];
@@ -246,11 +246,11 @@ void Metric::InitializeMetricDerivativesOnGrid()
 void Metric::InitializeAdmComponentsOnGrid()
 {
     PARALLEL_FOR(3)
-    for(int k=0; k<grid.nz; k++)
-    for(int j=0; j<grid.ny; j++)
-    for(int i=0; i<grid.nx; i++)
+    for(size_t k=0; k<grid.nz; k++)
+    for(size_t j=0; j<grid.ny; j++)
+    for(size_t i=0; i<grid.nx; i++)
     {
-        int ijk = grid.Index(i,j,k);
+        size_t ijk = grid.Index(i,j,k);
         alpha[ijk] = 1.0/sqrt(-g00_uu[ijk]);
         beta1_u[ijk] = alpha[ijk] * alpha[ijk] * g01_uu[ijk];
         beta2_u[ijk] = alpha[ijk] * alpha[ijk] * g02_uu[ijk];
@@ -330,12 +330,12 @@ void Metric::InitializeAdmComponentsOnGrid()
 
 double Metric::InterpolateArrayTo_ijk(const RealBuffer& array, const Coord& ijk)
 {
-    int i0 = std::floor(ijk[1]);
-    int j0 = std::floor(ijk[2]);
-    int k0 = std::floor(ijk[3]);
-    int i1 = i0 + 1;
-    int j1 = j0 + 1;
-    int k1 = k0 + 1;
+    size_t i0 = std::floor(ijk[1]);
+    size_t j0 = std::floor(ijk[2]);
+    size_t k0 = std::floor(ijk[3]);
+    size_t i1 = i0 + 1;
+    size_t j1 = j0 + 1;
+    size_t k1 = k0 + 1;
 
     return TrilinearInterpolation
     (ijk[1] - i0, ijk[2] - j0, ijk[3] - k0,
@@ -344,12 +344,12 @@ double Metric::InterpolateArrayTo_ijk(const RealBuffer& array, const Coord& ijk)
 }
 double Metric::InterpolateArrayTo_ijk(const RealBuffer& array, double i, double j, double k)
 {
-    int i0 = std::floor(i);
-    int j0 = std::floor(j);
-    int k0 = std::floor(k);
-    int i1 = i0 + 1;
-    int j1 = j0 + 1;
-    int k1 = k0 + 1;
+    size_t i0 = std::floor(i);
+    size_t j0 = std::floor(j);
+    size_t k0 = std::floor(k);
+    size_t i1 = i0 + 1;
+    size_t j1 = j0 + 1;
+    size_t k1 = k0 + 1;
 
     return TrilinearInterpolation
     (i - i0, j - j0, k - k0,
@@ -366,7 +366,7 @@ bool Metric::InsideBH(const Coord& xyz)
 
 
 // Tensor getters:
-Tensor4 Metric::uEulObs(int ijk)
+Tensor4 Metric::uEulObs(size_t ijk)
 {
     double alpha = GetAlpha(ijk);
     Tensor3 beta_u = GetBeta_u(ijk);
@@ -381,7 +381,7 @@ Tensor4 Metric::uEulObs(const Coord& xyz)
     else
         return Tensor4 (1.0/alpha, -beta_u[1]/alpha, -beta_u[2]/alpha, -beta_u[3]/alpha);
 }
-Tensor4x4 Metric::GetMetric_ll(int ijk)
+Tensor4x4 Metric::GetMetric_ll(size_t ijk)
 {
     return Tensor4x4
     (g00_ll[ijk], g01_ll[ijk], g02_ll[ijk], g03_ll[ijk],
@@ -410,7 +410,7 @@ Tensor4x4 Metric::GetMetric_ll(const Coord& xyz)
         return g_ll;
     }
 }
-Tensor4x4 Metric::GetMetric_uu(int ijk)
+Tensor4x4 Metric::GetMetric_uu(size_t ijk)
 {
     return Tensor4x4
     (g00_uu[ijk], g01_uu[ijk], g02_uu[ijk], g03_uu[ijk],
@@ -440,7 +440,7 @@ Tensor4x4 Metric::GetMetric_uu(const Coord& xyz)
     }
 }
 
-Tensor4x4 Metric::GetMinkowskiMetric_ll(int ijk)
+Tensor4x4 Metric::GetMinkowskiMetric_ll(size_t ijk)
 {
     return Tensor4x4(-1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1);
 }
@@ -448,7 +448,7 @@ Tensor4x4 Metric::GetMinkowskiMetric_ll(const Coord& xyz)
 {
     return Tensor4x4(-1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1);
 }
-Tensor4x4 Metric::GetMinkowskiMetric_uu(int ijk)
+Tensor4x4 Metric::GetMinkowskiMetric_uu(size_t ijk)
 {
     return Tensor4x4(-1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1);
 }
@@ -457,7 +457,7 @@ Tensor4x4 Metric::GetMinkowskiMetric_uu(const Coord& xyz)
     return Tensor4x4(-1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1);
 }
 
-Tensor4x4x4 Metric::GetDerivMetric_lll(int ijk)
+Tensor4x4x4 Metric::GetDerivMetric_lll(size_t ijk)
 {
     return Tensor4x4x4
     (d0_g00_lll[ijk], d0_g01_lll[ijk], d0_g02_lll[ijk], d0_g03_lll[ijk],
@@ -538,7 +538,7 @@ Tensor4x4x4 Metric::GetDerivMetric_lll(const Coord& xyz)
 
 
 
-Tensor4x4x4 Metric::GetDerivMetric_luu(int ijk)
+Tensor4x4x4 Metric::GetDerivMetric_luu(size_t ijk)
 {
     return Tensor4x4x4
     (d0_g00_luu[ijk], d0_g01_luu[ijk], d0_g02_luu[ijk], d0_g03_luu[ijk],
@@ -619,7 +619,7 @@ Tensor4x4x4 Metric::GetDerivMetric_luu(const Coord& xyz)
 
 
 
-Tensor4x4 Metric::GetTetrad(int ijk)
+Tensor4x4 Metric::GetTetrad(size_t ijk)
 {
     return Tensor4x4
     (tetrad00_ul[ijk], tetrad01_ul[ijk], tetrad02_ul[ijk], tetrad03_ul[ijk],
@@ -644,7 +644,7 @@ Tensor4x4 Metric::GetTetrad(const Coord& xyz)
 
 
 
-Tensor4x4 Metric::GetTetradInverse(int ijk)
+Tensor4x4 Metric::GetTetradInverse(size_t ijk)
 {
     return Tensor4x4
     (tetrad00_lu[ijk], tetrad01_lu[ijk], tetrad02_lu[ijk], tetrad03_lu[ijk],
@@ -670,7 +670,7 @@ Tensor4x4 Metric::GetTetradInverse(const Coord& xyz)
 
 
 // ADM getters:
-double Metric::GetAlpha(int ijk)
+double Metric::GetAlpha(size_t ijk)
 {
     return alpha[ijk];
 }
@@ -685,7 +685,7 @@ double Metric::GetAlpha(const Coord& xyz)
     }
 }
 
-Tensor3 Metric::GetBeta_u(int ijk)
+Tensor3 Metric::GetBeta_u(size_t ijk)
 {
     return Tensor3(beta1_u[ijk],beta2_u[ijk],beta3_u[ijk]);
 }
@@ -700,7 +700,7 @@ Tensor3 Metric::GetBeta_u(const Coord& xyz)
     }
 }
 
-Tensor3 Metric::GetBeta_l(int ijk)
+Tensor3 Metric::GetBeta_l(size_t ijk)
 {
     return Tensor3(beta1_l[ijk],beta2_l[ijk],beta3_l[ijk]);
 }
@@ -715,7 +715,7 @@ Tensor3 Metric::GetBeta_l(const Coord& xyz)
     }
 }
 
-Tensor3x3 Metric::GetGamma_ll(int ijk)
+Tensor3x3 Metric::GetGamma_ll(size_t ijk)
 {
     return Tensor3x3
     (gamma11_ll[ijk],gamma12_ll[ijk],gamma13_ll[ijk],
@@ -740,7 +740,7 @@ Tensor3x3 Metric::GetGamma_ll(const Coord& xyz)
     }
 }
 
-Tensor3x3 Metric::GetGamma_uu(int ijk)
+Tensor3x3 Metric::GetGamma_uu(size_t ijk)
 {
     return Tensor3x3
     (gamma11_uu[ijk],gamma12_uu[ijk],gamma13_uu[ijk],
@@ -765,7 +765,7 @@ Tensor3x3 Metric::GetGamma_uu(const Coord& xyz)
     }
 }
 
-Tensor3x3 Metric::GetMinkowskiGamma_ll(int ijk)
+Tensor3x3 Metric::GetMinkowskiGamma_ll(size_t ijk)
 {
     return Tensor3x3(1,0,0, 0,1,0, 0,0,1);
 }
@@ -774,7 +774,7 @@ Tensor3x3 Metric::GetMinkowskiGamma_ll(const Coord& xyz)
     return Tensor3x3(1,0,0, 0,1,0, 0,0,1);
 }
 
-Tensor3x3 Metric::GetMinkowskiGamma_uu(int ijk)
+Tensor3x3 Metric::GetMinkowskiGamma_uu(size_t ijk)
 {
     return Tensor3x3(1,0,0, 0,1,0, 0,0,1);
 }
@@ -783,7 +783,7 @@ Tensor3x3 Metric::GetMinkowskiGamma_uu(const Coord& xyz)
     return Tensor3x3(1,0,0, 0,1,0, 0,0,1);
 }
 
-Tensor3 Metric::GetDerivAlpha_l(int ijk)
+Tensor3 Metric::GetDerivAlpha_l(size_t ijk)
 {
     return Tensor3(d1_alpha_l[ijk],d2_alpha_l[ijk],d3_alpha_l[ijk]);
 }
@@ -798,7 +798,7 @@ Tensor3 Metric::GetDerivAlpha_l(const Coord& xyz)
     }
 }
 
-Tensor3x3 Metric::GetDerivBeta_lu(int ijk)
+Tensor3x3 Metric::GetDerivBeta_lu(size_t ijk)
 {
     return Tensor3x3
     (d1_beta1_lu[ijk],d1_beta2_lu[ijk],d1_beta3_lu[ijk],
@@ -819,7 +819,7 @@ Tensor3x3 Metric::GetDerivBeta_lu(const Coord& xyz)
     }
 }
 
-Tensor3x3 Metric::GetDerivBeta_ll(int ijk)
+Tensor3x3 Metric::GetDerivBeta_ll(size_t ijk)
 {
     return Tensor3x3
     (d1_beta1_ll[ijk],d1_beta2_ll[ijk],d1_beta3_ll[ijk],
@@ -840,7 +840,7 @@ Tensor3x3 Metric::GetDerivBeta_ll(const Coord& xyz)
     }
 }
 
-Tensor3x3x3 Metric::GetDerivGamma_lll(int ijk)
+Tensor3x3x3 Metric::GetDerivGamma_lll(size_t ijk)
 {
     return Tensor3x3x3
     (d1_gamma11_lll[ijk], d1_gamma12_lll[ijk], d1_gamma13_lll[ijk],
@@ -883,7 +883,7 @@ Tensor3x3x3 Metric::GetDerivGamma_lll(const Coord& xyz)
     }
 }
 
-Tensor3x3x3 Metric::GetDerivGamma_luu(int ijk)
+Tensor3x3x3 Metric::GetDerivGamma_luu(size_t ijk)
 {
     return Tensor3x3x3
     (d1_gamma11_luu[ijk], d1_gamma12_luu[ijk], d1_gamma13_luu[ijk],
@@ -926,7 +926,7 @@ Tensor3x3x3 Metric::GetDerivGamma_luu(const Coord& xyz)
     }
 }
 
-Tensor3x3 Metric::GetExtrCurv_ll(int ijk)
+Tensor3x3 Metric::GetExtrCurv_ll(size_t ijk)
 {
     return Tensor3x3
     (K11_ll[ijk],K12_ll[ijk],K13_ll[ijk],

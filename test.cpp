@@ -99,7 +99,7 @@ void Test_TensorTypes()
 
 void Test_Grid()
 {
-    int nx, ny, nz;
+    size_t nx, ny, nz;
     nx = ny = nz = 20;
     Coord start(0,0,0);
     Coord end(1,1,1);
@@ -121,11 +121,11 @@ void Test_Grid()
     RealBuffer data1(grid.nxyz);
     RealBuffer data2(grid.nxyz);
     RealBuffer data3(grid.nxyz);
-    for(int i=0; i<grid.nx; i++)
-    for(int j=0; j<grid.ny; j++)
-    for(int k=0; k<grid.nz; k++)
+    for(size_t i=0; i<grid.nx; i++)
+    for(size_t j=0; j<grid.ny; j++)
+    for(size_t k=0; k<grid.nz; k++)
     {
-        int ijk = grid.Index(i,j,k);
+        size_t ijk = grid.Index(i,j,k);
         Coord xyz = grid.xyz(i,j,k);
         data0[ijk] = (dist(rOrb,xyz) < 0.2) ? 1 : 0;
         data1[ijk] = (dist(gOrb,xyz) < 0.2) ? 1 : 0;
@@ -140,7 +140,7 @@ void Test_Grid()
 
 void Test_Interpolation()
 {
-    int nx, ny, nz;
+    size_t nx, ny, nz;
     nx = ny = nz = 50;
     Coord start(0,0,0);
     Coord end(1,1,1);
@@ -150,11 +150,11 @@ void Test_Interpolation()
     RealBuffer data1(grid.nxyz);
     RealBuffer data2(grid.nxyz);
     RealBuffer data3(grid.nxyz);
-    for(int i=0; i<grid.nx; i++)
-    for(int j=0; j<grid.ny; j++)
-    for(int k=0; k<grid.nz; k++)
+    for(size_t i=0; i<grid.nx; i++)
+    for(size_t j=0; j<grid.ny; j++)
+    for(size_t k=0; k<grid.nz; k++)
     {
-        int ijk = grid.Index(i,j,k);
+        size_t ijk = grid.Index(i,j,k);
         Coord xyz = grid.xyz(i,j,k);
         data0[ijk] = TrilinearInterpolation(i/49.0, j/49.0, k/49.0, 1,0,0,0,0,0,0,1);
         data1[ijk] = TrilinearInterpolation(i/49.0, j/49.0, k/49.0, 0,1,0,0,0,0,1,0);
@@ -168,7 +168,7 @@ void Test_Interpolation()
 
 void Test_Metric()
 {
-    int nx, ny, nz;
+    size_t nx, ny, nz;
     nx = ny = nz = 50;
     Coord start(1,1,1);
     Coord end(3,3,3);
@@ -199,7 +199,7 @@ void Test_GeodesicEquationSolver()
     std::ofstream fileOut("output/Test_GeodesicEquationSolver.csv");
     fileOut << "#x, y, z, s \n";
 
-    int nx, ny, nz;
+    size_t nx, ny, nz;
     nx = ny = nz = 100;
     Coord start(-4,-4,-4);
     Coord end(4,4,4);
@@ -272,18 +272,18 @@ void Test_LebedevStencil()
 
 void Test_Quadrature()
 {
-    int nTh = 19;
+    size_t nTh = 19;
     Stencil stencil(nTh);
 
     double data[stencil.nThPh];
-    for(int d1=0; d1<stencil.nPh; d1++)
-    for(int d0=0; d0<stencil.nTh; d0++)
+    for(size_t d1=0; d1<stencil.nPh; d1++)
+    for(size_t d0=0; d0<stencil.nTh; d0++)
     {
         double x = stencil.Cx(d0,d1);
         double y = stencil.Cy(d0,d1);
         double z = stencil.Cz(d0,d1);
 
-        int d = stencil.Index(d0,d1);
+        size_t d = stencil.Index(d0,d1);
         data[d] = 0.1 *SphericalHarmonics::Y00(x,y,z);
 
         data[d] += 1.0 * SphericalHarmonics::Y1m1(x,y,z);
@@ -314,18 +314,18 @@ void Test_Quadrature()
         data[d] += 4.7 * SphericalHarmonics::Y4p3(x,y,z);
         data[d] += 4.8 * SphericalHarmonics::Y4p4(x,y,z);
     }
-    vector<double>c = SphericalHarmonics::GetCoefficients(stencil,data,min(stencil.nCoefficients,25));
+    vector<double>c = SphericalHarmonics::GetCoefficients(stencil,data,min(stencil.nCoefficients,(size_t)25));
     
-    for(int i=0; i<c.size(); i++)
+    for(size_t i=0; i<c.size(); i++)
         cout << "c" << i << ": " << c[i] << endl;
     cout << endl;
 
     cout << "Real Value, Compressed Value:" << endl;
-    int d0 = stencil.nTh/2;
-    int d1 = stencil.nPh/2;
+    size_t d0 = stencil.nTh/2;
+    size_t d1 = stencil.nPh/2;
     double theta = stencil.Theta(d0,d1);
     double phi = stencil.Phi(d0,d1);
-    cout << data[stencil.Index(d0,d1)] << ", " << SphericalHarmonics::GetValue(theta,phi,c,min(stencil.nCoefficients,25)) << endl << endl;
+    cout << data[stencil.Index(d0,d1)] << ", " << SphericalHarmonics::GetValue(theta,phi,c,min(stencil.nCoefficients,(size_t)25)) << endl << endl;
 
     cout << "nCoefficients = " << stencil.nCoefficients << endl;
     // stencil.Print();
@@ -336,7 +336,7 @@ void Test_QuadratureLebedev()
     LebedevStencil7 lebedev;
 
     double data[lebedev.nDir];
-    for(int d=0; d<lebedev.nDir; d++)
+    for(size_t d=0; d<lebedev.nDir; d++)
     {
         double x = lebedev.Cx(d);
         double y = lebedev.Cy(d);
@@ -372,17 +372,17 @@ void Test_QuadratureLebedev()
         data[d] += 4.7 * SphericalHarmonics::Y4p3(x,y,z);
         data[d] += 4.8 * SphericalHarmonics::Y4p4(x,y,z);
     }
-    vector<double>c = SphericalHarmonics::GetCoefficients(lebedev,data,min(lebedev.nCoefficients,25));
+    vector<double>c = SphericalHarmonics::GetCoefficients(lebedev,data,min(lebedev.nCoefficients,(size_t)25));
 
-    for(int i=0; i<c.size(); i++)
+    for(size_t i=0; i<c.size(); i++)
         cout << "c" << i << ": " << c[i] << endl;
     cout << endl;
     
     cout << "Real Value, Compressed Value:" << endl;
-    int d = lebedev.nDir / 2;
+    size_t d = lebedev.nDir / 2;
     double theta = lebedev.Theta(d);
     double phi = lebedev.Phi(d);
-    cout << data[d] << ", " << SphericalHarmonics::GetValue(theta,phi,c,min(lebedev.nCoefficients,25)) << endl << endl;
+    cout << data[d] << ", " << SphericalHarmonics::GetValue(theta,phi,c,min(lebedev.nCoefficients,(size_t)25)) << endl << endl;
 
     cout << "         nDir = " << lebedev.nDir << endl;
     cout << "       nOrder = " << lebedev.nOrder << endl;
@@ -397,7 +397,7 @@ void Test_QuadratureGaussLegendre()
     GaussLegendreStencil19 gauss;
 
     double data[gauss.nDir];
-    for(int d=0; d<gauss.nDir; d++)
+    for(size_t d=0; d<gauss.nDir; d++)
     {
         double x = gauss.Cx(d);
         double y = gauss.Cy(d);
@@ -433,17 +433,17 @@ void Test_QuadratureGaussLegendre()
         data[d] += 4.7 * SphericalHarmonics::Y4p3(x,y,z);
         data[d] += 4.8 * SphericalHarmonics::Y4p4(x,y,z);
     }
-    vector<double>c = SphericalHarmonics::GetCoefficients(gauss,data,min(gauss.nCoefficients,25));
+    vector<double>c = SphericalHarmonics::GetCoefficients(gauss,data,min(gauss.nCoefficients,(size_t)25));
 
-    for(int i=0; i<c.size(); i++)
+    for(size_t i=0; i<c.size(); i++)
         cout << "c" << i << ": " << c[i] << endl;
     cout << endl;
     
     cout << "Real Value, Compressed Value:" << endl;
-    int d = gauss.nDir / 2;
+    size_t d = gauss.nDir / 2;
     double theta = gauss.Theta(d);
     double phi = gauss.Phi(d);
-    cout << data[d] << ", " << SphericalHarmonics::GetValue(theta,phi,c,min(gauss.nCoefficients,25)) << endl << endl;
+    cout << data[d] << ", " << SphericalHarmonics::GetValue(theta,phi,c,min(gauss.nCoefficients,(size_t)25)) << endl << endl;
 
     cout << "         nDir = " << gauss.nDir << endl;
     cout << "       nOrder = " << gauss.nOrder << endl;
@@ -457,7 +457,7 @@ void Test_QuadratureGaussLegendre()
 
 void Test_SphericalHarmonicsExpansion()
 {
-    int nx, ny, nz;
+    size_t nx, ny, nz;
     nx = ny = nz = 20;
     Coord start(0,0,0);
     Coord end(3,3,3);
@@ -480,26 +480,26 @@ void Test_SphericalHarmonicsExpansion()
     file1 << "#x, y, z, s \n";
     file2 << "#x, y, z, s \n";
     file3 << "#x, y, z, s \n";
-	for(int k=2; k<grid.nz-2; k+=2)
-	for(int j=2; j<grid.ny-2; j+=2)
-	for(int i=2; i<grid.nx-2; i+=2)
+	for(size_t k=2; k<grid.nz-2; k+=2)
+	for(size_t j=2; j<grid.ny-2; j+=2)
+	for(size_t i=2; i<grid.nx-2; i+=2)
     {
 		if(i == grid.nx/2 && j == grid.ny/2 && k == grid.nz/2)
         {
 	        std::vector<double> cS(lebedevStencil.nCoefficients);
-	        for(int f=0; f<lebedevStencil.nCoefficients; f++)
+	        for(size_t f=0; f<lebedevStencil.nCoefficients; f++)
 	        	cS[f] = radiation.coefficientsS[f + i*lebedevStencil.nCoefficients + j*lebedevStencil.nCoefficients*grid.nx + k*lebedevStencil.nCoefficients*grid.nxy];
                 
-    		for(int i=0; i<cS.size(); i++)
+    		for(size_t i=0; i<cS.size(); i++)
     		    std::cout << "cS" << i << ": " << cS[i] << std::endl;
     		std::cout << std::endl;
         }
 
-        int ijk = grid.Index(i,j,k);
+        size_t ijk = grid.Index(i,j,k);
         double alpha = metric.GetAlpha(ijk);
         Coord center = grid.xyz(i,j,k);
-        for(int d1=0; d1<stencil.nPh; d1++)
-        for(int d0=0; d0<stencil.nTh; d0++)
+        for(size_t d1=0; d1<stencil.nPh; d1++)
+        for(size_t d0=0; d0<stencil.nTh; d0++)
         {
             // Get pos and vel by Spherical Harmonic Expansion:
             {
@@ -555,8 +555,8 @@ void Test_QuaternionRotation()
     file0 << "#x, y, z" << endl;
     file1 << "#x, y, z" << endl;
     
-    for(int d1=0; d1<stencil.nPh; d1++)
-    for(int d0=0; d0<stencil.nTh; d0++)
+    for(size_t d1=0; d1<stencil.nPh; d1++)
+    for(size_t d0=0; d0<stencil.nTh; d0++)
     {
         Tensor3 p = stencil.Cxyz(d0,d1);
         file0 << p[1] << ", " << p[2] << ", " << p[3] << endl;
@@ -580,7 +580,7 @@ void Test_QuaternionRotation()
 
 void Test_IntensityAt()
 {
-    // This test is simulating the Radiation::IntensityAt(int ijk, Tensor3 vTempIF) function.
+    // This test is simulating the Radiation::IntensityAt(size_t ijk, Tensor3 vTempIF) function.
     Stencil stencil(5);
     LebedevStencil11 lebedev;
 
@@ -593,10 +593,10 @@ void Test_IntensityAt()
     file0 << "x, y, z, color\n";
     file1 << "x, y, z, color\n";
 
-    for(int d1=0; d1<stencil.nPh; d1++)
-    for(int d0=0; d0<stencil.nTh; d0++)
+    for(size_t d1=0; d1<stencil.nPh; d1++)
+    for(size_t d0=0; d0<stencil.nTh; d0++)
     {
-        int d = stencil.Index(d0,d1);
+        size_t d = stencil.Index(d0,d1);
         Tensor3 xyz = stencil.Cxyz(d0,d1);
         I[d] = 1.0 + 0.75 * SphericalHarmonics::Y1p1(xyz) + 0.75 * SphericalHarmonics::Y10 (xyz) + 0.75 * SphericalHarmonics::Y1m1(xyz);
         file0 << I[d] * xyz[1] << ", " << I[d] * xyz[2] << ", " << I[d] * xyz[3] << ", " << 1 << "\n";
@@ -606,12 +606,13 @@ void Test_IntensityAt()
     file0 << Inorth * 0 << ", " << Inorth * 0 << ", " << Inorth * 1 << ", "  << 0 << "\n";
     file0 << Isouth * 0 << ", " << Isouth * 0 << ", " << Isouth * -1 << ", " << 0 << "\n";
 
-    for(int d=0; d<lebedev.nDir; d++)
+    for(size_t d=0; d<lebedev.nDir; d++)
     {
         Tensor3 xyz = lebedev.Cxyz(d);
 	    double t = stencil.d0(xyz.Theta());
 	    double p = stencil.d1(xyz.Phi());
         
+        // Don't use size_t due to possible negative values.
         int t0 = floor(t);
         int t1 = t0 + 1;
         int p0 = ((int)floor(p) + stencil.nPh) % stencil.nPh;
@@ -660,10 +661,10 @@ void Test_Camera()
 {
     // Black Hole with Thin Disk Camera Settings:
     {
-        int resX = 400;
-        int resY = 200;
-        int width = 28;
-        int height = 14;
+        size_t resX = 400;
+        size_t resY = 200;
+        size_t width = 28;
+        size_t height = 14;
 
         Coord position(0,20,3);
         double degreeToRadians = 2.0 * M_PI / 360.0;
@@ -674,10 +675,10 @@ void Test_Camera()
 
         Camera camera(resX, resY, width, height, position, eulerAngles);
 
-        for(int ij=0; ij<camera.pixelCount; ij++)
+        for(size_t ij=0; ij<camera.pixelCount; ij++)
         {
-            int i = ij % camera.resX;
-            int j = ij / camera.resX;
+            size_t i = ij % camera.resX;
+            size_t j = ij / camera.resX;
             camera.image[ij] = i / (resX-1.0) * j / (resY-1.0);
         }
 
@@ -686,10 +687,10 @@ void Test_Camera()
     
     // Curved Beam Close Settings:
     {
-        int resX = 100;
-        int resY = 50;
-        int width = 2;
-        int height = 1;
+        size_t resX = 100;
+        size_t resY = 50;
+        size_t width = 2;
+        size_t height = 1;
 
         Coord position(0,3/sqrt(2.0),3/sqrt(2.0));
         double degreeToRadians = 2.0 * M_PI / 360.0;
@@ -700,10 +701,10 @@ void Test_Camera()
 
         Camera camera(resX, resY, width, height, position, eulerAngles);
 
-        for(int ij=0; ij<camera.pixelCount; ij++)
+        for(size_t ij=0; ij<camera.pixelCount; ij++)
         {
-            int i = ij % camera.resX;
-            int j = ij / camera.resX;
+            size_t i = ij % camera.resX;
+            size_t j = ij / camera.resX;
             camera.image[ij] = i / (resX-1.0) * j / (resY-1.0);
         }
 
@@ -713,7 +714,7 @@ void Test_Camera()
 
 
 
-void Test_Emission(int nx, int ny, int nz, int nTh, int sigma, int simTime)
+void Test_Emission(size_t nx, size_t ny, size_t nz, size_t nTh, int sigma, int simTime)
 {
     // Grid, Metric, Stencil:
     Coord start(-1,0,-0.1);
@@ -727,10 +728,10 @@ void Test_Emission(int nx, int ny, int nz, int nTh, int sigma, int simTime)
     LebedevStencil5 lebedevStencil;
 
     // Camera:
-    int resX = 100;
-    int resY = 200;
-    int width = 2;
-    int height = 4;
+    size_t resX = 100;
+    size_t resY = 200;
+    size_t width = 2;
+    size_t height = 4;
     Coord position(0,2,2);
     double degreeToRadians = 2.0 * M_PI / 360.0;
     double angleX = -135 * degreeToRadians;
@@ -744,11 +745,11 @@ void Test_Emission(int nx, int ny, int nz, int nTh, int sigma, int simTime)
     Radiation radiation(metric, stencil, lebedevStencil, camera, StreamingType::CurvedDynamic);
 
     // Initial Data:
-    for(int k=0; k<grid.nz; k++)
-    for(int j=0; j<grid.ny; j++)
-    for(int i=0; i<grid.nx; i++)
+    for(size_t k=0; k<grid.nz; k++)
+    for(size_t j=0; j<grid.ny; j++)
+    for(size_t i=0; i<grid.nx; i++)
     {
-        int ijk = grid.Index(i,j,k);
+        size_t ijk = grid.Index(i,j,k);
         Coord xyz = grid.xyz(i,j,k);
         double x = xyz[1];
         double y = xyz[2];
@@ -891,9 +892,9 @@ void BlackHoleCsv()
     file0 << "0,0,0,1" << "\n";
     file1 << "0,0,0,0" << "\n";
 
-    for(int k=0; k<grid.nz; k++)
-    for(int j=0; j<grid.ny; j++)
-    for(int i=0; i<grid.nx; i++)
+    for(size_t k=0; k<grid.nz; k++)
+    for(size_t j=0; j<grid.ny; j++)
+    for(size_t i=0; i<grid.nx; i++)
     {
         Coord xyz = grid.xyz(i,j,k);
         double radius = xyz.Radius();
@@ -915,7 +916,7 @@ void BlackHoleCsv()
 void StreamFlatStaticSphereWave()
 {
     // Create Radiation object:
-    int nx, ny, nz;
+    size_t nx, ny, nz;
     nx = ny = nz = 50;
     Coord start(-1,-1,-1);
     Coord end(1,1,1);
@@ -929,11 +930,11 @@ void StreamFlatStaticSphereWave()
     Radiation radiation(metric, stencil, lebedevStencil, camera, StreamingType::FlatStatic);
 
     // Initial Data:
-    for(int k=0; k<grid.nz; k++)
-    for(int j=0; j<grid.ny; j++)
-    for(int i=0; i<grid.nx; i++)
+    for(size_t k=0; k<grid.nz; k++)
+    for(size_t j=0; j<grid.ny; j++)
+    for(size_t i=0; i<grid.nx; i++)
     {
-        int ijk = grid.Index(i,j,k);
+        size_t ijk = grid.Index(i,j,k);
         Coord xyz = grid.xyz(i,j,k);
         double r = xyz.Radius();
         if (r < 0.1)
@@ -963,7 +964,7 @@ void StreamFlatStaticSphereWave()
 void StreamFlatDynamicSphereWave()
 {
     // Create Radiation object:
-    int nx, ny, nz;
+    size_t nx, ny, nz;
     nx = ny = nz = 50;
     Coord start(-1,-1,-1);
     Coord end(1,1,1);
@@ -977,11 +978,11 @@ void StreamFlatDynamicSphereWave()
     Radiation radiation(metric, stencil, lebedevStencil, camera, StreamingType::FlatDynamic);
 
     // Initial Data:
-    for(int k=0; k<grid.nz; k++)
-    for(int j=0; j<grid.ny; j++)
-    for(int i=0; i<grid.nx; i++)
+    for(size_t k=0; k<grid.nz; k++)
+    for(size_t j=0; j<grid.ny; j++)
+    for(size_t i=0; i<grid.nx; i++)
     {
-        int ijk = grid.Index(i,j,k);
+        size_t ijk = grid.Index(i,j,k);
         Coord xyz = grid.xyz(i,j,k);
         double r = xyz.Radius();
         if (r < 0.1)
@@ -1011,7 +1012,7 @@ void StreamFlatDynamicSphereWave()
 void StreamFlatBeam()
 {
     // Create Radiation object:
-    int nx, ny, nz;
+    size_t nx, ny, nz;
     nx = ny = nz = 50;
     Coord start(-2,0,0);
     Coord end(2,4,4);
@@ -1028,11 +1029,11 @@ void StreamFlatBeam()
     // Initial Data:
     double beamWidth = 0.5;
     Coord beamCenter(0,3,0);
-    for(int k=0; k<grid.nz; k++)
-    for(int j=0; j<grid.ny; j++)
-    for(int i=0; i<grid.nx; i++)
+    for(size_t k=0; k<grid.nz; k++)
+    for(size_t j=0; j<grid.ny; j++)
+    for(size_t i=0; i<grid.nx; i++)
     {
-        int ijk = grid.Index(i,j,k);
+        size_t ijk = grid.Index(i,j,k);
         Coord xyz = grid.xyz(i,j,k);
         double x = xyz[1];
         double y = xyz[2];
@@ -1067,7 +1068,7 @@ void StreamFlatBeam()
 
 
 
-void StreamCurvedBeam(int nx, int ny, int nz, int nTh, int sigma, int simTime)
+void StreamCurvedBeam(size_t nx, size_t ny, size_t nz, size_t nTh, int sigma, int simTime)
 {
     // Grid, Metric, Stencil:
     Coord start(-1,0,-0.1);
@@ -1081,10 +1082,10 @@ void StreamCurvedBeam(int nx, int ny, int nz, int nTh, int sigma, int simTime)
     LebedevStencil5 lebedevStencil;
 
     // Camera:
-    int resX = 100;
-    int resY = 200;
-    int width = 2;
-    int height = 4;
+    size_t resX = 100;
+    size_t resY = 200;
+    size_t width = 2;
+    size_t height = 4;
     Coord position(0,2,2);
     double degreeToRadians = 2.0 * M_PI / 360.0;
     double angleX = -135 * degreeToRadians;
@@ -1099,11 +1100,11 @@ void StreamCurvedBeam(int nx, int ny, int nz, int nTh, int sigma, int simTime)
 
     // Initial Data:
     PARALLEL_FOR(3)
-    for(int k=0; k<grid.nz; k++)
-    for(int j=0; j<grid.ny; j++)
-    for(int i=0; i<grid.nx; i++)
+    for(size_t k=0; k<grid.nz; k++)
+    for(size_t j=0; j<grid.ny; j++)
+    for(size_t i=0; i<grid.nx; i++)
     {
-        int ijk = grid.Index(i,j,k);
+        size_t ijk = grid.Index(i,j,k);
         Coord xyz = grid.xyz(i,j,k);
         double x = xyz[1];
         double y = xyz[2];
@@ -1149,7 +1150,7 @@ void StreamCurvedBeam(int nx, int ny, int nz, int nTh, int sigma, int simTime)
 
 
 
-void ThinDisk(int nx, int ny, int nz, int nTh, int sigma, int simTime, bool diskIsHomogeneous)
+void ThinDisk(size_t nx, size_t ny, size_t nz, size_t nTh, int sigma, int simTime, bool diskIsHomogeneous)
 {
     // Black Hole and Thin Disk:
     double m = 1;
@@ -1169,10 +1170,10 @@ void ThinDisk(int nx, int ny, int nz, int nTh, int sigma, int simTime, bool disk
     LebedevStencil5 lebedevStencil;
 
     // Camera:
-    int resX = 400;
-    int resY = 200;
-    int width = 26;
-    int height = 13;
+    size_t resX = 400;
+    size_t resY = 200;
+    size_t width = 26;
+    size_t height = 13;
     Coord position(0,19,3);
     double degreeToRadians = 2.0 * M_PI / 360.0;
     double angleX = 100 * degreeToRadians;
@@ -1186,11 +1187,11 @@ void ThinDisk(int nx, int ny, int nz, int nTh, int sigma, int simTime, bool disk
 
     // Initial Data:
     #pragma omp parallel for
-    for(int k=0; k<grid.nz; k++)
-    for(int j=0; j<grid.ny; j++)
-    for(int i=0; i<grid.nx; i++)
+    for(size_t k=0; k<grid.nz; k++)
+    for(size_t j=0; j<grid.ny; j++)
+    for(size_t i=0; i<grid.nx; i++)
     {
-        int ijk = grid.Index(i,j,k);
+        size_t ijk = grid.Index(i,j,k);
         Coord xyz = grid.xyz(i,j,k);
         double radius = xyz.Radius();
 
@@ -1271,12 +1272,12 @@ int main()
     // StreamFlatStaticSphereWave();
     // StreamFlatDynamicSphereWave();
 
-  //Test_StreamCurvedBeam( nx, ny, nz, nTh, sigma,simTime);
-    // Test_StreamCurvedBeam( 26, 46, 51,  15,    15,10);
-    // Test_StreamCurvedBeam( 26, 46, 51,  19,   20,10);
+  //StreamCurvedBeam( nx, ny, nz, nTh, sigma,simTime);
+    // StreamCurvedBeam( 26, 46, 51,  15,    15,10);
+    // StreamCurvedBeam( 26, 46, 51,  19,   20,10);
 
-    // Test_StreamCurvedBeam( 51, 91, 101,  15,    15,10);
-    // Test_StreamCurvedBeam( 51, 91, 101,  19,    20,10);
+    // StreamCurvedBeam( 51, 91, 101,  15,    15,10);
+    // StreamCurvedBeam( 51, 91, 101,  19,    20,10);
 
 
 

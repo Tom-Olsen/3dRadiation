@@ -30,15 +30,15 @@
 // nCoefficients = 1+3+5+...+nTh is the number of spherical harmonics which can be integrated 'exactly'.
 struct Stencil
 {
-    int nTh; // = order
-    int nPh;
-    int nThPh;
-    int nCoefficients;
+    size_t nTh; // = order
+    size_t nPh;
+    size_t nThPh;
+    size_t nCoefficients;
     double w0;
     double sigma = 1.0;
     double dTheta;
 
-    Stencil(int nTh) : nTh(nTh), nPh(2 * nTh), nThPh(nTh * nPh)
+    Stencil(size_t nTh) : nTh(nTh), nPh(2 * nTh), nThPh(nTh * nPh)
     {
         if      (nTh ==  3) { dTheta = 0.88607712379261370; }
         else if (nTh ==  5) { dTheta = 0.56708068878468730; }
@@ -56,18 +56,18 @@ struct Stencil
 
         // Set number of spherical harmonics which can be integrated:
         nCoefficients = 0;
-        for(int i=1; i<=nTh; i+=2)
+        for(size_t i=1; i<=nTh; i+=2)
             nCoefficients += i;
 
         // Initialize weights:
         w0 = 0;
-        for(int d1=0; d1<nPh; d1++)
-        for(int d0=0; d0<nTh; d0++)
+        for(size_t d1=0; d1<nPh; d1++)
+        for(size_t d0=0; d0<nTh; d0++)
             w0 += MySin<9>(Theta(d0,d1));
         w0 = 4.0 * M_PI / w0;
     }
 
-    int Index(int d0, int d1) const
+    size_t Index(size_t d0, size_t d1) const
     { return d0 + d1 * nTh; }
     double d0(double theta) const
     { return nTh / 2 + (theta - M_PI_2) / dTheta; }
@@ -79,7 +79,7 @@ struct Stencil
     double Phi(double d0, double d1) const
     { return 2.0 * M_PI * (d1 + 0.5) / nPh; }
 
-    double W(int d0, int d1) const
+    double W(size_t d0, size_t d1) const
     { return w0 * MySin<9>(Theta(d0,d1)); }
 
     // Velocity vector.
@@ -98,8 +98,8 @@ struct Stencil
     void Print()
     {
         std::cout << "  theta,  phi,    w,      x,      y,      z:\n";
-        for(int d1=0; d1<nPh; d1++)
-        for(int d0=0; d0<nTh; d0++)
+        for(size_t d1=0; d1<nPh; d1++)
+        for(size_t d0=0; d0<nTh; d0++)
             std::cout << "(" << Format(Theta(d0,d1)) << ", " <<Format(Phi(d0,d1)) << ", " << Format(W(d0,d1)) <<
                         ", " << Format(Cx(d0,d1)) << ", " << Format(Cy(d0,d1)) << ", " << Format(Cz(d0,d1)) <<")\n";
         std::cout << std::endl;
@@ -109,8 +109,8 @@ struct Stencil
     {
         std::ofstream file("output/stencil.csv");
         file << "#x,y,z,w\n";
-        for(int d1=0; d1<nPh; d1++)
-        for(int d0=0; d0<nTh; d0++)
+        for(size_t d1=0; d1<nPh; d1++)
+        for(size_t d0=0; d0<nTh; d0++)
             file << Format(Cx(d0,d1)) << ", " << Format(Cy(d0,d1)) << ", " << Format(Cz(d0,d1)) << "," << Format(W(d0,d1)) << "\n";
         file.close();
     }
@@ -129,9 +129,9 @@ struct Stencil
 struct LebedevStencil
 {
 public:
-    int nDir;
-    int nOrder;
-    int nCoefficients;
+    size_t nDir;
+    size_t nOrder;
+    size_t nCoefficients;
 protected:
     double* w;
     double* cx;
@@ -141,27 +141,27 @@ protected:
 public:
     double Theta(double x, double y, double z)
     { return MyAtan2(sqrt(x * x + y * y), z); }
-    double Theta(int d)
+    double Theta(size_t d)
     { return Theta(Cx(d), Cy(d), Cz(d)); }
     double Phi(double x, double y, double z)
     {
         double phi = MyAtan2(y, x);
         return (phi < 0) ? phi + 2 * M_PI : phi;
     }
-    double Phi(int d)
+    double Phi(size_t d)
     { return Phi(Cx(d), Cy(d), Cz(d)); }
 
-    double W(int d) const
+    double W(size_t d) const
     { return w[d]; }
 
     // Velocity vector.
-    double Cx(int d) const
+    double Cx(size_t d) const
     { return cx[d]; }
-    double Cy(int d) const
+    double Cy(size_t d) const
     { return cy[d]; }
-    double Cz(int d) const
+    double Cz(size_t d) const
     { return cz[d]; }
-    Tensor3 Cxyz(int d) const
+    Tensor3 Cxyz(size_t d) const
     { return Tensor3(cx[d], cy[d], cz[d]); }
     
 
@@ -169,7 +169,7 @@ public:
     void Print()
     {
         std::cout << "  theta,  phi,    w,      x,      y,      z:\n";
-        for(int d=0; d<nDir; d++)
+        for(size_t d=0; d<nDir; d++)
             std::cout << "(" << Format(Theta(d)) << ", " <<Format(Phi(d)) << ", " << Format(W(d)) <<
                         ", " << Format(Cx(d)) << ", " << Format(Cy(d)) << ", " << Format(Cz(d)) <<")\n";
         std::cout << std::endl;
@@ -179,7 +179,7 @@ public:
     {
         std::ofstream file("output/lebedevStencil.csv");
         file << "#x,y,z,w\n";
-        for(int d=0; d<nDir; d++)
+        for(size_t d=0; d<nDir; d++)
             file << Format(Cx(d)) << ", " << Format(Cy(d)) << ", " << Format(Cz(d)) << "," << Format(W(d)) << "\n";
         file.close();
     }
@@ -293,9 +293,9 @@ struct LebedevStencil15 : LebedevStencil
 struct GaussLegendreStencil
 {
 public:
-    int nDir;
-    int nOrder;
-    int nCoefficients;
+    size_t nDir;
+    size_t nOrder;
+    size_t nCoefficients;
 protected:
     double* w;
     double* cx;
@@ -305,27 +305,27 @@ protected:
 public:
     double Theta(double x, double y, double z)
     { return MyAtan2(sqrt(x * x + y * y), z); }
-    double Theta(int d)
+    double Theta(size_t d)
     { return Theta(Cx(d), Cy(d), Cz(d)); }
     double Phi(double x, double y, double z)
     {
         double phi = MyAtan2(y, x);
         return (phi < 0) ? phi + 2 * M_PI : phi;
     }
-    double Phi(int d)
+    double Phi(size_t d)
     { return Phi(Cx(d), Cy(d), Cz(d)); }
 
-    double W(int d) const
+    double W(size_t d) const
     { return w[d]; }
 
     // Velocity vector.
-    double Cx(int d) const
+    double Cx(size_t d) const
     { return cx[d]; }
-    double Cy(int d) const
+    double Cy(size_t d) const
     { return cy[d]; }
-    double Cz(int d) const
+    double Cz(size_t d) const
     { return cz[d]; }
-    Tensor3 Cxyz(int d) const
+    Tensor3 Cxyz(size_t d) const
     { return Tensor3(cx[d], cy[d], cz[d]); }
     
 
@@ -333,7 +333,7 @@ public:
     void Print()
     {
         std::cout << "  theta,  phi,    w,      x,      y,      z:\n";
-        for(int d=0; d<nDir; d++)
+        for(size_t d=0; d<nDir; d++)
             std::cout << "(" << Format(Theta(d)) << ", " <<Format(Phi(d)) << ", " << Format(W(d)) <<
                         ", " << Format(Cx(d)) << ", " << Format(Cy(d)) << ", " << Format(Cz(d)) <<")\n";
         std::cout << std::endl;
@@ -343,7 +343,7 @@ public:
     {
         std::ofstream file("output/gaussLegendreStencil.csv");
         file << "#x,y,z,w\n";
-        for(int d=0; d<nDir; d++)
+        for(size_t d=0; d<nDir; d++)
             file << Format(Cx(d)) << ", " << Format(Cy(d)) << ", " << Format(Cz(d)) << "," << Format(W(d)) << "\n";
         file.close();
     }

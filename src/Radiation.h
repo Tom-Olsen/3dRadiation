@@ -106,18 +106,18 @@ public:
 	Radiation(Metric& metric, Stencil& stencil, LebedevStencil& lebedevStencil, Camera& camera, StreamingType streamingType);
 	~Radiation();
 
-	int Index(int ijk, int d);
-	int Index(int ijk, int d0, int d1);
-	int Index(int i, int j, int k, int d);
-	int Index(int i, int j, int k, int d0, int d1);
+	size_t Index(size_t ijk, size_t d);
+	size_t Index(size_t ijk, size_t d0, size_t d1);
+	size_t Index(size_t i, size_t j, size_t k, size_t d);
+	size_t Index(size_t i, size_t j, size_t k, size_t d0, size_t d1);
 
-	int HarmonicIndex(int f, int ijk);
+	size_t HarmonicIndex(size_t f, size_t ijk);
 
-	Coord GetTempCoordinate(int ijk, Tensor3 direction);
-	Tensor3 GetTemp3Velocity(int ijk, Tensor3 direction);
-	double GetFrequencyShift(int ijk, Tensor3 direction);
-	double IntensityAt(int ijk, Tensor3 vTempIF);
-	Tensor3 AverageF(int i, int j, int k);
+	Coord GetTempCoordinate(size_t ijk, Tensor3 direction);
+	Tensor3 GetTemp3Velocity(size_t ijk, Tensor3 direction);
+	double GetFrequencyShift(size_t ijk, Tensor3 direction);
+	double IntensityAt(size_t ijk, Tensor3 vTempIF);
+	Tensor3 AverageF(size_t i, size_t j, size_t k);
 
 	void NormalizeInitialDirections();
 	void LoadInitialData();
@@ -128,9 +128,9 @@ public:
 	void UpdateQuaternions();
 
 	template<class IntensityType, class StaticOrDynamic>
-	void StreamFlatKernal(int i, int j, int k, int d0, int d1);
+	void StreamFlatKernal(size_t i, size_t j, size_t k, size_t d0, size_t d1);
 	template<class IntensityType, class StaticOrDynamic>
-	void StreamCurvedKernal(int i, int j, int k, int d0, int d1);
+	void StreamCurvedKernal(size_t i, size_t j, size_t k, size_t d0, size_t d1);
 
 	void StreamFlatStatic();
 	void StreamFlatDynamic();

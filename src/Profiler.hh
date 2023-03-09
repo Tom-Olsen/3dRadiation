@@ -58,11 +58,11 @@ namespace Profiler
     private:
         std::string sessionName;
         std::ofstream outputStream;
-        int profileCount;
+        size_t profileCount;
         std::mutex writeMutex;
     public:
         std::vector<Result> results;
-        int numResults;
+        size_t numResults;
 
     private:
         // Singleton Pattern: hide these constructors from user!
@@ -144,13 +144,13 @@ namespace Profiler
         // Result analysis:
         void PrintResults()
         {
-            for(int i=0; i<results.size(); i++)
+            for(size_t i=0; i<results.size(); i++)
                 std::cout << results[i] << std::endl;
         }
         double GetTotalTime(std::string functionName)
         {
             double duration = 0;
-            for(int i=0; i<results.size(); i++)
+            for(size_t i=0; i<results.size(); i++)
             {
                 if(results[i].name == functionName)
                     duration += results[i].DurationS();
@@ -160,7 +160,7 @@ namespace Profiler
         std::vector<std::string> GetAllFunctionNames()
         {
             std::vector<std::string> names;
-            for(int i=0; i<results.size(); i++)
+            for(size_t i=0; i<results.size(); i++)
             {
                 if(std::find(names.begin(), names.end(), results[i].name) != names.end())
                     continue;

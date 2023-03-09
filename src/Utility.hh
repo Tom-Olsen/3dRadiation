@@ -281,7 +281,7 @@ inline int sgn(T val)
 // Marker for debugging
 inline void Marker(std::string name="", bool newline=true)
 {
-    static int i = 0;
+    static size_t i = 0;
     std::cout << name << ": " << i << std::endl;
     if(newline)
         std::cout << std::endl;
@@ -305,7 +305,7 @@ inline int numDigits(int number)
 
 
 // Converts frame number to correct format, e.g. 1 -> 0001.
-inline std::string FrameNumber(unsigned int f)
+inline std::string FrameNumber(int f)
 {
 	std::string frameNumber;
 	int maxDigits = 4;

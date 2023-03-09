@@ -3,7 +3,7 @@
 
 
 // Constructors:
-Grid::Grid(int nx, int ny, int nz, Coord start, Coord end) :
+Grid::Grid(size_t nx, size_t ny, size_t nz, Coord start, Coord end) :
 nx(nx), ny(ny), nz(nz),
 startx(start[1]), starty(start[2]), startz(start[3]), 
 endx(end[1]), endy(end[2]), endz(end[3])
@@ -47,9 +47,9 @@ double Grid::GetCFL()
 { return m_cfl; }
 
 // Grid Access Tools:
-int Grid::Index(int i, int j, int k)
+size_t Grid::Index(size_t i, size_t j, size_t k)
 { return i + j * nx + k * nxy; }
-Coord Grid::xyz(int i, int j, int k)
+Coord Grid::xyz(size_t i, size_t j, size_t k)
 { return Coord(startx + i*dx, starty + j*dy, startz + k*dz); }
 Coord Grid::xyz(double i, double j, double k)
 { return Coord(startx + i*dx, starty + j*dy, startz + k*dz); }
@@ -89,11 +89,11 @@ void Grid::WriteFrametoCsv
     std::ofstream fileOut(directory + "/" + name + " " + FrameNumber(frameNumber) + "_" + std::to_string(nx) + "x" + std::to_string(ny) + "y" + std::to_string(nz) + "z" + ".csv");
     fileOut << "#x,y,z,r,g,b,a\n";
 
-    for(int k=0; k<nz; k++)
-    for(int j=0; j<ny; j++)
-    for(int i=0; i<nx; i++)
+    for(size_t k=0; k<nz; k++)
+    for(size_t j=0; j<ny; j++)
+    for(size_t i=0; i<nx; i++)
     {
-        int ijk = Index(i,j,k);
+        size_t ijk = Index(i,j,k);
         Coord x = xyz(i,j,k);
         fileOut << x[1]   << "," << x[2]   << "," << x[3] << ",";
         fileOut << r[ijk] << "," << g[ijk] << "," << b[ijk] << "," << a[ijk] << "\n";

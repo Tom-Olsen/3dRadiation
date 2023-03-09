@@ -33,10 +33,10 @@ Camera::Camera()
 
 
 
-int Camera::Index(int i, int j)
+size_t Camera::Index(size_t i, size_t j)
 { return i + j * resX; }
 
-Coord Camera::xyz(int i, int j)
+Coord Camera::xyz(size_t i, size_t j)
 {
     // xLocal € [ -width/2,  width/2]
     // yLocal € [-height/2, height/2]
@@ -50,10 +50,10 @@ Coord Camera::xyz(int i, int j)
     Coord xyz = q * xyzLocal + position;
     return xyz;
 }
-Coord Camera::xyz(int ij)
+Coord Camera::xyz(size_t ij)
 {
-    int i = ij % resX;
-    int j = ij / resX;
+    size_t i = ij % resX;
+    size_t j = ij / resX;
     return xyz(i,j);
 }
 

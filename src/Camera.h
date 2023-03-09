@@ -22,9 +22,9 @@ public:
     Camera(int resX, int resY, int width, int height, Coord position, glm::vec3 eulerAngles);
     Camera();
     
-    int Index(int i, int j);
-    Coord xyz(int i, int j);
-    Coord xyz(int ij);
+    size_t Index(size_t i, size_t j);
+    Coord xyz(size_t i, size_t j);
+    Coord xyz(size_t ij);
 
     void WriteImagetoCsv
     (float time, const int frameNumber, std::string directory, std::string name="");
