@@ -210,7 +210,7 @@ inline double MySin(double x)
     else
         exit_on_error("sin input outside domain: " + std::to_string(x));
     
-    x *= 2.0f / M_PI;
+    x *= 2.0f / pi;
 
     if constexpr(Order == 5)
     {

@@ -102,6 +102,7 @@ Tensor4x4 Metric::MetricFunction(const Coord& xyz)
 
 void Metric::InitializeMetricOnGrid()
 {
+    PARALLEL_FOR(3)
     for(int k=0; k<grid.nz; k++)
     for(int j=0; j<grid.ny; j++)
     for(int i=0; i<grid.nx; i++)
@@ -126,6 +127,7 @@ void Metric::InitializeMetricOnGrid()
 
 void Metric::InitializeBoostedTetradOnGrid()
 {
+    PARALLEL_FOR(3)
     for(int k=0; k<grid.nz; k++)
     for(int j=0; j<grid.ny; j++)
     for(int i=0; i<grid.nx; i++)
@@ -201,6 +203,7 @@ Tensor4x4 Metric::InverseMetricDeriv(const Coord& xyz)
 
 void Metric::InitializeMetricDerivativesOnGrid()
 {
+    PARALLEL_FOR(3)
     for(int k=0; k<grid.nz; k++)
     for(int j=0; j<grid.ny; j++)
     for(int i=0; i<grid.nx; i++)
@@ -242,6 +245,7 @@ void Metric::InitializeMetricDerivativesOnGrid()
 
 void Metric::InitializeAdmComponentsOnGrid()
 {
+    PARALLEL_FOR(3)
     for(int k=0; k<grid.nz; k++)
     for(int j=0; j<grid.ny; j++)
     for(int i=0; i<grid.nx; i++)

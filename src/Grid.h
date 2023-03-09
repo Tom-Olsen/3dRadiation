@@ -2,7 +2,6 @@
 #define __INCLUDE_GUARD_Grid_h__
 #include <iomanip>              // std::setprecision.
 #include <fstream>              // File input/output.
-#include <jsoncpp/json/json.h>  // Everything about json files.
 #include "ControlFlow.hh"       // Template arguments and profiling macros.
 #include "Utility.hh"           // Utility functions.
 #include "TensorTypes.hh"       // General relativity tensors.
@@ -55,9 +54,6 @@ public:
     bool OutsideDomain(double i, double j, double k);
 
     // Write Data to file:
-    void WriteFrametoJson
-    (float time, const RealBuffer& r, const RealBuffer& g, const RealBuffer& b, const RealBuffer& a,
-     const int frameNumber, std::string directory, std::string name="");
     void WriteFrametoCsv
     (float time, const RealBuffer& r, const RealBuffer& g, const RealBuffer& b, const RealBuffer& a,
      const int frameNumber, std::string directory, std::string name="");

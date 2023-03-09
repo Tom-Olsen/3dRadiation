@@ -24,4 +24,4 @@ add_executable(test test.cpp ${srcs})
 target_compile_options(test PUBLIC -O3 -ffast-math)
 
 # libraries to link:
-target_link_libraries(test jsoncpp OpenMP::OpenMP_CXX glm::glm)
+target_link_libraries(test OpenMP::OpenMP_CXX glm::glm)

@@ -1220,6 +1220,7 @@ void ThinDisk(int nx, int ny, int nz, int nTh, int sigma, int simTime, bool disk
     Config config =
     {
         .name = "Thin Disk " + metric.Name() + " " + std::to_string(stencil.nTh) + "." + std::to_string(stencil.nPh)
+              + " " + std::to_string(nx) + "x" + std::to_string(ny) + "y" + std::to_string(nz) + "z"
               + " s" + std::to_string(sigma) + " Leb" + std::to_string(lebedevStencil.nOrder) + " t" + std::to_string(simTime)
               + ((diskIsHomogeneous) ? "homogeneous" : "inhomogeneous"),
         .simTime = (double)simTime,
@@ -1230,7 +1231,6 @@ void ThinDisk(int nx, int ny, int nz, int nTh, int sigma, int simTime, bool disk
         .printToTerminal = true,
         .useCamera = true
     };
-    cout << "starting run" << endl;
     radiation.RunSimulation(config);
 }
 
@@ -1282,18 +1282,26 @@ int main()
 
   //ThinDisk( nx, ny, nz, nTh, sigma,simTime, diskHomogeneous?);
     // Low res, low dir:
-    ThinDisk(106,136, 76,  15,     1,80, true);
+    // ThinDisk(106,136, 76,  15,     1,80, true);
     // ThinDisk(106,136, 76,  15,     1,80, false); // done
 
     // Low res, high dir:
-    ThinDisk(106,136, 76,  19,     1,80, true);
+    // ThinDisk(106,136, 76,  19,     1,80, true);
     // ThinDisk(106,136, 76,  19,     1,80, false); // done
 
+    // Middle res, low dir:
+    // ThinDisk(148,190,106,  15,     1,80, true);
+    // ThinDisk(148,190,106,  15,     1,80, false); // done
+
+    // Middle res, high dir:
+    // ThinDisk(148,190,106,  19,     1,80, true);
+    ThinDisk(148,190,106,  19,     1,80, false);
+
     // high res, low dir:
-    ThinDisk(211,271, 151,  15,     1,80, true);
-    ThinDisk(211,271, 151,  15,     1,80, false);
+    // ThinDisk(211,271, 151,  15,     1,80, true);
+    // ThinDisk(211,271, 151,  15,     1,80, false);
 
     // high res, high dir:
-    ThinDisk(211,271, 151,  19,     1,80, true);
-    ThinDisk(211,271, 151,  19,     1,80, false);
+    // ThinDisk(211,271, 151,  19,     1,80, true);
+    // ThinDisk(211,271, 151,  19,     1,80, false);
 }
