@@ -12,6 +12,7 @@
 //
 // You will probably want to macro-fy this, to switch on/off easily and use things like __FUNCSIG__ for the profile name.
 //
+
 #ifndef __INCLUDE_Profiler_hh__
 #define __INCLUDE_Profiler_hh__
 #include <iostream>     // Terminal Output.
