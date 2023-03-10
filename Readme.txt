@@ -6,7 +6,6 @@ The following libraries are necessary to compile the code:
 
 openmp:     -sudo apt-get install libomp-dev
 glm:        -sudo apt-get install libglm-dev
-json:       -sudo apt-get install libjsoncpp-dev
 
 
 

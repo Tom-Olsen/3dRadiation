@@ -1160,8 +1160,8 @@ void ThinDisk(size_t nx, size_t ny, size_t nz, size_t nTh, int sigma, int simTim
     double diskOuter = 6 * r;   // 12
 
     // Grid, Metric, Stencil:
-    Coord start(-14,-14,-10);
-    Coord   end( 14, 22, 10);
+    Coord start(-14,-14,-8);
+    Coord   end( 14, 22, 12);
     Grid grid(nx, ny, nz, start, end);
     grid.SetCFL(0.5);
     SchwarzSchild metric(grid, m, a);
@@ -1211,8 +1211,8 @@ void ThinDisk(size_t nx, size_t ny, size_t nz, size_t nTh, int sigma, int simTim
             EIGEN_DEFAULT_SETTINGS_H
             {
                 // s goes from 0 to 1.
-                double s = (diskOuter - xyz[2]) / (2.0 * diskOuter);
-                radiation.initialEta[ijk] = 0.1 + 0.9*s*s*s;
+                double d = (diskOuter - xyz[2]) / (2.0 * diskOuter);
+                radiation.initialEta[ijk] = 0.1 + 0.9*d*d*d*d;
             }
         }
     }
@@ -1223,7 +1223,7 @@ void ThinDisk(size_t nx, size_t ny, size_t nz, size_t nTh, int sigma, int simTim
         .name = "Thin Disk " + metric.Name() + " " + std::to_string(stencil.nTh) + "." + std::to_string(stencil.nPh)
               + " " + std::to_string(nx) + "x" + std::to_string(ny) + "y" + std::to_string(nz) + "z"
               + " s" + std::to_string(sigma) + " Leb" + std::to_string(lebedevStencil.nOrder) + " t" + std::to_string(simTime)
-              + ((diskIsHomogeneous) ? "homogeneous" : "inhomogeneous"),
+              + ((diskIsHomogeneous) ? " homogeneous" : " inhomogeneous"),
         .simTime = (double)simTime,
         .writeFrequency = 20,
         .updateSphericalHarmonics = false,
