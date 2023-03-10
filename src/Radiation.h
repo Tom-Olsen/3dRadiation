@@ -5,7 +5,7 @@
 #include <fstream>					// File input/output.
 #include <vector>					// Basic vectors.
 #include <string>					// Basic strings.
-#include <glm/gtc/quaternion.hpp>   // Quaternions.
+#include "glm/glm/gtc/quaternion.hpp"   // Quaternions.
 #include "ControlFlow.hh"			// Template arguments and profiling macros.
 #include "Utility.hh"				// Utility functions.
 #include "TensorTypes.hh" 			// General relativity tensors.

@@ -1,6 +1,6 @@
 #ifndef __INCLUDE_GUARD_Stencil_hh__
 #define __INCLUDE_GUARD_Stencil_hh__
-#include <glm/gtc/quaternion.hpp>   // Quaternions.
+#include "glm/glm/gtc/quaternion.hpp"   // Quaternions.
 #include <fstream>                  // File input/output.
 #include "Utility.hh"
 #include "TensorTypes.hh"

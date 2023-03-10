@@ -1,6 +1,7 @@
 #ifndef __INCLUDE_GUARD_Camera_h__
 #define __INCLUDE_GUARD_Camera_h__
-#include "TensorTypes.hh"
+#include "TensorTypes.hh" 			// General relativity tensors.
+#include "glm/glm/gtc/quaternion.hpp"   // Quaternions.
 
 
 

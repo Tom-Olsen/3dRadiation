@@ -8,7 +8,7 @@
 #include <sstream>                  // stringstream.
 #include <filesystem>               // Folder/file management.
 #include <vector>                   // basic c++ vector
-#include <glm/gtc/quaternion.hpp>   // Quaternions.
+#include "glm/glm/gtc/quaternion.hpp"   // Quaternions.
 #include "ControlFlow.hh"           // Template arguments and profiling macros.
 #include "eigen/Eigen/Dense"        // Eigen library for solving linear systems.
 

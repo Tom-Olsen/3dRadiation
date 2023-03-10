@@ -3,9 +3,7 @@ Do not forget to download submodules aswell:
 -git submodule update
 
 The following libraries are necessary to compile the code:
-
 openmp:     -sudo apt-get install libomp-dev
-glm:        -sudo apt-get install libglm-dev
 
 
 
