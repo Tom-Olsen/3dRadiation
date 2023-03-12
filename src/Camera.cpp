@@ -60,6 +60,7 @@ Coord Camera::xyz(size_t ij)
 void Camera::WriteImagetoCsv
 (float time, const int frameNumber, std::string directory, std::string name)
 {
+	PROFILE_FUNCTION();
     CreateDirectory(directory);
     
     name = (name == "") ? "image" :  name;

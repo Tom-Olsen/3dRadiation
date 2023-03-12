@@ -1174,7 +1174,7 @@ void ThinDisk(size_t nx, size_t ny, size_t nz, size_t nTh, int sigma, int simTim
     size_t resY = 200;
     size_t width = 26;
     size_t height = 13;
-    Coord position(0,19,3);
+    Coord position(0,19,5);
     double degreeToRadians = 2.0 * M_PI / 360.0;
     double angleX = 100 * degreeToRadians;
     double angleY = 0 * degreeToRadians;
@@ -1194,6 +1194,7 @@ void ThinDisk(size_t nx, size_t ny, size_t nz, size_t nTh, int sigma, int simTim
         size_t ijk = grid.Index(i,j,k);
         Coord xyz = grid.xyz(i,j,k);
         double radius = xyz.Radius();
+        double phi = xyz.Phi();
 
         // Disk:
         if(diskInner <= radius && radius <= diskOuter && abs(xyz[3]) < 0.9 * grid.dz)
@@ -1208,28 +1209,36 @@ void ThinDisk(size_t nx, size_t ny, size_t nz, size_t nTh, int sigma, int simTim
             radiation.initialKappaA[ijk] = 0;
             if (diskIsHomogeneous)
                 radiation.initialEta[ijk] = 1;
-            EIGEN_DEFAULT_SETTINGS_H
+            else
             {
                 // s goes from 0 to 1.
                 double d = (diskOuter - xyz[2]) / (2.0 * diskOuter);
-                radiation.initialEta[ijk] = 0.1 + 0.9*d*d*d*d;
+                // radiation.initialEta[ijk] = 0.1 + 0.9*d*d*d*d;
+                radiation.initialEta[ijk] = 16*d*d*d - 12*d*d + 2;
             }
         }
     }
 
+    // Get current time and date:
+    auto t = std::time(nullptr);
+    auto tm = *std::localtime(&t);
+    std::ostringstream oss;
+    oss << std::put_time(&tm, "%H.%M.%S - %d.%m.%Y");
+	string date = oss.str();
+
     // Start simulation:
     Config config =
     {
-        .name = "Thin Disk " + metric.Name() + " " + std::to_string(stencil.nTh) + "." + std::to_string(stencil.nPh)
-              + " " + std::to_string(nx) + "x" + std::to_string(ny) + "y" + std::to_string(nz) + "z"
-              + " s" + std::to_string(sigma) + " Leb" + std::to_string(lebedevStencil.nOrder) + " t" + std::to_string(simTime)
-              + ((diskIsHomogeneous) ? " homogeneous" : " inhomogeneous"),
+        .name = "Thin Disk " + metric.Name() + " " + std::to_string(stencil.nTh) + "th" + std::to_string(stencil.nPh) + "ph "
+              + std::to_string(nx) + "x" + std::to_string(ny) + "y" + std::to_string(nz) + "z"
+              + " Leb" + std::to_string(lebedevStencil.nOrder) + " t" + std::to_string(simTime)
+              + ((diskIsHomogeneous) ? " hom" : " inh") + " " + date,
         .simTime = (double)simTime,
-        .writeFrequency = 20,
+        .writeFrequency = 50,
         .updateSphericalHarmonics = false,
         .keepSourceNodesActive = false,
-        .writeData = true,
-        .printToTerminal = true,
+        .writeData = false,
+        .printToTerminal = false,
         .useCamera = true
     };
     radiation.RunSimulation(config);
@@ -1290,19 +1299,24 @@ int main()
     // ThinDisk(106,136, 76,  19,     1,80, true);
     // ThinDisk(106,136, 76,  19,     1,80, false); // done
 
+
     // Middle res, low dir:
     // ThinDisk(148,190,106,  15,     1,80, true);
     // ThinDisk(148,190,106,  15,     1,80, false); // done
 
     // Middle res, high dir:
     // ThinDisk(148,190,106,  19,     1,80, true);
-    ThinDisk(148,190,106,  19,     1,80, false);
+    // ThinDisk(148,190,106,  19,     1,80, false); // done
+
 
     // high res, low dir:
     // ThinDisk(211,271, 151,  15,     1,80, true);
-    // ThinDisk(211,271, 151,  15,     1,80, false);
+    // ThinDisk(211,271, 151,  15,     1,80, false);   // done
 
     // high res, high dir:
-    // ThinDisk(211,271, 151,  19,     1,80, true);
-    // ThinDisk(211,271, 151,  19,     1,80, false);
+    // ThinDisk(211,271, 151,  19,     1,80, true); // running: 261195
+    ThinDisk(211,271, 151,  19,     1,80, false);   // running: 261196
+
+    // Super high res, high dir:
+    // ThinDisk(253,325, 181,  19,     1,80, false);   // running: 259989
 }

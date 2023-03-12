@@ -12,6 +12,7 @@ build/*
 perf.data
 perf.data.old
 report.txt
+slurm-*.out
 
 # Binaries:
 test

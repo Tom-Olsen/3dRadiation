@@ -1,17 +1,14 @@
 #!/bin/bash
-#SBATCH --job-name=myjob           # Job name
-#SBATCH --nodes=1                  # Number of nodes
-#SBATCH --time=00:30:00            # maximum run time
+#SBATCH --job-name=myjob    # Job name
+#SBATCH --nodes=1           # Number of nodes
+#SBATCH --ntasks=1          # Number of MPI tasks
+#SBATCH --cpus-per-task=64  # Number of cores per task
+#SBATCH --mem=128G          # Memory per node
+#SBATCH --time=60:00:00     # maximum run time
 
-# Clear the environment from any previously loaded modules
-module purge > /dev/null 2>&1
+srun -n 1 env OMP_PLACES=threads env OMP_PROC_BIND=true ./test #> output.txt
 
-# Load the module environment suitable for the job
-module load foss/2019a
-
-# Use '&' to start the first job in the background
-srun -n 1 ./job1 &
-srun -n 1 ./job2 
-
-# Use 'wait' as a barrier to collect both executables when they are done. If not the batch job will finish when the job2.batch program finishes and kill job1.batch if it is still running.
-wait
+# usefull commands:
+# sinfo                 shows all available nodes and their usage
+# squeue -u tolsen      shows all your running jobs
+# scancel <number>      cancels given job

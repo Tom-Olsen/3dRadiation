@@ -14,12 +14,13 @@ clean:
 
 .Phony: outputClean
 outputClean:
-	rm -r output/*
+	rm -r -f output/*
+	rm -r -f /mnt/ceph/tolsen/output/*
 
 .Phony: runTest
 runTest:
-#	env OMP_PLACES=threads env OMP_PROC_BIND=true ./test
-	nohup env OMP_PLACES=threads env OMP_PROC_BIND=true ./test > output.txt &
+	env OMP_PLACES=threads env OMP_PROC_BIND=true ./test
+# 	nohup env OMP_PLACES=threads env OMP_PROC_BIND=true ./test > output.txt &
 #	OMP_PLACES=threads OMP_PROC_BIND=true ./test
 
 .Phony: runTestPerf

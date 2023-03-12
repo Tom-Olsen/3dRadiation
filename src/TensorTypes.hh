@@ -58,6 +58,13 @@ public:
     { return data[0] * data[0] + data[1] * data[1] + data[2] * data[2]; }
     double Radius() const
     { return sqrt(data[0] * data[0] + data[1] * data[1] + data[2] * data[2]); }
+    double Theta()
+    { return MyAtan2(sqrt(data[0] * data[0] + data[1] * data[1]), data[2]); }
+    double Phi()
+    {
+        double phi = MyAtan2(data[1], data[0]);
+        return (phi < 0) ? phi + 2 * M_PI : phi;
+    }
 
     static double Dot(const Coord& lhs, const Coord& rhs)
     { return lhs[1] * rhs[1] + lhs[2] * rhs[2] + lhs[3] * rhs[3]; }

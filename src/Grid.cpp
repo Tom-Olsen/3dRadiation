@@ -83,6 +83,7 @@ void Grid::WriteFrametoCsv
 (float time, const RealBuffer& r, const RealBuffer& g, const RealBuffer& b, const RealBuffer& a,
  const int frameNumber, std::string directory, std::string name)
 {
+	PROFILE_FUNCTION();
     CreateDirectory(directory);
     
     name = (name == "") ? "data" :  name;

@@ -1,6 +1,8 @@
 #ifndef __INCLUDE_GUARD_Camera_h__
 #define __INCLUDE_GUARD_Camera_h__
-#include "TensorTypes.hh" 			// General relativity tensors.
+#include "Utility.hh"                   // Utility functions.
+#include "Profiler.hh"                  // Time measurement profiler.
+#include "TensorTypes.hh" 			    // General relativity tensors.
 #include "glm/glm/gtc/quaternion.hpp"   // Quaternions.
 
 

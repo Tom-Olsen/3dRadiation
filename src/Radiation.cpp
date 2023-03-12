@@ -132,7 +132,6 @@ size_t Radiation::HarmonicIndex(size_t f, size_t ijk)
 void Radiation::NormalizeInitialDirections()
 {
 	PROFILE_FUNCTION();
-	DEBUG_FUNCTION();
 	PARALLEL_FOR(1)
 	for(size_t ijk=0; ijk<grid.nxyz; ijk++)
 	{
@@ -159,7 +158,6 @@ void Radiation::NormalizeInitialDirections()
 void Radiation::LoadInitialData()
 {
 	PROFILE_FUNCTION();
-	DEBUG_FUNCTION();
 	bool isDynamicStreaming = (streamingType == StreamingType::FlatDynamic || streamingType == StreamingType::CurvedDynamic);
 	srand((unsigned) time(NULL));
 
@@ -224,7 +222,6 @@ void Radiation::LoadInitialData()
 void Radiation::NormalizeInitialIntensities()
 {
 	PROFILE_FUNCTION();
-	DEBUG_FUNCTION();
 	PARALLEL_FOR(1)
 	for(size_t ijk=0; ijk<grid.nxyz; ijk++)
 		if(isInitialGridPoint[ijk])
@@ -236,7 +233,6 @@ void Radiation::NormalizeInitialIntensities()
 void Radiation::UpdateSphericalHarmonicsCoefficients()
 {
 	PROFILE_FUNCTION();
-	DEBUG_FUNCTION();
 	PARALLEL_FOR(3)
 	for(size_t k=2; k<grid.nz-2; k++)
 	for(size_t j=2; j<grid.ny-2; j++)
@@ -304,7 +300,6 @@ void Radiation::UpdateSphericalHarmonicsCoefficients()
 void Radiation::ComputeMomentsIF()
 {
 	PROFILE_FUNCTION();
-	DEBUG_FUNCTION();
 	constexpr double fourPiInv = 1.0 / (4.0 * M_PI);
 	
 	PARALLEL_FOR(1)
@@ -353,7 +348,6 @@ void Radiation::ComputeMomentsIF()
 void Radiation::ComputeMomentsLF()
 {
 	PROFILE_FUNCTION();
-	DEBUG_FUNCTION();
 	PARALLEL_FOR(1)
 	for(size_t ijk=0; ijk<grid.nxyz; ijk++)
 	{
@@ -486,7 +480,6 @@ Tensor3 Radiation::AverageF(size_t i, size_t j, size_t k)
 void Radiation::UpdateQuaternions()
 {
 	PROFILE_FUNCTION();
-	DEBUG_FUNCTION();
 	PARALLEL_FOR(3)
 	for(size_t k=2; k<grid.nz-2; k++)
 	for(size_t j=2; j<grid.ny-2; j++)
@@ -512,7 +505,6 @@ void Radiation::UpdateQuaternions()
 void Radiation::StreamFlatStatic()
 {
 	PROFILE_FUNCTION();
-	DEBUG_FUNCTION();
 	PARALLEL_FOR(5)
 	#ifdef ijkd0d1
 	for(size_t d1=0; d1<stencil.nPh; d1++)
@@ -535,7 +527,6 @@ void Radiation::StreamFlatStatic()
 void Radiation::StreamFlatDynamic()
 {
 	PROFILE_FUNCTION();
-	DEBUG_FUNCTION();
 	PARALLEL_FOR(5)
 	#ifdef ijkd0d1
 	for(size_t d1=0; d1<stencil.nPh; d1++)
@@ -634,7 +625,6 @@ void Radiation::StreamFlatKernal(size_t i, size_t j,size_t k, size_t d0, size_t 
 void Radiation::StreamCurvedStatic()
 {
 	PROFILE_FUNCTION();
-	DEBUG_FUNCTION();
 	PARALLEL_FOR(5)
 	#ifdef ijkd0d1
 	for(size_t d1=0; d1<stencil.nPh; d1++)
@@ -669,7 +659,6 @@ void Radiation::StreamCurvedStatic()
 void Radiation::StreamCurvedDynamic()
 {
 	PROFILE_FUNCTION();
-	DEBUG_FUNCTION();
 	PARALLEL_FOR(5)
 	#ifdef ijkd0d1
 	for(size_t d1=0; d1<stencil.nPh; d1++)
@@ -803,7 +792,6 @@ void Radiation::StreamCurvedKernal(size_t i, size_t j, size_t k, size_t d0, size
 void Radiation::Collide()
 {
 	PROFILE_FUNCTION();
-	DEBUG_FUNCTION();
 	// TODO: Steife DGL?
 	
 	PARALLEL_FOR(3)
@@ -844,7 +832,6 @@ void Radiation::Collide()
 void Radiation::TakePicture()
 {
 	PROFILE_FUNCTION();
-	DEBUG_FUNCTION();
 	#pragma omp parallel for
 	for(size_t ij=0; ij<camera.pixelCount; ij++)
 	{

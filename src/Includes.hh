@@ -6,6 +6,7 @@
 // The compilation steps are completely handeld by the CMake/Makefile.
 // It is sufficient to include this 'Includes.hh' file in your cpp file to use the code.
 
+#include "Profiler.hh"              // Time measurement profiler.
 #include "ControlFlow.hh"           // Template arguments and profiling macros.
 #include "Utility.hh"               // Utility functions.
 #include "TensorTypes.hh"           // General relativity tensors.
@@ -18,6 +19,6 @@
 #include "Stencil.hh"               // Velocity stencil.
 #include "SphericalHarmonics.h"     // Real spherical harmonic functions and expansion.
 #include "Radiation.h"              // 'General Relativistic Lattice Boltzmann Method for Radiative Transport' code.
-#include "Camera.h"
+#include "Camera.h"                 // Orthographic Camera to grab 2d slices of intensities orthogonal to camera plane.
 
 #endif //__INCLUDE_GUARD_Includes_hh__

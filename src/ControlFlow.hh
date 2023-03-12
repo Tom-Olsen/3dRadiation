@@ -20,7 +20,9 @@ class South {};
 class Static {};
 class Dynamic {};
 
-
+// Output Directory:
+// #define OUTPUTDIR "output/"
+#define OUTPUTDIR "/mnt/ceph/tolsen/output/"
 
 // omp parallel for macro:
 #define STRINGIFY(X) #X
@@ -40,15 +42,5 @@ class Dynamic {};
 #endif
 
 
-
-// Output current function:
-// #define DEBUG_MODE 1
-#ifdef DEBUG_MODE
-    #define DEBUG_REPORT(name) std::cout << name << "\n"
-    #define DEBUG_FUNCTION() DEBUG_REPORT(__PRETTY_FUNCTION__)
-#else
-    #define DEBUG_REPORT(name)
-    #define DEBUG_FUNCTION()
-#endif
 
 #endif //__INCLUDE_GUARD_ControlFlow_hh__
