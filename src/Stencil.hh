@@ -62,7 +62,7 @@ struct Stencil
         w0 = 0;
         for(size_t d1=0; d1<nPh; d1++)
         for(size_t d0=0; d0<nTh; d0++)
-            w0 += MySin<9>(Theta(d0,d1));
+            w0 += MySin(Theta(d0,d1));
         w0 = 4.0 * M_PI / w0;
     }
 
@@ -84,13 +84,13 @@ struct Stencil
 
     // Weights and directions:
     double W(size_t d0, size_t d1) const
-    { return w0 * MySin<9>(Theta(d0,d1)); }
+    { return w0 * MySin(Theta(d0,d1)); }
     double Cx(double d0, double d1) const
-    { return MySin<9>(Theta(d0,d1)) * MyCos<9>(Phi(d0,d1)); }
+    { return MySin(Theta(d0,d1)) * MyCos(Phi(d0,d1)); }
     double Cy(double d0, double d1) const
-    { return MySin<9>(Theta(d0,d1)) * MySin<9>(Phi(d0,d1)); }
+    { return MySin(Theta(d0,d1)) * MySin(Phi(d0,d1)); }
     double Cz(double d0, double d1) const
-    { return MyCos<9>(Theta(d0,d1)); }
+    { return MyCos(Theta(d0,d1)); }
 
     Tensor3 Cxyz(double d0, double d1) const
     { return Tensor3(Cx(d0,d1), Cy(d0,d1), Cz(d0,d1)); }

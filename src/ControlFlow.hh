@@ -7,22 +7,37 @@
 class IF {};
 class LF {};
 
+
+
 // Datastructure:
 // #define ijkd0d1
 #define d0d1ijk // is faster on CPU
+
+
+
+// Order of polynomial approximation for MySin, MyCos, MyAtan, MyAtan2:
+#define APPROXIMATION_ORDER 9
+
+
 
 // IntensityTypes:
 class Bulk {};
 class North {};
 class South {};
 
+
+
 // StaticOrDynamic:
 class Static {};
 class Dynamic {};
 
+
+
 // Output Directory:
 // #define OUTPUTDIR "output/"
 #define OUTPUTDIR "/mnt/ceph/tolsen/output/"
+
+
 
 // omp parallel for macro:
 #define STRINGIFY(X) #X

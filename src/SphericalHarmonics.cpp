@@ -245,9 +245,9 @@ double SphericalHarmonics::GetValue(Tensor3 direction, double* coefficients, siz
 }
 double SphericalHarmonics::GetValue(double theta, double phi, const std::vector<double>& coefficients, size_t nCoefficients)
 {
-    double x = MySin<9>(theta) * MyCos<9>(phi);
-    double y = MySin<9>(theta) * MySin<9>(phi);
-    double z = MyCos<9>(theta);
+    double x = MySin(theta) * MyCos(phi);
+    double y = MySin(theta) * MySin(phi);
+    double z = MyCos(theta);
     
     double result = 0;
     for(size_t i=0; i<nCoefficients; i++)
@@ -257,9 +257,9 @@ double SphericalHarmonics::GetValue(double theta, double phi, const std::vector<
 }
 double SphericalHarmonics::GetValue(double theta, double phi, double* coefficients, size_t nCoefficients)
 {
-    double x = MySin<9>(theta) * MyCos<9>(phi);
-    double y = MySin<9>(theta) * MySin<9>(phi);
-    double z = MyCos<9>(theta);
+    double x = MySin(theta) * MyCos(phi);
+    double y = MySin(theta) * MySin(phi);
+    double z = MyCos(theta);
     
     double result = 0;
     for(size_t i=0; i<nCoefficients; i++)

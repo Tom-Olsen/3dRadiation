@@ -96,7 +96,7 @@ Tensor4x4 KerrSchild::MetricFunction(const Coord& xyz)
         double r2 = R2 - a2;
         double r  = sqrt(r2);
         double rho2 = r2 + a2;
-        double H = this->m * MyPow<3>(r) / (MyPow<4>(r) + a2 * xyz[3] * xyz[3]);
+        double H = this->m * IntegerPow<3>(r) / (IntegerPow<4>(r) + a2 * xyz[3] * xyz[3]);
         Tensor4 l_l( 1, (r * xyz[1] + this->a * xyz[2]) / rho2, (r * xyz[2] - this->a * xyz[1]) / rho2, xyz[3]/r);
         Tensor4 l_u(-1, (r * xyz[1] + this->a * xyz[2]) / rho2, (r * xyz[2] - this->a * xyz[1]) / rho2, xyz[3]/r);
         Tensor4x4 g_ll;

@@ -115,7 +115,7 @@ public:
 	size_t HarmonicIndex(size_t f, size_t ijk);
 
 	Coord GetTempCoordinate(size_t ijk, Tensor3 direction);
-	Tensor3 GetTemp3Velocity(size_t ijk, Tensor3 direction);
+	Tensor3 GetTemp3VelocityIF(size_t ijk, Tensor3 direction);
 	double GetFrequencyShift(size_t ijk, Tensor3 direction);
 	double IntensityAt(size_t ijk, Tensor3 vTempIF);
 	Tensor3 AverageF(size_t i, size_t j, size_t k);

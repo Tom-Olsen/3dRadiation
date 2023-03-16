@@ -525,16 +525,16 @@ void Test_SphericalHarmonicsExpansion()
 	for(size_t j=2; j<grid.ny-2; j+=2)
 	for(size_t i=2; i<grid.nx-2; i+=2)
     {
-		if(i == grid.nx/2 && j == grid.ny/2 && k == grid.nz/2)
-        {
-	        std::vector<double> cS(lebedevStencil.nCoefficients);
-	        for(size_t f=0; f<lebedevStencil.nCoefficients; f++)
-	        	cS[f] = radiation.coefficientsS[f + i*lebedevStencil.nCoefficients + j*lebedevStencil.nCoefficients*grid.nx + k*lebedevStencil.nCoefficients*grid.nxy];
-                
-    		for(size_t i=0; i<cS.size(); i++)
-    		    std::cout << "cS" << i << ": " << cS[i] << std::endl;
-    		std::cout << std::endl;
-        }
+		//if(i == grid.nx/2 && j == grid.ny/2 && k == grid.nz/2)
+        //{
+	    //    std::vector<double> cS(lebedevStencil.nCoefficients);
+	    //    for(size_t f=0; f<lebedevStencil.nCoefficients; f++)
+	    //    	cS[f] = radiation.coefficientsS[f + i*lebedevStencil.nCoefficients + j*lebedevStencil.nCoefficients*grid.nx + k*lebedevStencil.nCoefficients*grid.nxy];
+        //        
+    	//	for(size_t i=0; i<cS.size(); i++)
+    	//	    std::cout << "cS" << i << ": " << cS[i] << std::endl;
+    	//	std::cout << std::endl;
+        //}
 
         size_t ijk = grid.Index(i,j,k);
         double alpha = metric.GetAlpha(ijk);
@@ -547,11 +547,11 @@ void Test_SphericalHarmonicsExpansion()
                 Tensor3 direction = stencil.Cxyz(d0,d1);
                 double s = radiation.GetFrequencyShift(ijk,direction);
                 Coord xyz = radiation.GetTempCoordinate(ijk,direction);
-                Tensor3 v = radiation.GetTemp3Velocity(ijk,direction);
+                Tensor3 vIF = radiation.GetTemp3VelocityIF(ijk,direction);
                 if(!metric.InsideBH(xyz))
                 {
                     file0 << xyz[1] << ", " << xyz[2] << ", " << xyz[3] << ", " << s << "\n";
-                    file1 << center[1] + 0.1*v[1] << ", " << center[2] + 0.1*v[2] << ", " << center[3] + 0.1*v[3] << ", " << s << "\n";
+                    file1 << center[1] + 0.1*vIF[1] << ", " << center[2] + 0.1*vIF[2] << ", " << center[3] + 0.1*vIF[3] << ", " << s << "\n";
                 }
             }
             
@@ -561,13 +561,14 @@ void Test_SphericalHarmonicsExpansion()
 			    Coord xyz = center;
                 Tensor3 c = stencil.Cxyz(d0,d1);
                 Tensor4 u(alpha, c[1] * alpha, c[2] * alpha, c[3] * alpha);
-                Tensor3 v = Vec3ObservedByEulObs<IF,LF>(u, xyz, metric);
+                Tensor3 vLF = Vec3ObservedByEulObs<IF,LF>(u, xyz, metric);
     
 			    if(!metric.InsideBH(xyz))
                 {
-    	        	s *= RK45_GeodesicEquation<-1>(grid.dt, xyz, v, metric);
+    	        	s *= RK45_GeodesicEquation<-1>(grid.dt, xyz, vLF, metric);
+                    Tensor3 vIF = TransformLFtoIF(vLF, metric.GetTetradInverse(xyz));
                     file2 << xyz[1] << ", " << xyz[2] << ", " << xyz[3] << ", " << 1.0/s << "\n";
-                    file3 << center[1] + 0.1*v[1] << ", " << center[2] + 0.1*v[2] << ", " << center[3] + 0.1*v[3] << ", " << 1.0/s << "\n";
+                    file3 << center[1] + 0.1*vIF[1] << ", " << center[2] + 0.1*vIF[2] << ", " << center[3] + 0.1*vIF[3] << ", " << 1.0/s << "\n";
                 }
             }
         }
@@ -1191,22 +1192,27 @@ void StreamCurvedBeam(size_t nx, size_t ny, size_t nz, size_t nTh, int sigma, in
 
 
 
-enum IntensityProfile { Uniform, Linear, Squared, Cubic, SqFunc, CubFunc, CubFunc2, UniformToSquared, UniformToSquared2, UniformToSquared3 };
+enum IntensityProfile { Uniform, Linear, Squared, Cubic, SqFunc, CubFunc1, CubFunc2, CubFunc3, CubFunc4, CubFunc5, CubFunc6, CubFunc7, UniformToSquared1, UniformToSquared2, UniformToSquared3 };
 std::string IntensityProfileName(int n)
 {
 	std::string name("unknown");
 	switch (n)
 	{
-   		case 0: { name = "Uniform"; } break;
-   		case 1: { name = "Linear";  } break;
-   		case 2: { name = "Squared"; } break;
-   		case 3: { name = "Cubic";   } break;
-   		case 4: { name = "SqFunc";  } break;
-   		case 5: { name = "CubFunc"; } break;
-   		case 6: { name = "CubFunc2"; } break;
-   		case 7: { name = "UniformToSquared"; } break;
-   		case 8: { name = "UniformToSquared2"; } break;
-   		case 9: { name = "UniformToSquared3"; } break;
+   		case  0: { name = "Uniform";    } break;
+   		case  1: { name = "Linear";     } break;
+   		case  2: { name = "Squared";    } break;
+   		case  3: { name = "Cubic";      } break;
+   		case  4: { name = "SqFunc";     } break;
+   		case  5: { name = "CubFunc1";   } break;
+   		case  6: { name = "CubFunc2";   } break;
+   		case  7: { name = "CubFunc3";   } break;
+   		case  8: { name = "CubFunc4";   } break;
+   		case  9: { name = "CubFunc5";   } break;
+   		case 10: { name = "CubFunc6";   } break;
+   		case 11: { name = "CubFunc7";   } break;
+   		case 12: { name = "UniformToSquared1"; } break;
+   		case 13: { name = "UniformToSquared2"; } break;
+   		case 14: { name = "UniformToSquared3"; } break;
 		default: { exit_on_error("Invalid IntensityProfile"); }
 	}
 	return name;
@@ -1282,12 +1288,22 @@ void ThinDisk(size_t nx, size_t ny, size_t nz, size_t nTh, int sigma, int simTim
 
             else if (intensityProfile == IntensityProfile::SqFunc)
                 radiation.initialE[ijk] = 1.7*d*d - 17.0/15.0*d + 0.2;
-            else if (intensityProfile == IntensityProfile::CubFunc)
+            else if (intensityProfile == IntensityProfile::CubFunc1)
                 radiation.initialE[ijk] = 16*d*d*d - 12*d*d + 2;
-            else if (intensityProfile == IntensityProfile::CubFunc)
+            else if (intensityProfile == IntensityProfile::CubFunc2)
                 radiation.initialE[ijk] = 24*d*d*d - 20*d*d + 2*d + 2;
+            else if (intensityProfile == IntensityProfile::CubFunc3)
+                radiation.initialE[ijk] = 32*d*d*d - 28*d*d + 4*d + 2;
+            else if (intensityProfile == IntensityProfile::CubFunc4)
+                radiation.initialE[ijk] = 28*d*d*d - 22*d*d+ 1*d + 2;
+            else if (intensityProfile == IntensityProfile::CubFunc5)
+                radiation.initialE[ijk] = 20*d*d*d - 6*d*d - 9*d + 4;
+            else if (intensityProfile == IntensityProfile::CubFunc6)
+                radiation.initialE[ijk] = 24*d*d*d - 14*d*d - 4*d + 3;
+            else if (intensityProfile == IntensityProfile::CubFunc7)
+                radiation.initialE[ijk] = 28*d*d*d - 20*d*d - 1*d + 2.5;
 
-            else if (intensityProfile == IntensityProfile::UniformToSquared)
+            else if (intensityProfile == IntensityProfile::UniformToSquared1)
             {
                 if (d <= 0.5)
                     radiation.initialE[ijk] = 1;
@@ -1351,7 +1367,7 @@ void ThinDisk(size_t nx, size_t ny, size_t nz, size_t nTh, int sigma, int simTim
 // TODO:
 // -fix kerr metric initial direction
 // -try higher cfl condition
-// -change Camera to transform intensities to observer at infinity (div or mul by alpha^4).
+// -fix bh rendering with dynamic stencil. Camera broken?
 int main(int argc, char *argv[])
 {
     int n;
@@ -1409,9 +1425,14 @@ int main(int argc, char *argv[])
     // ThinDisk(n*21+1,n*27+1,n*12+1,  19, 1,80, IntensityProfile::Squared,           "initalE_static");
     // ThinDisk(n*21+1,n*27+1,n*12+1,  19, 1,80, IntensityProfile::Cubic,             "initalE_static");
     // ThinDisk(n*21+1,n*27+1,n*12+1,  19, 1,80, IntensityProfile::SqFunc,            "initalE_static");
-    // ThinDisk(n*21+1,n*27+1,n*12+1,  19, 1,80, IntensityProfile::CubFunc,           "initalE_static");
-    ThinDisk(n*21+1,n*27+1,n*12+1,  19, 1,80, IntensityProfile::CubFunc2,          "initalE_static");
-    // ThinDisk(n*21+1,n*27+1,n*12+1,  19, 1,80, IntensityProfile::UniformToSquared,  "initalE_static");
+    // ThinDisk(n*21+1,n*27+1,n*12+1,  19, 1,80, IntensityProfile::CubFunc1,           "initalE_static");
+    // ThinDisk(n*21+1,n*27+1,n*12+1,  19, 1,80, IntensityProfile::CubFunc2,          "initalE_static");
+    // ThinDisk(n*21+1,n*27+1,n*12+1,  19, 1,80, IntensityProfile::CubFunc3,          "initalE_static");
+    // ThinDisk(n*21+1,n*27+1,n*12+1,  19, 1,80, IntensityProfile::CubFunc4,          "initalE_static");
+    // ThinDisk(n*21+1,n*27+1,n*12+1,  19, 1,80, IntensityProfile::CubFunc5,          "initalE_static");
+    // ThinDisk(n*21+1,n*27+1,n*12+1,  19, 1,80, IntensityProfile::CubFunc6,          "initalE_static");
+    ThinDisk(n*21+1,n*27+1,n*12+1,  19, 1,80, IntensityProfile::CubFunc7,          "initalE_static");
+    // ThinDisk(n*21+1,n*27+1,n*12+1,  19, 1,80, IntensityProfile::UniformToSquared1,  "initalE_static");
     // ThinDisk(n*21+1,n*27+1,n*12+1,  19, 1,80, IntensityProfile::UniformToSquared2, "initalE_static");
     // ThinDisk(n*21+1,n*27+1,n*12+1,  19, 1,80, IntensityProfile::UniformToSquared3, "initalE_static");
 

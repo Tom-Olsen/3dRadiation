@@ -23,7 +23,7 @@ inline void exit_on_error(std::string msg="")
 
 
 
-// Felix:
+// Memory aligned data buffers:
 template <class T>
 class AlignedArrayAllocator
 {
@@ -58,19 +58,23 @@ using QuatBuffer = std::vector<glm::quat,AlignedArrayAllocator<glm::quat>>;
 
 
 // Fast integer exponentiation:
+/// @brief a^N with double a and integer N.
+/// @tparam N integer power.
+/// @param a number to exponentiate.
+/// @return a*a*a...*a, N times.
 template<int N>
-inline double MyPow(double a)
-{ return a * MyPow<N-1>(a); }
+inline double IntegerPow(double a)
+{ return a * IntegerPow<N-1>(a); }
 template<>
-inline double MyPow<0>(double a)
+inline double IntegerPow<0>(double a)
 { return 1; }
 
 
 
-/// @brief Approximates atan(z) much faster then std libraries.
+/// @brief Polynomial approximation of atan(z). Much faster then std libraries.
 /// @tparam Order Polynomial approximation order [0,3,5,7,9,11]. Use 0 for rational approximation.
-/// @param z bound to [-1,1].
-/// @return 
+/// @param z Bound to [-1,1].
+/// @return Polynomial approximation of: atan(z)
 template<int Order>
 inline double MyAtan(double z)
 {
@@ -143,16 +147,22 @@ inline double MyAtan(double z)
         return z * (a1 + zz * (a3 + zz * (a5 + zz * (a7 + zz * (a9 + zz * a11)))));
     }
 }
+/// @brief Polynomial order given by the macro APPROXIMATION_ORDER in ControlFlow.hh
+/// @param z Bound to [-1,1].
+/// @return Polynomial approximation of: atan(z)
+inline double MyAtan(double x)
+{ return MyAtan<APPROXIMATION_ORDER>(x); }
 
 
 
-/// @brief Approximates atan2(y,x) much faster then std libraries. Returns 0 for all edge cases.
-/// @param y coordinate on 2D Cartesian plane.
-/// @param x coordinate on 2D Cartesian plane.
-/// @return 
+/// @brief Polynomial approximation of atan2(y,x). Much faster then std libraries.
+/// @tparam Order Polynomial approximation order [0,3,5,7,9,11].
+/// @param y Coordinate on 2D Cartesian plane.
+/// @param x Coordinate on 2D Cartesian plane.
+/// @return Polynomial approximation of: atan2(y,x)
+template<int Order>
 inline double MyAtan2(double y, double x)
 {// https://www.dsprelated.com/showarticle/1052.php
-    constexpr int order = 9;
     constexpr double pi = M_PI;
     constexpr double pi_2 = M_PI_2;
     if (x != 0.0)
@@ -161,19 +171,19 @@ inline double MyAtan2(double y, double x)
         {
             const double z = y / x;
             if (x > 0.0)
-                return MyAtan<order>(z);
+                return MyAtan<Order>(z);
             else if (y >= 0.0)
-                return MyAtan<order>(z) + pi;
+                return MyAtan<Order>(z) + pi;
             else
-                return MyAtan<order>(z) - pi;
+                return MyAtan<Order>(z) - pi;
         }
         else // Use property atan(y/x) = PI/2 - atan(x/y) if |y/x| > 1.
         {
             const double z = x / y;
             if (y > 0.0)
-                return -MyAtan<order>(z) + pi_2;
+                return -MyAtan<Order>(z) + pi_2;
             else
-                return -MyAtan<order>(z) - pi_2;
+                return -MyAtan<Order>(z) - pi_2;
         }
     }
     else
@@ -185,13 +195,19 @@ inline double MyAtan2(double y, double x)
     }
     return 0.0; // x,y = 0. Could return NaN instead.
 }
+/// @brief Polynomial order given by the macro APPROXIMATION_ORDER in ControlFlow.hh
+/// @param y Coordinate on 2D Cartesian plane.
+/// @param x Coordinate on 2D Cartesian plane.
+/// @return Polynomial approximation of: atan2(y,x)
+inline double MyAtan2(double y, double x)
+{ return MyAtan2<APPROXIMATION_ORDER>(y,x); }
 
 
 
-/// @brief Approximates sin(x) much faster then std libraries.
+/// @brief Polynomial approximation of sin(x). Much faster then std libraries.
 /// @tparam Order Polynomial approximation order [5,7,9]
-/// @param x angle in radians. Bound to [-pi/2,5pi/2].
-/// @return 
+/// @param x Angle in radians. Bound to [-pi/2,5pi/2].
+/// @return Polynomial approximation of: sin(x)
 template<int Order>
 inline double MySin(double x)
 {
@@ -242,13 +258,18 @@ inline double MySin(double x)
         return x * (a1 + xx * (a3 + xx * (a5 + xx * (a7 + xx * a9))));
     }
 }
+/// @brief Polynomial order given by the macro APPROXIMATION_ORDER in ControlFlow.hh
+/// @param x Angle in radians. Bound to [-pi/2,5pi/2].
+/// @return Polynomial approximation of: sin(x)
+inline double MySin(double x)
+{ return MySin<APPROXIMATION_ORDER>(x); }
 
 
 
-/// @brief Approximates cos(x) much faster then std libraries.
+/// @brief Polynomial approximation of cos(x). Much faster then std libraries.
 /// @tparam Order Polynomial approximation order [5,7,9]
-/// @param x angle in radians. Bound to [-pi/2,5pi/2].
-/// @return 
+/// @param x Angle in radians. Bound to [-pi/2,5pi/2].
+/// @return Polynomial approximation of: cos(x)
 template<int Order>
 inline float MyCos(float x)
 {
@@ -259,6 +280,11 @@ inline float MyCos(float x)
     else
         return MySin<Order>(x + pi_2);
 }
+/// @brief Polynomial order given by the macro APPROXIMATION_ORDER in ControlFlow.hh
+/// @param x Angle in radians. Bound to [-pi/2,5pi/2].
+/// @return Polynomial approximation of: cos(x)
+inline double MyCos(double x)
+{ return MyCos<APPROXIMATION_ORDER>(x); }
 
 
 
