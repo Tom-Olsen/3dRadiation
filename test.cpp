@@ -194,6 +194,47 @@ void Test_Metric()
 
 
 
+void Test_PhotonVelocity()
+{
+    size_t nx, ny, nz;
+    nx = ny = nz = 50;
+    Coord start(1,1,1);
+    Coord end(3,3,3);
+    Grid grid(nx, ny, nz, start, end);
+    KerrSchild metric(grid, 1.0, 0.0);
+    
+    Coord xyz(1.5, 2, 2.5);
+    double alpha = metric.GetAlpha(xyz);
+    Tensor4x4 g_ll = metric.GetMetric_ll(xyz);
+    Tensor3x3 eta3x3_ll = metric.GetMinkowskiGamma_ll(xyz);
+    Tensor4x4 eta4x4_ll = metric.GetMinkowskiMetric_ll(xyz);
+    Tensor3x3 gamma_ll = metric.GetGamma_ll(xyz);
+
+    // Four velocity defined in LF and transformed to three velocity in IF:
+    {
+        Tensor4 uLF(1,0,0,1);
+        uLF = NullNormalize(uLF,g_ll);
+        Tensor3 vIF = Vec3ObservedByEulObs<LF,IF>(uLF,xyz,metric);
+
+        uLF.Print(" uLF ");
+        PrintDouble(Norm2(uLF,g_ll),"|uLF|");
+        vIF.Print(" vIF ");
+        PrintDouble(Norm2(vIF,eta3x3_ll),"|vIF|");
+    }cout << endl;
+    // Four velocity defined in IF and transformed to three velocity in LF:
+    {
+        Tensor4 uIF(alpha,0,0,alpha);
+        Tensor3 vLF = Vec3ObservedByEulObs<IF,LF>(uIF, xyz, metric);
+
+        uIF.Print(" uIF ");
+        PrintDouble(Norm2(uIF,eta4x4_ll),"|uIF|");
+        vLF.Print(" vLF ");
+        PrintDouble(Norm2(vLF,gamma_ll),"|vLF|");
+    }
+}
+
+
+
 void Test_GeodesicEquationSolver()
 {
     std::ofstream fileOut("output/Test_GeodesicEquationSolver.csv");
@@ -1113,15 +1154,15 @@ void StreamCurvedBeam(size_t nx, size_t ny, size_t nz, size_t nTh, int sigma, in
           && 3.00 < y && y < 3.50
           && z < 0.00)
         {
-            Tensor4 u(1,0,0,1);
-            u = NullNormalize(u,metric.GetMetric_ll(ijk));
-            Tensor3 v = Vec3ObservedByEulObs<LF,IF>(u, xyz, metric);
+            Tensor4 uLF(1,0,0,1);
+            uLF = NullNormalize(uLF,metric.GetMetric_ll(ijk));
+            Tensor3 vIF = Vec3ObservedByEulObs<LF,IF>(uLF, xyz, metric);
 
             radiation.isInitialGridPoint[ijk] = true;
             radiation.initialE[ijk] = 1;
-            radiation.initialNx[ijk] = v[1];
-            radiation.initialNy[ijk] = v[2];
-            radiation.initialNz[ijk] = v[3];
+            radiation.initialNx[ijk] = vIF[1];
+            radiation.initialNy[ijk] = vIF[2];
+            radiation.initialNz[ijk] = vIF[3];
             radiation.initialKappa0[ijk] = 0;
             radiation.initialKappa1[ijk] = 0;
             radiation.initialKappaA[ijk] = 0;
@@ -1150,7 +1191,27 @@ void StreamCurvedBeam(size_t nx, size_t ny, size_t nz, size_t nTh, int sigma, in
 
 
 
-void ThinDisk(size_t nx, size_t ny, size_t nz, size_t nTh, int sigma, int simTime, bool diskIsHomogeneous)
+enum IntensityProfile { Uniform, Linear, Squared, Cubic, SqFunc, CubFunc, CubFunc2, UniformToSquared, UniformToSquared2, UniformToSquared3 };
+std::string IntensityProfileName(int n)
+{
+	std::string name("unknown");
+	switch (n)
+	{
+   		case 0: { name = "Uniform"; } break;
+   		case 1: { name = "Linear";  } break;
+   		case 2: { name = "Squared"; } break;
+   		case 3: { name = "Cubic";   } break;
+   		case 4: { name = "SqFunc";  } break;
+   		case 5: { name = "CubFunc"; } break;
+   		case 6: { name = "CubFunc2"; } break;
+   		case 7: { name = "UniformToSquared"; } break;
+   		case 8: { name = "UniformToSquared2"; } break;
+   		case 9: { name = "UniformToSquared3"; } break;
+		default: { exit_on_error("Invalid IntensityProfile"); }
+	}
+	return name;
+}
+void ThinDisk(size_t nx, size_t ny, size_t nz, size_t nTh, int sigma, int simTime, IntensityProfile intensityProfile, string comment)
 {
     // Black Hole and Thin Disk:
     double m = 1;
@@ -1160,8 +1221,8 @@ void ThinDisk(size_t nx, size_t ny, size_t nz, size_t nTh, int sigma, int simTim
     double diskOuter = 6 * r;   // 12
 
     // Grid, Metric, Stencil:
-    Coord start(-14,-14,-8);
-    Coord   end( 14, 22, 12);
+    Coord start(-14,-14,-1);
+    Coord   end( 14, 22, 15);
     Grid grid(nx, ny, nz, start, end);
     grid.SetCFL(0.5);
     SchwarzSchild metric(grid, m, a);
@@ -1171,10 +1232,10 @@ void ThinDisk(size_t nx, size_t ny, size_t nz, size_t nTh, int sigma, int simTim
 
     // Camera:
     size_t resX = 400;
-    size_t resY = 200;
+    size_t resY = 300;
     size_t width = 26;
-    size_t height = 13;
-    Coord position(0,19,5);
+    size_t height = 19.5;
+    Coord position(0,19,6);
     double degreeToRadians = 2.0 * M_PI / 360.0;
     double angleX = 100 * degreeToRadians;
     double angleY = 0 * degreeToRadians;
@@ -1183,7 +1244,7 @@ void ThinDisk(size_t nx, size_t ny, size_t nz, size_t nTh, int sigma, int simTim
     Camera camera(resX, resY, width, height, position, eulerAngles);
 
     // Radiation:
-    Radiation radiation(metric, stencil, lebedevStencil, camera, StreamingType::CurvedDynamic);
+    Radiation radiation(metric, stencil, lebedevStencil, camera, StreamingType::CurvedStatic);
 
     // Initial Data:
     #pragma omp parallel for
@@ -1199,25 +1260,66 @@ void ThinDisk(size_t nx, size_t ny, size_t nz, size_t nTh, int sigma, int simTim
         // Disk:
         if(diskInner <= radius && radius <= diskOuter && abs(xyz[3]) < 0.9 * grid.dz)
         {
-            radiation.isInitialGridPoint[ijk] = false;
-            radiation.initialE[ijk] = 0;
+            radiation.isInitialGridPoint[ijk] = true;
+            // radiation.initialE[ijk] = 0;
             radiation.initialNx[ijk] = 0;
             radiation.initialNy[ijk] = 0;
             radiation.initialNz[ijk] = 0;
             radiation.initialKappa0[ijk] = 0;
             radiation.initialKappa1[ijk] = 0;
             radiation.initialKappaA[ijk] = 0;
-            if (diskIsHomogeneous)
-                radiation.initialEta[ijk] = 1;
-            else
+            radiation.initialEta[ijk] = 0;
+
+            double d = (diskOuter - xyz[2]) / (2.0 * diskOuter);
+            if (intensityProfile == IntensityProfile::Uniform)
+                radiation.initialE[ijk] = 1;
+            if (intensityProfile == IntensityProfile::Linear)
+                radiation.initialE[ijk] = 0.1 + 0.9*d;
+            else if (intensityProfile == IntensityProfile::Squared)
+                radiation.initialE[ijk] = 0.1 + 0.9*d*d;
+            else if (intensityProfile == IntensityProfile::Cubic)
+                radiation.initialE[ijk] = 0.1 + 0.9*d*d*d;
+
+            else if (intensityProfile == IntensityProfile::SqFunc)
+                radiation.initialE[ijk] = 1.7*d*d - 17.0/15.0*d + 0.2;
+            else if (intensityProfile == IntensityProfile::CubFunc)
+                radiation.initialE[ijk] = 16*d*d*d - 12*d*d + 2;
+            else if (intensityProfile == IntensityProfile::CubFunc)
+                radiation.initialE[ijk] = 24*d*d*d - 20*d*d + 2*d + 2;
+
+            else if (intensityProfile == IntensityProfile::UniformToSquared)
             {
-                // s goes from 0 to 1.
-                double d = (diskOuter - xyz[2]) / (2.0 * diskOuter);
-                // radiation.initialEta[ijk] = 0.1 + 0.9*d*d*d*d;
-                radiation.initialEta[ijk] = 16*d*d*d - 12*d*d + 2;
+                if (d <= 0.5)
+                    radiation.initialE[ijk] = 1;
+                else
+                    radiation.initialE[ijk] = 4.0*(d-0.5)*(d-0.5) + 1;
             }
+            else if (intensityProfile == IntensityProfile::UniformToSquared2)
+            {
+                if (d <= 0.5)
+                    radiation.initialE[ijk] = 1;
+                else
+                    radiation.initialE[ijk] = 8.0*(d-0.5)*(d-0.5) + 1;
+            }
+            else if (intensityProfile == IntensityProfile::UniformToSquared3)
+            {
+                if (d <= 0.5)
+                    radiation.initialE[ijk] = 1;
+                else
+                    radiation.initialE[ijk] = 12.0*(d-0.5)*(d-0.5) + 1;
+            }
+                
+            // if (intensityProfile == IntensityProfile::Uniform)
+                // radiation.initialEta[ijk] = 1;
+            // if (intensityProfile == IntensityProfile::Linear)
+                // radiation.initialEta[ijk] = 0.1 + 0.9*d;
+            // else if (intensityProfile == IntensityProfile::Squared)
+                // radiation.initialEta[ijk] = 0.1 + 0.9*d*d;
+            // else if (intensityProfile == IntensityProfile::Cubic)
+                // radiation.initialEta[ijk] = 0.1 + 0.9*d*d*d;
         }
     }
+    
 
     // Get current time and date:
     auto t = std::time(nullptr);
@@ -1229,14 +1331,13 @@ void ThinDisk(size_t nx, size_t ny, size_t nz, size_t nTh, int sigma, int simTim
     // Start simulation:
     Config config =
     {
-        .name = "Thin Disk " + metric.Name() + " " + std::to_string(stencil.nTh) + "th" + std::to_string(stencil.nPh) + "ph "
-              + std::to_string(nx) + "x" + std::to_string(ny) + "y" + std::to_string(nz) + "z"
-              + " Leb" + std::to_string(lebedevStencil.nOrder) + " t" + std::to_string(simTime)
-              + ((diskIsHomogeneous) ? " hom" : " inh") + " " + date,
+        .name = "ThinDisk_" + metric.Name() + "_" + std::to_string(stencil.nTh) + "th" + std::to_string(stencil.nPh) + "ph_"
+              + std::to_string(nx) + "x" + std::to_string(ny) + "y" + std::to_string(nz) + "z" + std::to_string(simTime) + "t_"
+              + "Leb" + std::to_string(lebedevStencil.nOrder) + "_" + IntensityProfileName(intensityProfile) + "_" + comment,
         .simTime = (double)simTime,
         .writeFrequency = 50,
         .updateSphericalHarmonics = false,
-        .keepSourceNodesActive = false,
+        .keepSourceNodesActive = true,
         .writeData = false,
         .printToTerminal = false,
         .useCamera = true
@@ -1245,19 +1346,24 @@ void ThinDisk(size_t nx, size_t ny, size_t nz, size_t nTh, int sigma, int simTim
 }
 
 // Note:
-// -Schwarzschild InsideBH has been modified to 2.4.
+// -TE changed from 1e-6 to 1e-4
 
 // TODO:
 // -fix kerr metric initial direction
 // -try higher cfl condition
-// -check out itp servers
-int main()
+// -change Camera to transform intensities to observer at infinity (div or mul by alpha^4).
+int main(int argc, char *argv[])
 {
+    int n;
+    if(argc > 1)
+        n = atoi(argv[1]);
+
     // Tests:
     // Test_TensorTypes();
     // Test_Grid();
     // Test_Interpolation();
     // Test_Metric();
+    // Test_PhotonVelocity();
     // Test_GeodesicEquationSolver();
     // Test_Stencil();
     // Test_LebedevStencil();
@@ -1290,33 +1396,64 @@ int main()
 
 
 
-  //ThinDisk( nx, ny, nz, nTh, sigma,simTime, diskHomogeneous?);
+  //ThinDisk( nx, ny, nz, nTh, sigma,simTime, intensityProfile);
+    //ThinDisk(n*21+1,n*27+1,n*12+1,  15,     1,80, IntensityProfile::Linear);
+    // ThinDisk(22,28,13,  19, 1,80, IntensityProfile::Linear, "writeDataTest");
+    // ThinDisk(43,55,25,  19, 1,80, IntensityProfile::Linear, "???");
+    // ThinDisk(64,82,37,  19, 1,80, IntensityProfile::UniformToSquared2, "initalE");
+    // ThinDisk(64,82,37,  19, 1,80, IntensityProfile::Cubic, "etaWithNSCollision");
+    
+    // n€[3,10] 8 takes about 13.5h
+    // ThinDisk(n*21+1,n*27+1,n*12+1,  19, 1,80, IntensityProfile::Uniform,           "initalE_static");
+    // ThinDisk(n*21+1,n*27+1,n*12+1,  19, 1,80, IntensityProfile::Linear,            "initalE_static");
+    // ThinDisk(n*21+1,n*27+1,n*12+1,  19, 1,80, IntensityProfile::Squared,           "initalE_static");
+    // ThinDisk(n*21+1,n*27+1,n*12+1,  19, 1,80, IntensityProfile::Cubic,             "initalE_static");
+    // ThinDisk(n*21+1,n*27+1,n*12+1,  19, 1,80, IntensityProfile::SqFunc,            "initalE_static");
+    // ThinDisk(n*21+1,n*27+1,n*12+1,  19, 1,80, IntensityProfile::CubFunc,           "initalE_static");
+    ThinDisk(n*21+1,n*27+1,n*12+1,  19, 1,80, IntensityProfile::CubFunc2,          "initalE_static");
+    // ThinDisk(n*21+1,n*27+1,n*12+1,  19, 1,80, IntensityProfile::UniformToSquared,  "initalE_static");
+    // ThinDisk(n*21+1,n*27+1,n*12+1,  19, 1,80, IntensityProfile::UniformToSquared2, "initalE_static");
+    // ThinDisk(n*21+1,n*27+1,n*12+1,  19, 1,80, IntensityProfile::UniformToSquared3, "initalE_static");
+
+    // ThinDisk(4*21+1,4*27+1,4*12+1,  19, 1,80, IntensityProfile::UniformToSquared3, "initalE");
+    // ThinDisk(5*21+1,5*27+1,5*12+1,  19, 1,80, IntensityProfile::UniformToSquared3, "initalE");
+    // ThinDisk(6*21+1,6*27+1,6*12+1,  19, 1,80, IntensityProfile::UniformToSquared3, "initalE");
+    // ThinDisk(7*21+1,7*27+1,7*12+1,  19, 1,80, IntensityProfile::UniformToSquared3, "initalE");
+    // ThinDisk(8*21+1,8*27+1,8*12+1,  19, 1,80, IntensityProfile::UniformToSquared3, "initalE");
+    // ThinDisk(9*21+1,9*27+1,9*12+1,  19, 1,80, IntensityProfile::UniformToSquared3, "initalE");
+    // ThinDisk(10*21+1,10*27+1,10*12+1,  19, 1,80, IntensityProfile::UniformToSquared3, "initalE");   // running: 266884
+
+
+    // Super low res, low dir:
+    // ThinDisk(64,82, 46,  15,     1,80, true);
+    // ThinDisk(64,82, 46,  19,     1,80, false);
+
     // Low res, low dir:
     // ThinDisk(106,136, 76,  15,     1,80, true);
-    // ThinDisk(106,136, 76,  15,     1,80, false); // done
+    // ThinDisk(106,136, 76,  15,     1,80, false);
 
     // Low res, high dir:
     // ThinDisk(106,136, 76,  19,     1,80, true);
-    // ThinDisk(106,136, 76,  19,     1,80, false); // done
+    // ThinDisk(106,136, 76,  19,     1,80, false);
 
 
     // Middle res, low dir:
     // ThinDisk(148,190,106,  15,     1,80, true);
-    // ThinDisk(148,190,106,  15,     1,80, false); // done
+    // ThinDisk(148,190,106,  15,     1,80, false);
 
     // Middle res, high dir:
     // ThinDisk(148,190,106,  19,     1,80, true);
-    // ThinDisk(148,190,106,  19,     1,80, false); // done
+    // ThinDisk(148,190,106,  19,     1,80, false);
 
 
     // high res, low dir:
     // ThinDisk(211,271, 151,  15,     1,80, true);
-    // ThinDisk(211,271, 151,  15,     1,80, false);   // done
+    // ThinDisk(211,271, 151,  15,     1,80, false);
 
     // high res, high dir:
-    // ThinDisk(211,271, 151,  19,     1,80, true); // running: 261195
-    ThinDisk(211,271, 151,  19,     1,80, false);   // running: 261196
+    // ThinDisk(211,271, 151,  19,     1,80, true);
+    // ThinDisk(211,271, 151,  19,     1,80, false);
 
     // Super high res, high dir:
-    // ThinDisk(253,325, 181,  19,     1,80, false);   // running: 259989
+    // ThinDisk(253,325, 181,  19,     1,80, false);
 }

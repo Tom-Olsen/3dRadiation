@@ -1,6 +1,5 @@
 #ifndef __INCLUDE_GUARD_Stencil_hh__
 #define __INCLUDE_GUARD_Stencil_hh__
-#include "glm/glm/gtc/quaternion.hpp"   // Quaternions.
 #include <fstream>                  // File input/output.
 #include "Utility.hh"
 #include "TensorTypes.hh"
@@ -67,22 +66,25 @@ struct Stencil
         w0 = 4.0 * M_PI / w0;
     }
 
+    // Indexing:
     size_t Index(size_t d0, size_t d1) const
     { return d0 + d1 * nTh; }
     double d0(double theta) const
-    { return nTh / 2 + (theta - M_PI_2) / dTheta; }
+    { return nTh / 2 + (theta - M_PI_2) / dTheta; }  // Gauß Legendre like
+    // { return theta * nTh / M_PI - 0.5; }                // Equidistant grid
     double d1(double phi) const
     { return phi * nPh / (2.0 * M_PI) - 0.5; }
 
+    // Angles:
     double Theta(double d0, double d1) const
-    { return M_PI_2 + (d0 - nTh / 2) * dTheta; }
+    { return M_PI_2 + (d0 - nTh / 2) * dTheta; } // Gauß Legendre like
+    // { return M_PI * (d0 + 0.5) / nTh; }             // Equidistant grid
     double Phi(double d0, double d1) const
     { return 2.0 * M_PI * (d1 + 0.5) / nPh; }
 
+    // Weights and directions:
     double W(size_t d0, size_t d1) const
     { return w0 * MySin<9>(Theta(d0,d1)); }
-
-    // Velocity vector.
     double Cx(double d0, double d1) const
     { return MySin<9>(Theta(d0,d1)) * MyCos<9>(Phi(d0,d1)); }
     double Cy(double d0, double d1) const

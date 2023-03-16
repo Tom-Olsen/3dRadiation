@@ -9,7 +9,7 @@ class LF {};
 
 // Datastructure:
 // #define ijkd0d1
-#define d0d1ijk
+#define d0d1ijk // is faster on CPU
 
 // IntensityTypes:
 class Bulk {};

@@ -255,23 +255,23 @@ void Radiation::UpdateSphericalHarmonicsCoefficients()
 			double s = 1;
 			Coord xyz = xyz0;
             Tensor3 c = lebedevStencil.Cxyz(d);
-            Tensor4 u(alpha, c[1] * alpha, c[2] * alpha, c[3] * alpha);
-            Tensor3 v = Vec3ObservedByEulObs<IF,LF>(u, xyz, metric);
+            Tensor4 uIF(alpha, c[1] * alpha, c[2] * alpha, c[3] * alpha);
+            Tensor3 vLF = Vec3ObservedByEulObs<IF,LF>(uIF, xyz, metric);
 
 			// Solve geodesic equation backwards:
 			if(!metric.InsideBH(xyz))
-    	    	s *= RK45_GeodesicEquation<-1>(grid.dt, xyz, v, metric);
+    	    	s *= RK45_GeodesicEquation<-1>(grid.dt, xyz, vLF, metric);
 			else // inside BH tetrad destroys the velocity stencil. Thus set it to 0.
-				v = Tensor3(0.0);
+				vLF = Tensor3(0.0);
 
 			// Final data points for fourier expansion:
 			dataS[d] = 1.0/s;
 			dataX[d] = xyz[1];
 			dataY[d] = xyz[2];
 			dataZ[d] = xyz[3];
-			dataCx[d] = v[1];
-			dataCy[d] = v[2];
-			dataCz[d] = v[3];
+			dataCx[d] = vLF[1];
+			dataCy[d] = vLF[2];
+			dataCz[d] = vLF[3];
     	}
 		std::vector<double> cS  = SphericalHarmonics::GetCoefficients(lebedevStencil, dataS , lebedevStencil.nCoefficients);
 		std::vector<double> cX  = SphericalHarmonics::GetCoefficients(lebedevStencil, dataX , lebedevStencil.nCoefficients);
@@ -823,6 +823,11 @@ void Radiation::Collide()
 
 			double Gamma = stencil.W(d0,d1) * (eta[ijk] + kappa0[ijk]*fluidE) / (A*A*A) - A*I[index] * (kappaA[ijk] + kappa0[ijk]);
 			I[index] += alpha * metric.grid.dt * Gamma;
+			// Contribution to north and south pole is the average contribution to the ring of intensities closest to them.
+			if (d0 == 0)	// North
+				Inorth[ijk] += alpha * metric.grid.dt * Gamma / stencil.nPh;
+			else if (d0 == stencil.nTh - 1)	// South
+				Isouth[ijk] += alpha * metric.grid.dt * Gamma / stencil.nPh;
 		}
 	}
 }
@@ -841,10 +846,11 @@ void Radiation::TakePicture()
 			camera.image[ij] = 0;
 			continue;
 		}
-
-		Tensor4x4 inverseTetrad = metric.GetTetradInverse(pixel);
-		Tensor3 vTempLF = camera.orthogonalPassThrough;
-		Tensor3 vTempIF = TransformLFtoIF(vTempLF, inverseTetrad);
+		
+		Tensor3 u3 = camera.orthogonalPassThrough;
+		Tensor4 u(1,u3[1],u3[2],u3[3]);
+		u = NullNormalize(u,metric.GetMetric_ll(pixel));
+		Tensor3 vIF = Vec3ObservedByEulObs<LF,IF>(u, pixel, metric);
 
 		// Get 8 nearest Grid Points:
 		double iTemp = grid.i(pixel[1]);
@@ -855,15 +861,15 @@ void Radiation::TakePicture()
 		size_t k0 = std::floor(kTemp);	size_t k1 = k0 + 1;
 
 		// Intensity interpolation:
-		double alpha = metric.GetAlpha(pixel);
-		double intensityAt_i0j0k0 = MyPow<4>(alpha / metric.GetAlpha(grid.Index(i0,j0,k0))) * IntensityAt(grid.Index(i0,j0,k0),vTempIF);
-		double intensityAt_i0j0k1 = MyPow<4>(alpha / metric.GetAlpha(grid.Index(i0,j0,k1))) * IntensityAt(grid.Index(i0,j0,k1),vTempIF);
-		double intensityAt_i0j1k0 = MyPow<4>(alpha / metric.GetAlpha(grid.Index(i0,j1,k0))) * IntensityAt(grid.Index(i0,j1,k0),vTempIF);
-		double intensityAt_i0j1k1 = MyPow<4>(alpha / metric.GetAlpha(grid.Index(i0,j1,k1))) * IntensityAt(grid.Index(i0,j1,k1),vTempIF);
-		double intensityAt_i1j0k0 = MyPow<4>(alpha / metric.GetAlpha(grid.Index(i1,j0,k0))) * IntensityAt(grid.Index(i1,j0,k0),vTempIF);
-		double intensityAt_i1j0k1 = MyPow<4>(alpha / metric.GetAlpha(grid.Index(i1,j0,k1))) * IntensityAt(grid.Index(i1,j0,k1),vTempIF);
-		double intensityAt_i1j1k0 = MyPow<4>(alpha / metric.GetAlpha(grid.Index(i1,j1,k0))) * IntensityAt(grid.Index(i1,j1,k0),vTempIF);
-		double intensityAt_i1j1k1 = MyPow<4>(alpha / metric.GetAlpha(grid.Index(i1,j1,k1))) * IntensityAt(grid.Index(i1,j1,k1),vTempIF);	
+		//double alpha = metric.GetAlpha(pixel); // removed to get intensity as seen by observer infinitly far away.
+		double intensityAt_i0j0k0 = MyPow<4>(1.0 / metric.GetAlpha(grid.Index(i0,j0,k0))) * IntensityAt(grid.Index(i0,j0,k0),vIF);
+		double intensityAt_i0j0k1 = MyPow<4>(1.0 / metric.GetAlpha(grid.Index(i0,j0,k1))) * IntensityAt(grid.Index(i0,j0,k1),vIF);
+		double intensityAt_i0j1k0 = MyPow<4>(1.0 / metric.GetAlpha(grid.Index(i0,j1,k0))) * IntensityAt(grid.Index(i0,j1,k0),vIF);
+		double intensityAt_i0j1k1 = MyPow<4>(1.0 / metric.GetAlpha(grid.Index(i0,j1,k1))) * IntensityAt(grid.Index(i0,j1,k1),vIF);
+		double intensityAt_i1j0k0 = MyPow<4>(1.0 / metric.GetAlpha(grid.Index(i1,j0,k0))) * IntensityAt(grid.Index(i1,j0,k0),vIF);
+		double intensityAt_i1j0k1 = MyPow<4>(1.0 / metric.GetAlpha(grid.Index(i1,j0,k1))) * IntensityAt(grid.Index(i1,j0,k1),vIF);
+		double intensityAt_i1j1k0 = MyPow<4>(1.0 / metric.GetAlpha(grid.Index(i1,j1,k0))) * IntensityAt(grid.Index(i1,j1,k0),vIF);
+		double intensityAt_i1j1k1 = MyPow<4>(1.0 / metric.GetAlpha(grid.Index(i1,j1,k1))) * IntensityAt(grid.Index(i1,j1,k1),vIF);	
 		
 		camera.image[ij]
 		= TrilinearInterpolation(iTemp-i0, jTemp-j0, kTemp-k0,

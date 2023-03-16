@@ -74,7 +74,7 @@ double Euler_GeodesicEquation(double dt, Coord& x, Tensor3& v, Metric& metric)
     return nu;
 }
 
-constexpr double maxTE = 1e-6;
+constexpr double maxTE = 1e-4;
 template<int timeDirection>
 double RK45_GeodesicEquation(double dt, Coord& x, Tensor3& v, Metric& metric)
 {
