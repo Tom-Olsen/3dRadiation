@@ -382,6 +382,23 @@ inline void PrintDouble(const double d, std::string name, bool newline=false, co
 
 
 
+// Print Quaternion:
+inline void qPrint(glm::quat q, std::string name, bool newline=false, const int precision=6)
+{
+    std::cout << name << " = ("
+    << Format(q.x,precision) << ","
+    << Format(q.y,precision) << ","
+    << Format(q.z,precision) << ","
+    << Format(q.w,precision) << ")\n";
+    if(newline) std::cout << "\n";
+}
+inline double qNorm(glm::quat q)
+{
+    return sqrt(q.x*q.x + q.y*q.y + q.z*q.z + q.w*q.w);
+}
+
+
+
 // Print formatted Matrix.
 inline void PrintMat(const Eigen::MatrixXd& A, int precision=6)
 {

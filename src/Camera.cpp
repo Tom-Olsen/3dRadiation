@@ -10,9 +10,6 @@ resX(resX), resY(resY), width(width), height(height), position(position), eulerA
 
     glm::quat q(eulerAngles);
     lookDirection = q * Tensor3(0,0,1);
-    orthogonalPassThrough[1] = -lookDirection[1];
-    orthogonalPassThrough[2] = -lookDirection[2];
-    orthogonalPassThrough[3] = -lookDirection[3];
 }
 Camera::Camera()
 {
@@ -26,9 +23,6 @@ Camera::Camera()
 
     glm::quat q(eulerAngles);
     lookDirection = q * Tensor3(0,0,1);
-    orthogonalPassThrough[1] = -lookDirection[1];
-    orthogonalPassThrough[2] = -lookDirection[2];
-    orthogonalPassThrough[3] = -lookDirection[3];
 }
 
 

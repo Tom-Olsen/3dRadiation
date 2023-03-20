@@ -42,6 +42,7 @@ class Dynamic {};
 // omp parallel for macro:
 #define STRINGIFY(X) #X
 #define PRAGMA(X) _Pragma(STRINGIFY(X))
+// #define PARALLEL_FOR(N)
 #define PARALLEL_FOR(N) PRAGMA(omp parallel for collapse(N) schedule(dynamic,50))
 
 

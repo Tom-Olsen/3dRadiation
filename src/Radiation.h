@@ -63,7 +63,7 @@ public:
 	RealBuffer initialKappaA;
 	RealBuffer initialEta;
 
-	QuatBuffer qOld;
+	QuatBuffer q;
 	QuatBuffer qNew;
 	RealBuffer E;
 	RealBuffer Fx;
@@ -101,8 +101,6 @@ public:
 	RealBuffer coefficientsCy;
 	RealBuffer coefficientsCz;
 
-	double normThreshhold = 1e-4;
-
 	Radiation() = delete;
 	Radiation(Metric& metric, Stencil& stencil, LebedevStencil& lebedevStencil, Camera& camera, StreamingType streamingType);
 	~Radiation();
@@ -127,6 +125,7 @@ public:
 	void ComputeMomentsIF();
 	void ComputeMomentsLF();
 	void UpdateQuaternions();
+	void RandomizeQuaternions();
 
 	template<class IntensityType, class StaticOrDynamic>
 	void StreamFlatKernal(size_t i, size_t j, size_t k, size_t d0, size_t d1);

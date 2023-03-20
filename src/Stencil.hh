@@ -70,14 +70,14 @@ struct Stencil
     size_t Index(size_t d0, size_t d1) const
     { return d0 + d1 * nTh; }
     double d0(double theta) const
-    { return nTh / 2 + (theta - M_PI_2) / dTheta; }  // Gauß Legendre like
+    { return nTh / 2 + (theta - M_PI_2) / dTheta; }  // Gauß Legendre like. Integer division really important!
     // { return theta * nTh / M_PI - 0.5; }                // Equidistant grid
     double d1(double phi) const
     { return phi * nPh / (2.0 * M_PI) - 0.5; }
 
     // Angles:
     double Theta(double d0, double d1) const
-    { return M_PI_2 + (d0 - nTh / 2) * dTheta; } // Gauß Legendre like
+    { return M_PI_2 + (d0 - nTh / 2) * dTheta; } // Gauß Legendre like. Integer division really important!
     // { return M_PI * (d0 + 0.5) / nTh; }             // Equidistant grid
     double Phi(double d0, double d1) const
     { return 2.0 * M_PI * (d1 + 0.5) / nPh; }

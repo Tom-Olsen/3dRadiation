@@ -14,15 +14,11 @@ class SphericalHarmonics
 public:
     // l = 0:
     static double Y00(double x, double y, double z);
-    static double Y00(const Tensor3& xyz);
     
     // l = 1:
     static double Y1m1(double x, double y, double z);
     static double Y10 (double x, double y, double z);
     static double Y1p1(double x, double y, double z);
-    static double Y1m1(const Tensor3& xyz);
-    static double Y10 (const Tensor3& xyz);
-    static double Y1p1(const Tensor3& xyz);
     
     // l = 2:
     static double Y2m2(double x, double y, double z);
@@ -30,11 +26,6 @@ public:
     static double Y20 (double x, double y, double z);
     static double Y2p1(double x, double y, double z);
     static double Y2p2(double x, double y, double z);
-    static double Y2m2(const Tensor3& xyz);
-    static double Y2m1(const Tensor3& xyz);
-    static double Y20 (const Tensor3& xyz);
-    static double Y2p1(const Tensor3& xyz);
-    static double Y2p2(const Tensor3& xyz);
     
     // l = 3:
     static double Y3m3(double x, double y, double z);
@@ -44,13 +35,6 @@ public:
     static double Y3p1(double x, double y, double z);
     static double Y3p2(double x, double y, double z);
     static double Y3p3(double x, double y, double z);
-    static double Y3m3(const Tensor3& xyz);
-    static double Y3m2(const Tensor3& xyz);
-    static double Y3m1(const Tensor3& xyz);
-    static double Y30 (const Tensor3& xyz);
-    static double Y3p1(const Tensor3& xyz);
-    static double Y3p2(const Tensor3& xyz);
-    static double Y3p3(const Tensor3& xyz);
     
     // l = 4:
     static double Y4m4(double x, double y, double z);
@@ -62,15 +46,6 @@ public:
     static double Y4p2(double x, double y, double z);
     static double Y4p3(double x, double y, double z);
     static double Y4p4(double x, double y, double z);
-    static double Y4m4(const Tensor3& xyz);
-    static double Y4m3(const Tensor3& xyz);
-    static double Y4m2(const Tensor3& xyz);
-    static double Y4m1(const Tensor3& xyz);
-    static double Y40 (const Tensor3& xyz);
-    static double Y4p1(const Tensor3& xyz);
-    static double Y4p2(const Tensor3& xyz);
-    static double Y4p3(const Tensor3& xyz);
-    static double Y4p4(const Tensor3& xyz);
 
     static std::vector<double (*)(double, double, double)> Harmonics;
 

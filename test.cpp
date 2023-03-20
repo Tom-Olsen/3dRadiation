@@ -212,7 +212,7 @@ void Test_PhotonVelocity()
 
     // Four velocity defined in LF and transformed to three velocity in IF:
     {
-        Tensor4 uLF(1,0,0,1);
+        Tensor4 uLF(1,0.2,0.4,0.6);
         uLF = NullNormalize(uLF,g_ll);
         Tensor3 vIF = Vec3ObservedByEulObs<LF,IF>(uLF,xyz,metric);
 
@@ -223,11 +223,22 @@ void Test_PhotonVelocity()
     }cout << endl;
     // Four velocity defined in IF and transformed to three velocity in LF:
     {
-        Tensor4 uIF(alpha,0,0,alpha);
+        Tensor4 uIF(1*alpha,0.2*alpha,0.4*alpha,0.6*alpha);
         Tensor3 vLF = Vec3ObservedByEulObs<IF,LF>(uIF, xyz, metric);
 
         uIF.Print(" uIF ");
         PrintDouble(Norm2(uIF,eta4x4_ll),"|uIF|");
+        vLF.Print(" vLF ");
+        PrintDouble(Norm2(vLF,gamma_ll),"|vLF|");
+    }cout << endl;
+    // Four velocity defined in LF and transformed to three velocity in LF:
+    {
+        Tensor4 uLF(1,0.2,0.4,0.6);
+        uLF = NullNormalize(uLF,g_ll);
+        Tensor3 vLF = Vec3ObservedByEulObs<LF,LF>(uLF, xyz, metric);
+
+        uLF.Print(" uLF ");
+        PrintDouble(Norm2(uLF,g_ll),"|uLF|");
         vLF.Print(" vLF ");
         PrintDouble(Norm2(vLF,gamma_ll),"|vLF|");
     }
@@ -587,13 +598,12 @@ void Test_QuaternionRotation()
     vec3 from(0,0,1);
     vec3 to(1,0,0);
     quat q = quat(from, to);
-    // quat qInv = glm::conjugate(q);
     quat qInv = quat(to, from);
 
     Stencil stencil(15);
 
-    ofstream file0("output/Test_QuaternionRotation Normal");
-    ofstream file1("output/Test_QuaternionRotation Rotated");
+    ofstream file0("output/Test_QuaternionRotation Normal.csv");
+    ofstream file1("output/Test_QuaternionRotation Rotated.csv");
     file0 << "#x, y, z" << endl;
     file1 << "#x, y, z" << endl;
     
@@ -612,10 +622,12 @@ void Test_QuaternionRotation()
     Tensor3 p(1,2,3);
     Tensor3 pRot = q * p;
     Tensor3 pRotInvRot = qInv * pRot;
+    Tensor3 pRotInvRot2 = Invert(q) * pRot;
 
     p.Print("   p");
     pRot.Print("pRot");
     pRotInvRot.Print("  p?");
+    pRotInvRot2.Print("  p?");
 }
 
 
@@ -630,17 +642,17 @@ void Test_IntensityAt()
     double Inorth;
     double Isouth;
 
-    ofstream file0("output/Test_IntensityAtStencil");
-    ofstream file1("output/Test_IntensityAtLebedev");
-    file0 << "x, y, z, color\n";
-    file1 << "x, y, z, color\n";
+    ofstream file0("output/Test_IntensityAtStencil.csv");
+    ofstream file1("output/Test_IntensityAtLebedev.csv");
+    file0 << "#x, y, z, color\n";
+    file1 << "#x, y, z, color\n";
 
     for(size_t d1=0; d1<stencil.nPh; d1++)
     for(size_t d0=0; d0<stencil.nTh; d0++)
     {
         size_t d = stencil.Index(d0,d1);
         Tensor3 xyz = stencil.Cxyz(d0,d1);
-        I[d] = 1.0 + 0.75 * SphericalHarmonics::Y1p1(xyz) + 0.75 * SphericalHarmonics::Y10 (xyz) + 0.75 * SphericalHarmonics::Y1m1(xyz);
+        I[d] = 1.0 + 0.75 * SphericalHarmonics::Y1p1(xyz[1],xyz[2],xyz[3]) + 0.75 * SphericalHarmonics::Y10 (xyz[1],xyz[2],xyz[3]) + 0.75 * SphericalHarmonics::Y1m1(xyz[1],xyz[2],xyz[3]);
         file0 << I[d] * xyz[1] << ", " << I[d] * xyz[2] << ", " << I[d] * xyz[3] << ", " << 1 << "\n";
     }
     Inorth = 1.0 + 0.75 * SphericalHarmonics::Y1p1(0, 0, 1) + 0.75 * SphericalHarmonics::Y10 (0, 0, 1) + 0.75 * SphericalHarmonics::Y1m1(0, 0, 1);
@@ -671,13 +683,14 @@ void Test_IntensityAt()
 	    // North: from [0.5, 1.0] to [0.0, 1.0]
 	    double tfrac = t - floor(t);	// Bug Fixing: Seems to be always 0 or 1
 	    double pfrac = p - floor(p);
+	    double d00 = stencil.d0(0);
         if (t0 == -1)			// North
-            tfrac = 2.0 * (tfrac - 0.5);
+		    tfrac = 1.0 / abs(d00) * (tfrac - (1.0 + d00));
         if (t1 == stencil.nTh)	// South
-            tfrac *= 2.0;
+		tfrac /= abs(d00);
 
 	    double I = BilinearInterpolation(tfrac, pfrac, I00, I01, I10, I11);
-        double Iexpected = 1.0 + 0.75 * SphericalHarmonics::Y1p1(xyz) + 0.75 * SphericalHarmonics::Y10 (xyz) + 0.75 * SphericalHarmonics::Y1m1(xyz);
+        double Iexpected = 1.0 + 0.75 * SphericalHarmonics::Y1p1(xyz[1],xyz[2],xyz[3]) + 0.75 * SphericalHarmonics::Y10 (xyz[1],xyz[2],xyz[3]) + 0.75 * SphericalHarmonics::Y1m1(xyz[1],xyz[2],xyz[3]);
         double color = 0;
         if(abs(I - Iexpected) > 0.1)
         {   
@@ -1110,6 +1123,174 @@ void StreamFlatBeam()
 
 
 
+void StreamFlatBeamCrossing()
+{
+    // Create Radiation object:
+    size_t nx, ny, nz;
+    nx = ny = nz = 50;
+    Coord start(-2,-2,-2);
+    Coord end(2,2,2);
+    Grid grid(nx, ny, nz, start, end);
+    grid.SetCFL(0.5);
+    Minkowski metric(grid, 1.0, 0.0);
+    Stencil stencil(15);
+    stencil.sigma = 100;
+    LebedevStencil3 lebedevStencil;
+    Camera camera;
+    Radiation radiation(metric, stencil, lebedevStencil, camera, StreamingType::FlatDynamic);
+    // Radiation radiation(metric, stencil, lebedevStencil, camera, StreamingType::FlatStatic);
+
+    // Initial Data:
+    double beamWidth = 0.5;
+    Coord beamCenter(0,3,0);
+    for(size_t k=0; k<grid.nz; k++)
+    for(size_t j=0; j<grid.ny; j++)
+    for(size_t i=0; i<grid.nx; i++)
+    {
+        size_t ijk = grid.Index(i,j,k);
+        Coord xyz = grid.xyz(i,j,k);
+        double x = xyz[1];
+        double y = xyz[2];
+        double z = xyz[3];
+        if ( -0.5 < x && x <  0.5
+          && -0.5 < y && y <  0.5
+          && -2.0 < z && z < -1.8)
+        {
+            radiation.isInitialGridPoint[ijk] = true;
+            radiation.initialE[ijk] = 1;
+            radiation.initialNx[ijk] = 0;
+            radiation.initialNy[ijk] = 0;
+            radiation.initialNz[ijk] = 1;
+        }
+        if (-0.5 < x && x <  0.5
+          &&-2.0 < y && y < -1.8
+          &&-0.5 < z && z <  0.5)
+        {
+            radiation.isInitialGridPoint[ijk] = true;
+            radiation.initialE[ijk] = 1;
+            radiation.initialNx[ijk] = 0;
+            radiation.initialNy[ijk] = 1;
+            radiation.initialNz[ijk] = 0;
+        }
+        if (-2.0 < x && x < -1.8
+          &&-0.5 < y && y <  0.5
+          &&-0.5 < z && z <  0.5)
+        {
+            radiation.isInitialGridPoint[ijk] = true;
+            radiation.initialE[ijk] = 1;
+            radiation.initialNx[ijk] = 1;
+            radiation.initialNy[ijk] = 0;
+            radiation.initialNz[ijk] = 0;
+        }
+    }
+
+    // Start simulation:
+    Config config =
+    {
+        // .name = "StreamFlatStaticBeamCrossing",
+        .name = "StreamFlatDynamicBeamCrossing",
+        .simTime = 4,
+        .writeFrequency = 10,
+        .updateSphericalHarmonics = false,
+        .keepSourceNodesActive = true,
+        .writeData = true,
+        .printToTerminal = true,
+        .useCamera = false
+    };
+    radiation.RunSimulation(config);
+}
+void StreamCurvedBeamCrossing()
+{
+    // Create Radiation object:
+    size_t nx, ny, nz;
+    nx = ny = nz = 50;
+    Coord start(200-2,200-2,200-2);
+    Coord end(200+2,200+2,200+2);
+    Grid grid(nx, ny, nz, start, end);
+    grid.SetCFL(0.5);
+    SchwarzSchild metric(grid, 1.0, 0.0);
+    Stencil stencil(15);
+    stencil.sigma = 100;
+    LebedevStencil5 lebedevStencil;
+
+    // Camera:
+    size_t resX = 100;
+    size_t resY = 100;
+    size_t width = 4;
+    size_t height = 4;
+    Coord position(200,200,201.5);
+    double degreeToRadians = 2.0 * M_PI / 360.0;
+    double angleX = 180 * degreeToRadians;
+    double angleY = 0 * degreeToRadians;
+    double angleZ = 0 * degreeToRadians;
+    glm::vec3 eulerAngles(angleX,angleY,angleZ);
+    Camera camera(resX, resY, width, height, position, eulerAngles);
+
+    // Radiation:
+    Radiation radiation(metric, stencil, lebedevStencil, camera, StreamingType::CurvedDynamic);
+
+    // Initial Data:
+    double beamWidth = 0.5;
+    Coord beamCenter(0,3,0);
+    for(size_t k=0; k<grid.nz; k++)
+    for(size_t j=0; j<grid.ny; j++)
+    for(size_t i=0; i<grid.nx; i++)
+    {
+        size_t ijk = grid.Index(i,j,k);
+        Coord xyz = grid.xyz(i,j,k);
+        double x = xyz[1];
+        double y = xyz[2];
+        double z = xyz[3];
+        if ( 200-0.5 < x && x < 200+0.5
+          && 200-0.5 < y && y < 200+0.5
+          && 200-2.0 < z && z < 200-1.8)
+        {
+            radiation.isInitialGridPoint[ijk] = true;
+            radiation.initialE[ijk] = 1;
+            radiation.initialNx[ijk] = 0;
+            radiation.initialNy[ijk] = 0;
+            radiation.initialNz[ijk] = 1;
+        }
+        if ( 200-0.5 < x && x < 200+0.5
+          && 200-2.0 < y && y < 200-1.8
+          && 200-0.5 < z && z < 200+0.5)
+        {
+            radiation.isInitialGridPoint[ijk] = true;
+            radiation.initialE[ijk] = 1;
+            radiation.initialNx[ijk] = 0;
+            radiation.initialNy[ijk] = 1;
+            radiation.initialNz[ijk] = 0;
+        }
+        if ( 200-2.0 < x && x < 200-1.8
+          && 200-0.5 < y && y < 200+0.5
+          && 200-0.5 < z && z < 200+0.5)
+        {
+            radiation.isInitialGridPoint[ijk] = true;
+            radiation.initialE[ijk] = 1;
+            radiation.initialNx[ijk] = 1;
+            radiation.initialNy[ijk] = 0;
+            radiation.initialNz[ijk] = 0;
+        }
+    }
+
+    // Start simulation:
+    Config config =
+    {
+        // .name = "StreamFlatStaticBeamCrossing",
+        .name = "StreamCurvedDynamicBeamCrossing",
+        .simTime = 6,
+        .writeFrequency = 20,
+        .updateSphericalHarmonics = false,
+        .keepSourceNodesActive = true,
+        .writeData = true,
+        .printToTerminal = true,
+        .useCamera = true
+    };
+    radiation.RunSimulation(config);
+}
+
+
+
 void StreamCurvedBeam(size_t nx, size_t ny, size_t nz, size_t nTh, int sigma, int simTime)
 {
     // Grid, Metric, Stencil:
@@ -1217,7 +1398,7 @@ std::string IntensityProfileName(int n)
 	}
 	return name;
 }
-void ThinDisk(size_t nx, size_t ny, size_t nz, size_t nTh, int sigma, int simTime, IntensityProfile intensityProfile, string comment)
+void ThinDiskE(size_t nx, size_t ny, size_t nz, size_t nTh, int sigma, int simTime, StreamingType streamingType, IntensityProfile intensityProfile, string comment)
 {
     // Black Hole and Thin Disk:
     double m = 1;
@@ -1250,7 +1431,7 @@ void ThinDisk(size_t nx, size_t ny, size_t nz, size_t nTh, int sigma, int simTim
     Camera camera(resX, resY, width, height, position, eulerAngles);
 
     // Radiation:
-    Radiation radiation(metric, stencil, lebedevStencil, camera, StreamingType::CurvedStatic);
+    Radiation radiation(metric, stencil, lebedevStencil, camera, streamingType);
 
     // Initial Data:
     #pragma omp parallel for
@@ -1267,7 +1448,6 @@ void ThinDisk(size_t nx, size_t ny, size_t nz, size_t nTh, int sigma, int simTim
         if(diskInner <= radius && radius <= diskOuter && abs(xyz[3]) < 0.9 * grid.dz)
         {
             radiation.isInitialGridPoint[ijk] = true;
-            // radiation.initialE[ijk] = 0;
             radiation.initialNx[ijk] = 0;
             radiation.initialNy[ijk] = 0;
             radiation.initialNz[ijk] = 0;
@@ -1276,6 +1456,7 @@ void ThinDisk(size_t nx, size_t ny, size_t nz, size_t nTh, int sigma, int simTim
             radiation.initialKappaA[ijk] = 0;
             radiation.initialEta[ijk] = 0;
 
+            double alpha = metric.GetAlpha(xyz);
             double d = (diskOuter - xyz[2]) / (2.0 * diskOuter);
             if (intensityProfile == IntensityProfile::Uniform)
                 radiation.initialE[ijk] = 1;
@@ -1324,15 +1505,6 @@ void ThinDisk(size_t nx, size_t ny, size_t nz, size_t nTh, int sigma, int simTim
                 else
                     radiation.initialE[ijk] = 12.0*(d-0.5)*(d-0.5) + 1;
             }
-                
-            // if (intensityProfile == IntensityProfile::Uniform)
-                // radiation.initialEta[ijk] = 1;
-            // if (intensityProfile == IntensityProfile::Linear)
-                // radiation.initialEta[ijk] = 0.1 + 0.9*d;
-            // else if (intensityProfile == IntensityProfile::Squared)
-                // radiation.initialEta[ijk] = 0.1 + 0.9*d*d;
-            // else if (intensityProfile == IntensityProfile::Cubic)
-                // radiation.initialEta[ijk] = 0.1 + 0.9*d*d*d;
         }
     }
     
@@ -1347,13 +1519,147 @@ void ThinDisk(size_t nx, size_t ny, size_t nz, size_t nTh, int sigma, int simTim
     // Start simulation:
     Config config =
     {
-        .name = "ThinDisk_" + metric.Name() + "_" + std::to_string(stencil.nTh) + "th" + std::to_string(stencil.nPh) + "ph_"
+        .name = "ThinDisk_E_" + metric.Name() + "_" + std::to_string(stencil.nTh) + "th" + std::to_string(stencil.nPh) + "ph_"
               + std::to_string(nx) + "x" + std::to_string(ny) + "y" + std::to_string(nz) + "z" + std::to_string(simTime) + "t_"
-              + "Leb" + std::to_string(lebedevStencil.nOrder) + "_" + IntensityProfileName(intensityProfile) + "_" + comment,
+              + "Leb" + std::to_string(lebedevStencil.nOrder) + "_" + StreamingName(streamingType) + "_" + IntensityProfileName(intensityProfile) + "_" + comment,
         .simTime = (double)simTime,
         .writeFrequency = 50,
         .updateSphericalHarmonics = false,
         .keepSourceNodesActive = true,
+        .writeData = true,
+        .printToTerminal = false,
+        .useCamera = true
+    };
+    radiation.RunSimulation(config);
+}
+void ThinDiskEta(size_t nx, size_t ny, size_t nz, size_t nTh, int sigma, int simTime, StreamingType streamingType, IntensityProfile intensityProfile, string comment)
+{
+    // Black Hole and Thin Disk:
+    double m = 1;
+    double a = 0;
+    double r = 2 * m;
+    double diskInner = 3 * r;   //  6
+    double diskOuter = 6 * r;   // 12
+
+    // Grid, Metric, Stencil:
+    Coord start(-14,-14,-1);
+    Coord   end( 14, 22, 15);
+    Grid grid(nx, ny, nz, start, end);
+    grid.SetCFL(0.5);
+    SchwarzSchild metric(grid, m, a);
+    Stencil stencil(nTh);
+    stencil.sigma = sigma;
+    LebedevStencil5 lebedevStencil;
+
+    // Camera:
+    size_t resX = 400;
+    size_t resY = 300;
+    size_t width = 26;
+    size_t height = 19.5;
+    Coord position(0,19,6);
+    double degreeToRadians = 2.0 * M_PI / 360.0;
+    double angleX = 100 * degreeToRadians;
+    double angleY = 0 * degreeToRadians;
+    double angleZ = 0 * degreeToRadians;
+    glm::vec3 eulerAngles(angleX,angleY,angleZ);
+    Camera camera(resX, resY, width, height, position, eulerAngles);
+
+    // Radiation:
+    Radiation radiation(metric, stencil, lebedevStencil, camera, streamingType);
+
+    // Initial Data:
+    #pragma omp parallel for
+    for(size_t k=0; k<grid.nz; k++)
+    for(size_t j=0; j<grid.ny; j++)
+    for(size_t i=0; i<grid.nx; i++)
+    {
+        size_t ijk = grid.Index(i,j,k);
+        Coord xyz = grid.xyz(i,j,k);
+        double radius = xyz.Radius();
+        double phi = xyz.Phi();
+
+        // Disk:
+        if(diskInner <= radius && radius <= diskOuter && abs(xyz[3]) < 0.9 * grid.dz)
+        {
+            radiation.isInitialGridPoint[ijk] = true;
+            radiation.initialE[ijk] = 0;
+            radiation.initialNx[ijk] = 0;
+            radiation.initialNy[ijk] = 0;
+            radiation.initialNz[ijk] = 0;
+            radiation.initialKappa0[ijk] = 0;
+            radiation.initialKappa1[ijk] = 0;
+            radiation.initialKappaA[ijk] = 0;
+
+            double alpha = metric.GetAlpha(xyz);
+            double d = (diskOuter - xyz[2]) / (2.0 * diskOuter);
+            if (intensityProfile == IntensityProfile::Uniform)
+                radiation.initialEta[ijk] = 1 / alpha;
+            if (intensityProfile == IntensityProfile::Linear)
+                radiation.initialEta[ijk] = 0.1 + 0.9*d;
+            else if (intensityProfile == IntensityProfile::Squared)
+                radiation.initialEta[ijk] = 0.1 + 0.9*d*d;
+            else if (intensityProfile == IntensityProfile::Cubic)
+                radiation.initialEta[ijk] = 0.1 + 0.9*d*d*d;
+
+            else if (intensityProfile == IntensityProfile::SqFunc)
+                radiation.initialEta[ijk] = 1.7*d*d - 17.0/15.0*d + 0.2;
+            else if (intensityProfile == IntensityProfile::CubFunc1)
+                radiation.initialEta[ijk] = 16*d*d*d - 12*d*d + 2;
+            else if (intensityProfile == IntensityProfile::CubFunc2)
+                radiation.initialEta[ijk] = 24*d*d*d - 20*d*d + 2*d + 2;
+            else if (intensityProfile == IntensityProfile::CubFunc3)
+                radiation.initialEta[ijk] = 32*d*d*d - 28*d*d + 4*d + 2;
+            else if (intensityProfile == IntensityProfile::CubFunc4)
+                radiation.initialEta[ijk] = 28*d*d*d - 22*d*d+ 1*d + 2;
+            else if (intensityProfile == IntensityProfile::CubFunc5)
+                radiation.initialEta[ijk] = 20*d*d*d - 6*d*d - 9*d + 4;
+            else if (intensityProfile == IntensityProfile::CubFunc6)
+                radiation.initialEta[ijk] = 24*d*d*d - 14*d*d - 4*d + 3;
+            else if (intensityProfile == IntensityProfile::CubFunc7)
+                radiation.initialEta[ijk] = 28*d*d*d - 20*d*d - 1*d + 2.5;
+
+            else if (intensityProfile == IntensityProfile::UniformToSquared1)
+            {
+                if (d <= 0.5)
+                    radiation.initialEta[ijk] = 1;
+                else
+                    radiation.initialEta[ijk] = 4.0*(d-0.5)*(d-0.5) + 1;
+            }
+            else if (intensityProfile == IntensityProfile::UniformToSquared2)
+            {
+                if (d <= 0.5)
+                    radiation.initialEta[ijk] = 1;
+                else
+                    radiation.initialEta[ijk] = 8.0*(d-0.5)*(d-0.5) + 1;
+            }
+            else if (intensityProfile == IntensityProfile::UniformToSquared3)
+            {
+                if (d <= 0.5)
+                    radiation.initialEta[ijk] = 1;
+                else
+                    radiation.initialEta[ijk] = 12.0*(d-0.5)*(d-0.5) + 1;
+            }
+        }
+    }
+    
+
+    // Get current time and date:
+    auto t = std::time(nullptr);
+    auto tm = *std::localtime(&t);
+    std::ostringstream oss;
+    oss << std::put_time(&tm, "%H.%M.%S - %d.%m.%Y");
+	string date = oss.str();
+
+    // Start simulation:
+    Config config =
+    {
+        .name = "ThinDisk_Eta_" + metric.Name() + "_" + std::to_string(stencil.nTh) + "th" + std::to_string(stencil.nPh) + "ph_"
+              + std::to_string(nx) + "x" + std::to_string(ny) + "y" + std::to_string(nz) + "z" + std::to_string(simTime) + "t_"
+              + "Leb" + std::to_string(lebedevStencil.nOrder) + "_" + StreamingName(streamingType) + "_" + IntensityProfileName(intensityProfile) + "_" + comment,
+        .simTime = (double)simTime,
+        .writeFrequency = 50,
+        .updateSphericalHarmonics = false,
+        .keepSourceNodesActive = false,
         .writeData = false,
         .printToTerminal = false,
         .useCamera = true
@@ -1368,6 +1674,7 @@ void ThinDisk(size_t nx, size_t ny, size_t nz, size_t nTh, int sigma, int simTim
 // -fix kerr metric initial direction
 // -try higher cfl condition
 // -fix bh rendering with dynamic stencil. Camera broken?
+// -test ComputeMomentsIF with velocty rotation vs moment rotation.
 int main(int argc, char *argv[])
 {
     int n;
@@ -1400,81 +1707,19 @@ int main(int argc, char *argv[])
 
     // Runs:
     // StreamFlatBeam();
+    // StreamFlatBeamCrossing();
+    // StreamCurvedBeamCrossing();
     // StreamFlatStaticSphereWave();
     // StreamFlatDynamicSphereWave();
 
   //StreamCurvedBeam( nx, ny, nz, nTh, sigma,simTime);
     // StreamCurvedBeam( 26, 46, 51,  15,    15,10);
     // StreamCurvedBeam( 26, 46, 51,  19,   20,10);
-
     // StreamCurvedBeam( 51, 91, 101,  15,    15,10);
     // StreamCurvedBeam( 51, 91, 101,  19,    20,10);
-
-
-
-  //ThinDisk( nx, ny, nz, nTh, sigma,simTime, intensityProfile);
-    //ThinDisk(n*21+1,n*27+1,n*12+1,  15,     1,80, IntensityProfile::Linear);
-    // ThinDisk(22,28,13,  19, 1,80, IntensityProfile::Linear, "writeDataTest");
-    // ThinDisk(43,55,25,  19, 1,80, IntensityProfile::Linear, "???");
-    // ThinDisk(64,82,37,  19, 1,80, IntensityProfile::UniformToSquared2, "initalE");
-    // ThinDisk(64,82,37,  19, 1,80, IntensityProfile::Cubic, "etaWithNSCollision");
     
+
+  //ThinDisk( nx, ny, nz, nTh, sigma,simTime, intensityProfile, comment);
     // n€[3,10] 8 takes about 13.5h
-    // ThinDisk(n*21+1,n*27+1,n*12+1,  19, 1,80, IntensityProfile::Uniform,           "initalE_static");
-    // ThinDisk(n*21+1,n*27+1,n*12+1,  19, 1,80, IntensityProfile::Linear,            "initalE_static");
-    // ThinDisk(n*21+1,n*27+1,n*12+1,  19, 1,80, IntensityProfile::Squared,           "initalE_static");
-    // ThinDisk(n*21+1,n*27+1,n*12+1,  19, 1,80, IntensityProfile::Cubic,             "initalE_static");
-    // ThinDisk(n*21+1,n*27+1,n*12+1,  19, 1,80, IntensityProfile::SqFunc,            "initalE_static");
-    // ThinDisk(n*21+1,n*27+1,n*12+1,  19, 1,80, IntensityProfile::CubFunc1,           "initalE_static");
-    // ThinDisk(n*21+1,n*27+1,n*12+1,  19, 1,80, IntensityProfile::CubFunc2,          "initalE_static");
-    // ThinDisk(n*21+1,n*27+1,n*12+1,  19, 1,80, IntensityProfile::CubFunc3,          "initalE_static");
-    // ThinDisk(n*21+1,n*27+1,n*12+1,  19, 1,80, IntensityProfile::CubFunc4,          "initalE_static");
-    // ThinDisk(n*21+1,n*27+1,n*12+1,  19, 1,80, IntensityProfile::CubFunc5,          "initalE_static");
-    // ThinDisk(n*21+1,n*27+1,n*12+1,  19, 1,80, IntensityProfile::CubFunc6,          "initalE_static");
-    ThinDisk(n*21+1,n*27+1,n*12+1,  19, 1,80, IntensityProfile::CubFunc7,          "initalE_static");
-    // ThinDisk(n*21+1,n*27+1,n*12+1,  19, 1,80, IntensityProfile::UniformToSquared1,  "initalE_static");
-    // ThinDisk(n*21+1,n*27+1,n*12+1,  19, 1,80, IntensityProfile::UniformToSquared2, "initalE_static");
-    // ThinDisk(n*21+1,n*27+1,n*12+1,  19, 1,80, IntensityProfile::UniformToSquared3, "initalE_static");
-
-    // ThinDisk(4*21+1,4*27+1,4*12+1,  19, 1,80, IntensityProfile::UniformToSquared3, "initalE");
-    // ThinDisk(5*21+1,5*27+1,5*12+1,  19, 1,80, IntensityProfile::UniformToSquared3, "initalE");
-    // ThinDisk(6*21+1,6*27+1,6*12+1,  19, 1,80, IntensityProfile::UniformToSquared3, "initalE");
-    // ThinDisk(7*21+1,7*27+1,7*12+1,  19, 1,80, IntensityProfile::UniformToSquared3, "initalE");
-    // ThinDisk(8*21+1,8*27+1,8*12+1,  19, 1,80, IntensityProfile::UniformToSquared3, "initalE");
-    // ThinDisk(9*21+1,9*27+1,9*12+1,  19, 1,80, IntensityProfile::UniformToSquared3, "initalE");
-    // ThinDisk(10*21+1,10*27+1,10*12+1,  19, 1,80, IntensityProfile::UniformToSquared3, "initalE");   // running: 266884
-
-
-    // Super low res, low dir:
-    // ThinDisk(64,82, 46,  15,     1,80, true);
-    // ThinDisk(64,82, 46,  19,     1,80, false);
-
-    // Low res, low dir:
-    // ThinDisk(106,136, 76,  15,     1,80, true);
-    // ThinDisk(106,136, 76,  15,     1,80, false);
-
-    // Low res, high dir:
-    // ThinDisk(106,136, 76,  19,     1,80, true);
-    // ThinDisk(106,136, 76,  19,     1,80, false);
-
-
-    // Middle res, low dir:
-    // ThinDisk(148,190,106,  15,     1,80, true);
-    // ThinDisk(148,190,106,  15,     1,80, false);
-
-    // Middle res, high dir:
-    // ThinDisk(148,190,106,  19,     1,80, true);
-    // ThinDisk(148,190,106,  19,     1,80, false);
-
-
-    // high res, low dir:
-    // ThinDisk(211,271, 151,  15,     1,80, true);
-    // ThinDisk(211,271, 151,  15,     1,80, false);
-
-    // high res, high dir:
-    // ThinDisk(211,271, 151,  19,     1,80, true);
-    // ThinDisk(211,271, 151,  19,     1,80, false);
-
-    // Super high res, high dir:
-    // ThinDisk(253,325, 181,  19,     1,80, false);
+    ThinDiskE(n*21+1,n*27+1,n*12+1,  9, 1,80, StreamingType::CurvedDynamic ,IntensityProfile::Uniform,           "lowDir");
 }

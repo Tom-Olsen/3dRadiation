@@ -20,7 +20,6 @@ public:
     Coord position;
     glm::vec3 eulerAngles;
     Tensor3 lookDirection;
-    Tensor3 orthogonalPassThrough;
 
     Camera(int resX, int resY, int width, int height, Coord position, glm::vec3 eulerAngles);
     Camera();
