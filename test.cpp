@@ -1,5 +1,6 @@
 #include <iostream>
 #include "src/Includes.hh"
+#include "src/Radiation2.h"
 
 using namespace std;
 
@@ -1600,12 +1601,84 @@ void Test_HarmonicsBenchmark()
             cout << "errors Xyz: " << errors << endl;
         }
     }
+	session.End();
     cout << endl;
 
 	std::vector<std::string> names = session.GetAllFunctionNames();
 	for(int i=0; i<names.size(); i++)
         session.PrintFunctionDuration(names[i]);
 }
+
+
+
+void Test_Radiation2(int nOrder)
+{
+    // Black Hole and Thin Disk:
+    double m = 1;
+    double a = 0;
+    double r = 2 * m;
+    double diskInner = 3 * r;   //  6
+    double diskOuter = 6 * r;   // 12
+
+    // Grid, Metric, Stencil:
+    Coord start(-1,-1,-1);
+    Coord   end( 1, 1, 1);
+    Grid grid(50, 50, 50, start, end);
+    grid.SetCFL(0.5);
+    Minkowski metric(grid, m, a);
+    LebedevStencil intensityStencil(nOrder);
+    LebedevStencil streamingStencil(5);
+
+    // Camera:
+    size_t resX = 200;
+    size_t resY = 200;
+    size_t width = 2;
+    size_t height = 2;
+    Coord position(0,0,0.9);
+    double degreeToRadians = 2.0 * M_PI / 360.0;
+    double angleX = 180 * degreeToRadians;
+    double angleY = 0 * degreeToRadians;
+    double angleZ = 0 * degreeToRadians;
+    glm::vec3 eulerAngles(angleX,angleY,angleZ);
+    Camera camera(resX, resY, width, height, position, eulerAngles);
+
+    // Radiation:
+    Radiation2 radiation(metric, intensityStencil, streamingStencil, camera);
+    radiation.sigma = 1.0;
+
+    // Initial Data:
+    for(size_t k=0; k<grid.nz; k++)
+    for(size_t j=0; j<grid.ny; j++)
+    for(size_t i=0; i<grid.nx; i++)
+    {
+        size_t ijk = grid.Index(i,j,k);
+        Coord xyz = grid.xyz(i,j,k);
+        double r = xyz.Radius();
+        if (r < 0.1)
+        {
+            radiation.isInitialGridPoint[ijk] = true;
+            radiation.initialE[ijk] = 1;
+            radiation.initialNx[ijk] = xyz[1] / r;
+            radiation.initialNy[ijk] = xyz[2] / r;
+            radiation.initialNz[ijk] = xyz[3] / r;
+        }
+    }
+
+    Config2 config =
+    {
+        .name = "Test_Radiation2(" + std::to_string(nOrder) + ")",
+        .simTime = 1,
+        .writeFrequency = 50,
+        .updateSphericalHarmonics = false,
+        .keepSourceNodesActive = false,
+        .writeData = true,
+        .printToTerminal = false,
+        .useCamera = true
+    };
+    radiation.RunSimulation(config);
+}
+
+
 
 // Note:
 // -TE changed from 1e-6 to 1e-4
@@ -1641,6 +1714,10 @@ int main(int argc, char *argv[])
     // Test_Camera();
     // Test_Emission( 25, 45, 50,  20,    15,10);
     // Test_HarmonicsBenchmark();
+    Test_Radiation2(7);
+    Test_Radiation2(9);
+    Test_Radiation2(11);
+    Test_Radiation2(13);
 
     // Visualization data:
     // BlackHoleCsv();
@@ -1661,6 +1738,6 @@ int main(int argc, char *argv[])
 
   //ThinDisk( nx, ny, nz, nTh, sigma,simTime, intensityProfile, comment);
     // n€[3,10] 8 takes about 13.5h
-    ThinDiskE(n*21+1,n*27+1,n*12+1,  9, 1,80, StreamingType::CurvedDynamic ,IntensityProfile::Uniform,           "harmonicRefactor");
-    ThinDiskE(n*21+1,n*27+1,n*12+1,  9, 1,80, StreamingType::CurvedStatic  ,IntensityProfile::Uniform,           "harmonicRefactor");
+    // ThinDiskE(n*21+1,n*27+1,n*12+1,  9, 1,80, StreamingType::CurvedDynamic ,IntensityProfile::Uniform,           "harmonicRefactor");
+    // ThinDiskE(n*21+1,n*27+1,n*12+1,  9, 1,80, StreamingType::CurvedStatic  ,IntensityProfile::Uniform,           "harmonicRefactor");
 }
