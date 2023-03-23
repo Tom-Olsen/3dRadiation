@@ -2,7 +2,7 @@
 #define __INCLUDE_GUARD_Log_hh__
 #include <math.h>       // Basic math.
 #include "Metric.h"     // Metric data.
-#include "Stencil.hh"   // Velocity stencil.
+#include "Stencil.h"    // Velocity stencil.
 
 
 
@@ -12,7 +12,7 @@ public:
     // General simulation parameters:
     int timeSteps;
     float simTime;
-    Stencil& stencil;
+    MyStencil& stencil;
     LebedevStencil& lebedevStencil;
     Metric& metric;
 
@@ -23,7 +23,7 @@ public:
     std::vector<std::string> timeNames;
     std::vector<double> timeMeasurements;
 
-    Log(std::string name_, double simTime_, Stencil& stencil_, LebedevStencil& lebedevStencil_, Metric& metric_) :
+    Log(std::string name_, double simTime_, MyStencil& stencil_, LebedevStencil& lebedevStencil_, Metric& metric_) :
     name(name_), stencil(stencil_), lebedevStencil(lebedevStencil_), metric(metric_)
     {
         // Derived from simulation parameters:
@@ -72,7 +72,6 @@ public:
 	    file << "nLebedev = " << lebedevStencil.nDir << std::endl;
 	    file << "oLebedev = " << lebedevStencil.nOrder << std::endl;
 	    file << "n Coeff  = " << lebedevStencil.nCoefficients << std::endl;
-	    file << "Normal distribution sigma = " << stencil.sigma << std::endl << std::endl;
 
 	    file << "Time measurements:" << std::endl;
 	    for(int i=0; i<timeMeasurements.size(); i++)

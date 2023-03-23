@@ -70,6 +70,13 @@ inline double IntegerPow<0>(double a)
 { return 1; }
 
 
+template<int N>
+inline double Factorial()
+{ return N * Factorial<N-1>(); }
+template<>
+inline double Factorial<0>()
+{ return 1; }
+
 
 /// @brief Polynomial approximation of atan(z). Much faster then std libraries.
 /// @tparam Order Polynomial approximation order [0,3,5,7,9,11]. Use 0 for rational approximation.

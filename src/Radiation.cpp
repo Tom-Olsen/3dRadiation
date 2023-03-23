@@ -16,7 +16,7 @@ std::string StreamingName(int n)
 
 
 
-Radiation::Radiation(Metric& metric, Stencil& stencil, LebedevStencil& lebedevStencil, Camera& camera, StreamingType streamingType):
+Radiation::Radiation(Metric& metric, MyStencil& stencil, LebedevStencil& lebedevStencil, Camera& camera, StreamingType streamingType):
 grid(metric.grid), metric(metric), stencil(stencil), lebedevStencil(lebedevStencil), camera(camera), streamingType(streamingType)
 {
 	isInitialGridPoint = new bool[grid.nxyz]();
@@ -54,8 +54,8 @@ grid(metric.grid), metric(metric), stencil(stencil), lebedevStencil(lebedevStenc
 	kappa1.resize(grid.nxyz);
 	kappaA.resize(grid.nxyz);
 	eta.resize(grid.nxyz);
-	I.resize(grid.nxyz * stencil.nThPh);
-	Inew.resize(grid.nxyz * stencil.nThPh);
+	I.resize(grid.nxyz * stencil.nDir);
+	Inew.resize(grid.nxyz * stencil.nDir);
 	Inorth.resize(grid.nxyz);
 	Isouth.resize(grid.nxyz);
 	coefficientsS.resize(grid.nxyz * lebedevStencil.nCoefficients);
@@ -88,7 +88,7 @@ size_t Radiation::Index(size_t ijk, size_t d)
 		return ijk + d * grid.nxyz;
 	#endif
 	#ifdef d0d1ijk
-		return ijk * stencil.nThPh + d;
+		return ijk * stencil.nDir + d;
 	#endif
 }
 size_t Radiation::Index(size_t ijk, size_t d0, size_t d1)
@@ -98,7 +98,7 @@ size_t Radiation::Index(size_t ijk, size_t d0, size_t d1)
 		return ijk + d * grid.nxyz;
 	#endif
 	#ifdef d0d1ijk
-		return ijk * stencil.nThPh + d;
+		return ijk * stencil.nDir + d;
 	#endif
 }
 size_t Radiation::Index(size_t i, size_t j, size_t k, size_t d)
@@ -108,7 +108,7 @@ size_t Radiation::Index(size_t i, size_t j, size_t k, size_t d)
 		return ijk + d * grid.nxyz;
 	#endif
 	#ifdef d0d1ijk
-		return ijk * stencil.nThPh + d;
+		return ijk * stencil.nDir + d;
 	#endif
 }
 size_t Radiation::Index(size_t i, size_t j, size_t k, size_t d0, size_t d1)
@@ -119,7 +119,7 @@ size_t Radiation::Index(size_t i, size_t j, size_t k, size_t d0, size_t d1)
 		return ijk + d * grid.nxyz;
 	#endif
 	#ifdef d0d1ijk
-		return ijk * stencil.nThPh + d;
+		return ijk * stencil.nDir + d;
 	#endif
 }
 size_t Radiation::HarmonicIndex(size_t f, size_t ijk)
@@ -189,7 +189,7 @@ void Radiation::LoadInitialData()
 				else	// (0,0,0) is an invalid direction. Set to identity:
 					q[ijk] = glm::quat(1,0,0,0);
 
-				for(int d=0; d<stencil.nThPh; d++)
+				for(int d=0; d<stencil.nDir; d++)
 					I[Index(ijk,d)] = initialE[ijk];
 				Inorth[ijk] = initialE[ijk];
 				Isouth[ijk] = initialE[ijk];
@@ -208,11 +208,11 @@ void Radiation::LoadInitialData()
 				for(size_t d0=0; d0<stencil.nTh; d0++)
 				{
 					size_t d = stencil.Index(d0,d1);
-					Tensor3 p = stencil.Cxyz(d0,d1);
-					I[Index(ijk,d)] = initialE[ijk] * exp(stencil.sigma * Tensor3::Dot(n, p));
+					Tensor3 p = stencil.C(d0,d1);
+					I[Index(ijk,d)] = initialE[ijk] * exp(sigma * Tensor3::Dot(n, p));
 				}
-				Inorth[ijk] = initialE[ijk] * exp(stencil.sigma * Tensor3::Dot(n, Tensor3(0,0, 1)));
-				Isouth[ijk] = initialE[ijk] * exp(stencil.sigma * Tensor3::Dot(n, Tensor3(0,0,-1)));
+				Inorth[ijk] = initialE[ijk] * exp(sigma * Tensor3::Dot(n, Tensor3(0,0, 1)));
+				Isouth[ijk] = initialE[ijk] * exp(sigma * Tensor3::Dot(n, Tensor3(0,0,-1)));
 			}
 		}
 	}
@@ -255,7 +255,7 @@ void Radiation::UpdateSphericalHarmonicsCoefficients()
 			// Initial data for geodesic equation:
 			double s = 1;
 			Coord xyz = xyz0;
-            Tensor3 c = lebedevStencil.Cxyz(d);
+            Tensor3 c = lebedevStencil.C(d);
             Tensor4 uIF(alpha, c[1] * alpha, c[2] * alpha, c[3] * alpha);
             Tensor3 vLF = Vec3ObservedByEulObs<IF,LF>(uIF, xyz, metric);
 
@@ -276,13 +276,13 @@ void Radiation::UpdateSphericalHarmonicsCoefficients()
 			dataCy[d] = vIF[2];
 			dataCz[d] = vIF[3];
     	}
-		std::vector<double> cS  = SphericalHarmonics::GetCoefficients(lebedevStencil, dataS , lebedevStencil.nCoefficients);
-		std::vector<double> cX  = SphericalHarmonics::GetCoefficients(lebedevStencil, dataX , lebedevStencil.nCoefficients);
-		std::vector<double> cY  = SphericalHarmonics::GetCoefficients(lebedevStencil, dataY , lebedevStencil.nCoefficients);
-		std::vector<double> cZ  = SphericalHarmonics::GetCoefficients(lebedevStencil, dataZ , lebedevStencil.nCoefficients);
-		std::vector<double> cCx = SphericalHarmonics::GetCoefficients(lebedevStencil, dataCx, lebedevStencil.nCoefficients);
-		std::vector<double> cCy = SphericalHarmonics::GetCoefficients(lebedevStencil, dataCy, lebedevStencil.nCoefficients);
-		std::vector<double> cCz = SphericalHarmonics::GetCoefficients(lebedevStencil, dataCz, lebedevStencil.nCoefficients);
+		std::vector<double> cS  = SphericalHarmonicsXyz::GetCoefficients(lebedevStencil, dataS );
+		std::vector<double> cX  = SphericalHarmonicsXyz::GetCoefficients(lebedevStencil, dataX );
+		std::vector<double> cY  = SphericalHarmonicsXyz::GetCoefficients(lebedevStencil, dataY );
+		std::vector<double> cZ  = SphericalHarmonicsXyz::GetCoefficients(lebedevStencil, dataZ );
+		std::vector<double> cCx = SphericalHarmonicsXyz::GetCoefficients(lebedevStencil, dataCx);
+		std::vector<double> cCy = SphericalHarmonicsXyz::GetCoefficients(lebedevStencil, dataCy);
+		std::vector<double> cCz = SphericalHarmonicsXyz::GetCoefficients(lebedevStencil, dataCz);
 
 		for(size_t f=0; f<lebedevStencil.nCoefficients; f++)
 		{
@@ -321,7 +321,7 @@ void Radiation::ComputeMomentsIF()
 		for(size_t d1=0; d1<stencil.nPh; d1++)
 		for(size_t d0=0; d0<stencil.nTh; d0++)
 		{
-			Tensor3 cxyz = stencil.Cxyz(d0,d1);
+			Tensor3 cxyz = stencil.C(d0,d1);
 			//Tensor3 cxyz = q[ijk] * stencil.Cxyz(d0,d1);
 			size_t d = stencil.Index(d0,d1);
 			size_t index = Index(ijk,d);
@@ -388,13 +388,13 @@ Coord Radiation::GetTempCoordinate(size_t ijk, Tensor3 direction)
 
 	for(size_t f=0; f<lebedevStencil.nCoefficients; f++)
 		evaluationCoefficients[f] = coefficientsX[HarmonicIndex(f,ijk)];
-	xyzTemp[1] = SphericalHarmonics::GetValue(direction,evaluationCoefficients,lebedevStencil.nCoefficients);
+	xyzTemp[1] = SphericalHarmonicsXyz::GetValue(direction,evaluationCoefficients,lebedevStencil.nCoefficients);
 	for(size_t f=0; f<lebedevStencil.nCoefficients; f++)
 		evaluationCoefficients[f] = coefficientsY[HarmonicIndex(f,ijk)];
-	xyzTemp[2] = SphericalHarmonics::GetValue(direction,evaluationCoefficients,lebedevStencil.nCoefficients);
+	xyzTemp[2] = SphericalHarmonicsXyz::GetValue(direction,evaluationCoefficients,lebedevStencil.nCoefficients);
 	for(size_t f=0; f<lebedevStencil.nCoefficients; f++)
 		evaluationCoefficients[f] = coefficientsZ[HarmonicIndex(f,ijk)];
-	xyzTemp[3] = SphericalHarmonics::GetValue(direction,evaluationCoefficients,lebedevStencil.nCoefficients);
+	xyzTemp[3] = SphericalHarmonicsXyz::GetValue(direction,evaluationCoefficients,lebedevStencil.nCoefficients);
 
 	return xyzTemp;
 }
@@ -405,13 +405,13 @@ Tensor3 Radiation::GetTemp3VelocityIF(size_t ijk, Tensor3 direction)
 
 	for(size_t f=0; f<lebedevStencil.nCoefficients; f++)
 		evaluationCoefficients[f] = coefficientsCx[HarmonicIndex(f,ijk)];
-	vTempIF[1] = SphericalHarmonics::GetValue(direction,evaluationCoefficients,lebedevStencil.nCoefficients);
+	vTempIF[1] = SphericalHarmonicsXyz::GetValue(direction,evaluationCoefficients,lebedevStencil.nCoefficients);
 	for(size_t f=0; f<lebedevStencil.nCoefficients; f++)
 		evaluationCoefficients[f] = coefficientsCy[HarmonicIndex(f,ijk)];
-	vTempIF[2] = SphericalHarmonics::GetValue(direction,evaluationCoefficients,lebedevStencil.nCoefficients);
+	vTempIF[2] = SphericalHarmonicsXyz::GetValue(direction,evaluationCoefficients,lebedevStencil.nCoefficients);
 	for(size_t f=0; f<lebedevStencil.nCoefficients; f++)
 		evaluationCoefficients[f] = coefficientsCz[HarmonicIndex(f,ijk)];
-	vTempIF[3] = SphericalHarmonics::GetValue(direction,evaluationCoefficients,lebedevStencil.nCoefficients);
+	vTempIF[3] = SphericalHarmonicsXyz::GetValue(direction,evaluationCoefficients,lebedevStencil.nCoefficients);
 
 	return vTempIF;
 }
@@ -420,7 +420,7 @@ double Radiation::GetFrequencyShift(size_t ijk, Tensor3 direction)
 	double evaluationCoefficients[lebedevStencil.nCoefficients];
 	for(size_t f=0; f<lebedevStencil.nCoefficients; f++)
 		evaluationCoefficients[f] = coefficientsS[HarmonicIndex(f,ijk)];
-	return SphericalHarmonics::GetValue(direction,evaluationCoefficients,lebedevStencil.nCoefficients);
+	return SphericalHarmonicsXyz::GetValue(direction,evaluationCoefficients,lebedevStencil.nCoefficients);
 }
 
 
@@ -598,14 +598,14 @@ void Radiation::StreamFlatKernal(size_t i, size_t j,size_t k, size_t d0, size_t 
 	if constexpr(std::is_same<StaticOrDynamic,Dynamic>::value)
 	{
 		if constexpr(std::is_same<IntensityType,Bulk>::value)
-			vTempIF = qNew[ijk] * stencil.Cxyz(d0,d1);
+			vTempIF = qNew[ijk] * stencil.C(d0,d1);
 		if constexpr(std::is_same<IntensityType,North>::value)
 			vTempIF = qNew[ijk] * Tensor3(0,0,1);
 		if constexpr(std::is_same<IntensityType,South>::value)
 			vTempIF = qNew[ijk] * Tensor3(0,0,-1);
 	}
 	if constexpr(std::is_same<StaticOrDynamic,Static>::value)
-		vTempIF = stencil.Cxyz(d0,d1);
+		vTempIF = stencil.C(d0,d1);
 
 	// Get temp lattice point:
 	Coord xyzTemp = grid.xyz(i,j,k);
@@ -742,7 +742,7 @@ void Radiation::StreamCurvedKernal(size_t i, size_t j, size_t k, size_t d0, size
 	if constexpr(std::is_same<StaticOrDynamic,Dynamic>::value)
 	{
 		if constexpr(std::is_same<IntensityType,Bulk>::value)
-			direction = qNew[ijk] * stencil.Cxyz(d0,d1);
+			direction = qNew[ijk] * stencil.C(d0,d1);
 		if constexpr(std::is_same<IntensityType,North>::value)
 			direction = qNew[ijk] * Tensor3(0,0,1);
 		if constexpr(std::is_same<IntensityType,South>::value)
@@ -751,7 +751,7 @@ void Radiation::StreamCurvedKernal(size_t i, size_t j, size_t k, size_t d0, size
 	if constexpr(std::is_same<StaticOrDynamic,Static>::value)
 	{
 		if constexpr(std::is_same<IntensityType,Bulk>::value)
-			direction = stencil.Cxyz(d0,d1);
+			direction = stencil.C(d0,d1);
 		if constexpr(std::is_same<IntensityType,North>::value)
 			direction = Tensor3(0,0,1);
 		if constexpr(std::is_same<IntensityType,South>::value)
@@ -860,7 +860,7 @@ void Radiation::Collide()
 		{
 			size_t d = stencil.Index(d0,d1);
 			size_t index = Index(ijk,d);
-			double A = W * (1.0 - Tensor3::Dot(q[ijk] * stencil.Cxyz(d0,d1), u));
+			double A = W * (1.0 - Tensor3::Dot(q[ijk] * stencil.C(d0,d1), u));
 
 			double Gamma = stencil.W(d0,d1) * (eta[ijk] + kappa0[ijk]*fluidE) / (A*A*A) - A*I[index] * (kappaA[ijk] + kappa0[ijk]);
 			I[index] += alpha * metric.grid.dt * Gamma;
@@ -882,7 +882,7 @@ void Radiation::TakePicture()
 	// ij is camera index
 	// i,j,k are grid indexes and not related to ij.
 	PROFILE_FUNCTION();
-	#pragma omp parallel for
+	PARALLEL_FOR(1)
 	for(size_t ij=0; ij<camera.pixelCount; ij++)
 	{
 		Coord pixel = camera.xyz(ij);
@@ -952,7 +952,7 @@ void Radiation::RunSimulation(Config config)
 	// Initial data output:
 	if (config.printToTerminal)
 	{
-		std::cout << " sigma        = " << stencil.sigma << "\n";
+		std::cout << " sigma        = " << sigma << "\n";
 		std::cout << " nx           = " << grid.nx << "\n";
 		std::cout << " ny           = " << grid.ny << "\n";
 		std::cout << " nz           = " << grid.nz << "\n";

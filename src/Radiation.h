@@ -15,7 +15,7 @@
 #include "Metric.h"				    	// Metric parent class.
 #include "GeodesicEquationSolver.h"		// Solves geodesic equation, given xyz coordinates, LF 3 velocity, and metric.
 #include "TensorOperations.h"       	// More specific tensor operations, nullNormalize etc.
-#include "Stencil.hh"					// Velocity stencils.
+#include "Stencil.h"					// Velocity stencils.
 #include "SphericalHarmonics.h"     	// Real spherical harmonic functions and expansion.
 #include "Log.hh"						// log final results.
 #include "Camera.h"						// orthographic camera to take images of radiation field.
@@ -48,9 +48,10 @@ public:
 	StreamingType streamingType;
 	Grid& grid;
 	Metric& metric;
-	Stencil& stencil;
+	MyStencil& stencil;
 	LebedevStencil& lebedevStencil;
 	Camera& camera;
+	double sigma = 1.0;
 
 
 	bool* isInitialGridPoint;
@@ -102,7 +103,7 @@ public:
 	RealBuffer coefficientsCz;
 
 	Radiation() = delete;
-	Radiation(Metric& metric, Stencil& stencil, LebedevStencil& lebedevStencil, Camera& camera, StreamingType streamingType);
+	Radiation(Metric& metric, MyStencil& stencil, LebedevStencil& lebedevStencil, Camera& camera, StreamingType streamingType);
 	~Radiation();
 
 	size_t Index(size_t ijk, size_t d);

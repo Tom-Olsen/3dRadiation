@@ -293,216 +293,49 @@ void Test_GeodesicEquationSolver()
 
 void Test_Stencil()
 {
-    Stencil stencil(5);
-    stencil.Print();
+    MyStencil stencil(5);
 
-    {
-        double d0 = 2.3;
-        double d1 = 6.7;
-        double x = stencil.Cx(d0,d1);
-        double y = stencil.Cy(d0,d1);
-        double z = stencil.Cz(d0,d1);
-        double theta = stencil.Theta(d0,d1);
-        double phi = stencil.Phi(d0,d1);
-        Tensor3 cxyz = stencil.Cxyz(d0,d1);
-        cout << theta << ", " << cxyz.Theta() << endl;
-        cout << phi << ", " << cxyz.Phi() << endl;
-    }
-    cout << endl;
-}
-void Test_LebedevStencil()
-{
-    LebedevStencil3 lebedev3;
-    lebedev3.Print();
-    LebedevStencil5 lebedev5;
-    lebedev5.Print();
-    LebedevStencil7 lebedev7;
-    lebedev7.Print();
-}
-
-
-
-void Test_Quadrature()
-{
-    size_t nTh = 19;
-    Stencil stencil(nTh);
-
-    double data[stencil.nThPh];
-    for(size_t d1=0; d1<stencil.nPh; d1++)
-    for(size_t d0=0; d0<stencil.nTh; d0++)
-    {
-        double x = stencil.Cx(d0,d1);
-        double y = stencil.Cy(d0,d1);
-        double z = stencil.Cz(d0,d1);
-
-        size_t d = stencil.Index(d0,d1);
-        data[d] = 0.1 *SphericalHarmonics::Y00(x,y,z);
-
-        data[d] += 1.0 * SphericalHarmonics::Y1m1(x,y,z);
-        data[d] += 1.1 * SphericalHarmonics::Y10(x,y,z);
-        data[d] += 1.2 * SphericalHarmonics::Y1p1(x,y,z);
-        
-        data[d] += 2.1 * SphericalHarmonics::Y2m2(x,y,z);
-        data[d] += 2.2 * SphericalHarmonics::Y2m1(x,y,z);
-        data[d] += 2.3 * SphericalHarmonics::Y20(x,y,z);
-        data[d] += 2.4 * SphericalHarmonics::Y2p1(x,y,z);
-        data[d] += 2.5 * SphericalHarmonics::Y2p2(x,y,z);
-        
-        data[d] += 3.0 * SphericalHarmonics::Y3m3(x,y,z);
-        data[d] += 3.1 * SphericalHarmonics::Y3m2(x,y,z);
-        data[d] += 3.2 * SphericalHarmonics::Y3m1(x,y,z);
-        data[d] += 3.3 * SphericalHarmonics::Y30 (x,y,z);
-        data[d] += 3.4 * SphericalHarmonics::Y3p1(x,y,z);
-        data[d] += 3.5 * SphericalHarmonics::Y3p2(x,y,z);
-        data[d] += 3.6 * SphericalHarmonics::Y3p3(x,y,z);
-        
-        data[d] += 4.0 * SphericalHarmonics::Y4m4(x,y,z);
-        data[d] += 4.1 * SphericalHarmonics::Y4m3(x,y,z);
-        data[d] += 4.2 * SphericalHarmonics::Y4m2(x,y,z);
-        data[d] += 4.3 * SphericalHarmonics::Y4m1(x,y,z);
-        data[d] += 4.4 * SphericalHarmonics::Y40 (x,y,z);
-        data[d] += 4.5 * SphericalHarmonics::Y4p1(x,y,z);
-        data[d] += 4.6 * SphericalHarmonics::Y4p2(x,y,z);
-        data[d] += 4.7 * SphericalHarmonics::Y4p3(x,y,z);
-        data[d] += 4.8 * SphericalHarmonics::Y4p4(x,y,z);
-    }
-    vector<double>c = SphericalHarmonics::GetCoefficients(stencil,data,min(stencil.nCoefficients,(size_t)25));
-    
-    for(size_t i=0; i<c.size(); i++)
-        cout << "c" << i << ": " << c[i] << endl;
-    cout << endl;
-
-    cout << "Real Value, Compressed Value:" << endl;
-    size_t d0 = stencil.nTh/2;
-    size_t d1 = stencil.nPh/2;
+    double d0 = 2.3;
+    double d1 = 6.7;
+    double x = stencil.Cx(d0,d1);
+    double y = stencil.Cy(d0,d1);
+    double z = stencil.Cz(d0,d1);
     double theta = stencil.Theta(d0,d1);
     double phi = stencil.Phi(d0,d1);
-    cout << data[stencil.Index(d0,d1)] << ", " << SphericalHarmonics::GetValue(theta,phi,c,min(stencil.nCoefficients,(size_t)25)) << endl << endl;
+    Tensor3 cxyz = stencil.C(d0,d1);
+    cout << theta << ", " << cxyz.Theta() << endl;
+    cout << phi << ", " << cxyz.Phi() << endl;
+    cout << endl;
+}
 
+
+
+void Test_Quadrature(const Stencil& stencil)
+{
+    cout << "nDir = " << stencil.nDir << endl;
+    cout << "nOrder = " << stencil.nOrder << endl;
     cout << "nCoefficients = " << stencil.nCoefficients << endl;
-    // stencil.Print();
-    stencil.WriteToCsv();
-}
-void Test_QuadratureLebedev()
-{
-    LebedevStencil7 lebedev;
 
-    double data[lebedev.nDir];
-    for(size_t d=0; d<lebedev.nDir; d++)
+    double data[stencil.nDir];
+    for(size_t d=0; d<stencil.nDir; d++)
     {
-        double x = lebedev.Cx(d);
-        double y = lebedev.Cy(d);
-        double z = lebedev.Cz(d);
-
-        data[d] = 0.1 *SphericalHarmonics::Y00(x,y,z);
-
-        data[d] += 1.0 * SphericalHarmonics::Y1m1(x,y,z);
-        data[d] += 1.1 * SphericalHarmonics::Y10(x,y,z);
-        data[d] += 1.2 * SphericalHarmonics::Y1p1(x,y,z);
-        
-        data[d] += 2.1 * SphericalHarmonics::Y2m2(x,y,z);
-        data[d] += 2.2 * SphericalHarmonics::Y2m1(x,y,z);
-        data[d] += 2.3 * SphericalHarmonics::Y20(x,y,z);
-        data[d] += 2.4 * SphericalHarmonics::Y2p1(x,y,z);
-        data[d] += 2.5 * SphericalHarmonics::Y2p2(x,y,z);
-        
-        data[d] += 3.0 * SphericalHarmonics::Y3m3(x,y,z);
-        data[d] += 3.1 * SphericalHarmonics::Y3m2(x,y,z);
-        data[d] += 3.2 * SphericalHarmonics::Y3m1(x,y,z);
-        data[d] += 3.3 * SphericalHarmonics::Y30 (x,y,z);
-        data[d] += 3.4 * SphericalHarmonics::Y3p1(x,y,z);
-        data[d] += 3.5 * SphericalHarmonics::Y3p2(x,y,z);
-        data[d] += 3.6 * SphericalHarmonics::Y3p3(x,y,z);
-        
-        data[d] += 4.0 * SphericalHarmonics::Y4m4(x,y,z);
-        data[d] += 4.1 * SphericalHarmonics::Y4m3(x,y,z);
-        data[d] += 4.2 * SphericalHarmonics::Y4m2(x,y,z);
-        data[d] += 4.3 * SphericalHarmonics::Y4m1(x,y,z);
-        data[d] += 4.4 * SphericalHarmonics::Y40 (x,y,z);
-        data[d] += 4.5 * SphericalHarmonics::Y4p1(x,y,z);
-        data[d] += 4.6 * SphericalHarmonics::Y4p2(x,y,z);
-        data[d] += 4.7 * SphericalHarmonics::Y4p3(x,y,z);
-        data[d] += 4.8 * SphericalHarmonics::Y4p4(x,y,z);
+        Tensor3 dir = stencil.C(d);
+        data[d] = 0;
+        for(int k=0; k<stencil.nCoefficients; k++)
+            data[d] += (k+1) * SphericalHarmonicsXyz::Y(k,dir);
     }
-    vector<double>c = SphericalHarmonics::GetCoefficients(lebedev,data,min(lebedev.nCoefficients,(size_t)25));
 
-    for(size_t i=0; i<c.size(); i++)
-        cout << "c" << i << ": " << c[i] << endl;
+    double coefficients[stencil.nDir];
+    SphericalHarmonicsXyz::GetCoefficients(stencil,data,coefficients);
+    // vector<double> coefficients = SphericalHarmonicsXyz::GetCoefficients(*stencil,data);
+    
+    for(size_t i=0; i<stencil.nCoefficients; i++)
+        cout << "c" << i << ": " << coefficients[i] << endl;
     cout << endl;
-    
+
     cout << "Real Value, Compressed Value:" << endl;
-    size_t d = lebedev.nDir / 2;
-    double theta = lebedev.Theta(d);
-    double phi = lebedev.Phi(d);
-    cout << data[d] << ", " << SphericalHarmonics::GetValue(theta,phi,c,min(lebedev.nCoefficients,(size_t)25)) << endl << endl;
-
-    cout << "         nDir = " << lebedev.nDir << endl;
-    cout << "       nOrder = " << lebedev.nOrder << endl;
-    cout << "nCoefficients = " << lebedev.nCoefficients << endl;
-    
-    lebedev.Print();
-    lebedev.WriteToCsv();
-}
-void Test_QuadratureGaussLegendre()
-{
-    // SphericalHarmonics::GetCoefficients only supported up to 9
-    GaussLegendreStencil19 gauss;
-
-    double data[gauss.nDir];
-    for(size_t d=0; d<gauss.nDir; d++)
-    {
-        double x = gauss.Cx(d);
-        double y = gauss.Cy(d);
-        double z = gauss.Cz(d);
-
-        data[d] = 0.1 *SphericalHarmonics::Y00(x,y,z);
-
-        data[d] += 1.0 * SphericalHarmonics::Y1m1(x,y,z);
-        data[d] += 1.1 * SphericalHarmonics::Y10(x,y,z);
-        data[d] += 1.2 * SphericalHarmonics::Y1p1(x,y,z);
-        
-        data[d] += 2.1 * SphericalHarmonics::Y2m2(x,y,z);
-        data[d] += 2.2 * SphericalHarmonics::Y2m1(x,y,z);
-        data[d] += 2.3 * SphericalHarmonics::Y20(x,y,z);
-        data[d] += 2.4 * SphericalHarmonics::Y2p1(x,y,z);
-        data[d] += 2.5 * SphericalHarmonics::Y2p2(x,y,z);
-        
-        data[d] += 3.0 * SphericalHarmonics::Y3m3(x,y,z);
-        data[d] += 3.1 * SphericalHarmonics::Y3m2(x,y,z);
-        data[d] += 3.2 * SphericalHarmonics::Y3m1(x,y,z);
-        data[d] += 3.3 * SphericalHarmonics::Y30 (x,y,z);
-        data[d] += 3.4 * SphericalHarmonics::Y3p1(x,y,z);
-        data[d] += 3.5 * SphericalHarmonics::Y3p2(x,y,z);
-        data[d] += 3.6 * SphericalHarmonics::Y3p3(x,y,z);
-        
-        data[d] += 4.0 * SphericalHarmonics::Y4m4(x,y,z);
-        data[d] += 4.1 * SphericalHarmonics::Y4m3(x,y,z);
-        data[d] += 4.2 * SphericalHarmonics::Y4m2(x,y,z);
-        data[d] += 4.3 * SphericalHarmonics::Y4m1(x,y,z);
-        data[d] += 4.4 * SphericalHarmonics::Y40 (x,y,z);
-        data[d] += 4.5 * SphericalHarmonics::Y4p1(x,y,z);
-        data[d] += 4.6 * SphericalHarmonics::Y4p2(x,y,z);
-        data[d] += 4.7 * SphericalHarmonics::Y4p3(x,y,z);
-        data[d] += 4.8 * SphericalHarmonics::Y4p4(x,y,z);
-    }
-    vector<double>c = SphericalHarmonics::GetCoefficients(gauss,data,min(gauss.nCoefficients,(size_t)25));
-
-    for(size_t i=0; i<c.size(); i++)
-        cout << "c" << i << ": " << c[i] << endl;
-    cout << endl;
-    
-    cout << "Real Value, Compressed Value:" << endl;
-    size_t d = gauss.nDir / 2;
-    double theta = gauss.Theta(d);
-    double phi = gauss.Phi(d);
-    cout << data[d] << ", " << SphericalHarmonics::GetValue(theta,phi,c,min(gauss.nCoefficients,(size_t)25)) << endl << endl;
-
-    cout << "         nDir = " << gauss.nDir << endl;
-    cout << "       nOrder = " << gauss.nOrder << endl;
-    cout << "nCoefficients = " << gauss.nCoefficients << endl;
-    
-    // gauss.Print();
-    gauss.WriteToCsv();
+    size_t d = stencil.nDir/2;
+    cout << data[d] << ", " << SphericalHarmonicsXyz::GetValue(stencil.C(d),coefficients,stencil.nCoefficients) << endl << endl;
 }
 
 
@@ -517,8 +350,8 @@ void Test_SphericalHarmonicsExpansion()
     // Minkowski metric(grid, 1.0, 0.0);
     KerrSchild metric(grid, 1.0, 0.0);
     // SchwarzSchild metric(grid, 1.0, 0.0);
-    Stencil stencil(15);
-    LebedevStencil5 lebedevStencil;
+    MyStencil stencil(15);
+    LebedevStencil lebedevStencil(5);
     Camera camera;
 
     Radiation radiation(metric, stencil, lebedevStencil, camera, StreamingType::CurvedDynamic);
@@ -555,7 +388,7 @@ void Test_SphericalHarmonicsExpansion()
         {
             // Get pos and vel by Spherical Harmonic Expansion:
             {
-                Tensor3 direction = stencil.Cxyz(d0,d1);
+                Tensor3 direction = stencil.C(d0,d1);
                 double s = radiation.GetFrequencyShift(ijk,direction);
                 Coord xyz = radiation.GetTempCoordinate(ijk,direction);
                 Tensor3 vIF = radiation.GetTemp3VelocityIF(ijk,direction);
@@ -570,7 +403,7 @@ void Test_SphericalHarmonicsExpansion()
             {
                 double s = 1;
 			    Coord xyz = center;
-                Tensor3 c = stencil.Cxyz(d0,d1);
+                Tensor3 c = stencil.C(d0,d1);
                 Tensor4 u(alpha, c[1] * alpha, c[2] * alpha, c[3] * alpha);
                 Tensor3 vLF = Vec3ObservedByEulObs<IF,LF>(u, xyz, metric);
     
@@ -600,7 +433,7 @@ void Test_QuaternionRotation()
     quat q = quat(from, to);
     quat qInv = quat(to, from);
 
-    Stencil stencil(15);
+    MyStencil stencil(15);
 
     ofstream file0("output/Test_QuaternionRotation Normal.csv");
     ofstream file1("output/Test_QuaternionRotation Rotated.csv");
@@ -610,7 +443,7 @@ void Test_QuaternionRotation()
     for(size_t d1=0; d1<stencil.nPh; d1++)
     for(size_t d0=0; d0<stencil.nTh; d0++)
     {
-        Tensor3 p = stencil.Cxyz(d0,d1);
+        Tensor3 p = stencil.C(d0,d1);
         file0 << p[1] << ", " << p[2] << ", " << p[3] << endl;
         p = q * p;
         file1 << p[1] << ", " << p[2] << ", " << p[3] << endl;
@@ -635,10 +468,10 @@ void Test_QuaternionRotation()
 void Test_IntensityAt()
 {
     // This test is simulating the Radiation::IntensityAt(size_t ijk, Tensor3 vTempIF) function.
-    Stencil stencil(5);
-    LebedevStencil11 lebedev;
+    MyStencil stencil(5);
+    LebedevStencil lebedev(11);
 
-    double I[stencil.nThPh];
+    double I[stencil.nDir];
     double Inorth;
     double Isouth;
 
@@ -651,20 +484,22 @@ void Test_IntensityAt()
     for(size_t d0=0; d0<stencil.nTh; d0++)
     {
         size_t d = stencil.Index(d0,d1);
-        Tensor3 xyz = stencil.Cxyz(d0,d1);
-        I[d] = 1.0 + 0.75 * SphericalHarmonics::Y1p1(xyz[1],xyz[2],xyz[3]) + 0.75 * SphericalHarmonics::Y10 (xyz[1],xyz[2],xyz[3]) + 0.75 * SphericalHarmonics::Y1m1(xyz[1],xyz[2],xyz[3]);
-        file0 << I[d] * xyz[1] << ", " << I[d] * xyz[2] << ", " << I[d] * xyz[3] << ", " << 1 << "\n";
+        Tensor3 dir = stencil.C(d0,d1);
+        I[d] = 1.0 + 0.75 * SphericalHarmonicsXyz::Y(1,dir) + 0.75 * SphericalHarmonicsXyz::Y(2,dir) + 0.75 * SphericalHarmonicsXyz::Y(3,dir);
+        file0 << I[d] * dir[1] << ", " << I[d] * dir[2] << ", " << I[d] * dir[3] << ", " << 1 << "\n";
     }
-    Inorth = 1.0 + 0.75 * SphericalHarmonics::Y1p1(0, 0, 1) + 0.75 * SphericalHarmonics::Y10 (0, 0, 1) + 0.75 * SphericalHarmonics::Y1m1(0, 0, 1);
-    Isouth = 1.0 + 0.75 * SphericalHarmonics::Y1p1(0, 0,-1) + 0.75 * SphericalHarmonics::Y10 (0, 0,-1) + 0.75 * SphericalHarmonics::Y1m1(0, 0,-1);
+    Tensor3 dir(0,0,1);
+    Inorth = 1.0 + 0.75 * SphericalHarmonicsXyz::Y(1,dir) + 0.75 * SphericalHarmonicsXyz::Y(2,dir) + 0.75 * SphericalHarmonicsXyz::Y(3,dir);
+    dir = Tensor3(0,0,-1);
+    Isouth = 1.0 + 0.75 * SphericalHarmonicsXyz::Y(1,dir) + 0.75 * SphericalHarmonicsXyz::Y(2,dir) + 0.75 * SphericalHarmonicsXyz::Y(3,dir);
     file0 << Inorth * 0 << ", " << Inorth * 0 << ", " << Inorth * 1 << ", "  << 0 << "\n";
     file0 << Isouth * 0 << ", " << Isouth * 0 << ", " << Isouth * -1 << ", " << 0 << "\n";
 
     for(size_t d=0; d<lebedev.nDir; d++)
     {
-        Tensor3 xyz = lebedev.Cxyz(d);
-	    double t = stencil.d0(xyz.Theta());
-	    double p = stencil.d1(xyz.Phi());
+        Tensor3 dir = lebedev.C(d);
+	    double t = stencil.d0(dir.Theta());
+	    double p = stencil.d1(dir.Phi());
         
         // Don't use size_t due to possible negative values.
         int t0 = floor(t);
@@ -690,7 +525,7 @@ void Test_IntensityAt()
 		tfrac /= abs(d00);
 
 	    double I = BilinearInterpolation(tfrac, pfrac, I00, I01, I10, I11);
-        double Iexpected = 1.0 + 0.75 * SphericalHarmonics::Y1p1(xyz[1],xyz[2],xyz[3]) + 0.75 * SphericalHarmonics::Y10 (xyz[1],xyz[2],xyz[3]) + 0.75 * SphericalHarmonics::Y1m1(xyz[1],xyz[2],xyz[3]);
+        double Iexpected = 1.0 + 0.75 * SphericalHarmonicsXyz::Y(1,dir) + 0.75 * SphericalHarmonicsXyz::Y(2,dir) + 0.75 * SphericalHarmonicsXyz::Y(3,dir);
         double color = 0;
         if(abs(I - Iexpected) > 0.1)
         {   
@@ -704,7 +539,7 @@ void Test_IntensityAt()
             PrintDouble(pfrac,"pfrac",1);
             color = 1;
         }
-        file1 << I * xyz[1] << ", " << I * xyz[2] << ", " << I * xyz[3] << ", " << color << "\n";
+        file1 << I * dir[1] << ", " << I * dir[2] << ", " << I * dir[3] << ", " << color << "\n";
     }
     file0.close();
     file1.close();
@@ -778,9 +613,8 @@ void Test_Emission(size_t nx, size_t ny, size_t nz, size_t nTh, int sigma, int s
     grid.SetCFL(0.5);
     SchwarzSchild metric(grid, 1.0, 0.0);
     // KerrSchild metric(grid, 1.0, 0.0);
-    Stencil stencil(nTh);
-    stencil.sigma = sigma;
-    LebedevStencil5 lebedevStencil;
+    MyStencil stencil(nTh);
+    LebedevStencil lebedevStencil(5);
 
     // Camera:
     size_t resX = 100;
@@ -798,6 +632,7 @@ void Test_Emission(size_t nx, size_t ny, size_t nz, size_t nTh, int sigma, int s
     // Radiation:
     // Radiation radiation(metric, stencil, lebedevStencil, camera, StreamingType::CurvedStatic);
     Radiation radiation(metric, stencil, lebedevStencil, camera, StreamingType::CurvedDynamic);
+    radiation.sigma = sigma;
 
     // Initial Data:
     for(size_t k=0; k<grid.nz; k++)
@@ -978,11 +813,11 @@ void StreamFlatStaticSphereWave()
     Grid grid(nx, ny, nz, start, end);
     grid.SetCFL(0.5);
     Minkowski metric(grid, 1.0, 0.0);
-    Stencil stencil(7);
-    stencil.sigma = 1.0;
-    LebedevStencil3 lebedevStencil;
+    MyStencil stencil(7);
+    LebedevStencil lebedevStencil(3);
     Camera camera;
     Radiation radiation(metric, stencil, lebedevStencil, camera, StreamingType::FlatStatic);
+    radiation.sigma = 1.0;
 
     // Initial Data:
     for(size_t k=0; k<grid.nz; k++)
@@ -1026,11 +861,11 @@ void StreamFlatDynamicSphereWave()
     Grid grid(nx, ny, nz, start, end);
     grid.SetCFL(0.5);
     Minkowski metric(grid, 1.0, 0.0);
-    Stencil stencil(7);
-    stencil.sigma = 1.0;
-    LebedevStencil3 lebedevStencil;
+    MyStencil stencil(7);
+    LebedevStencil lebedevStencil(3);
     Camera camera;
     Radiation radiation(metric, stencil, lebedevStencil, camera, StreamingType::FlatDynamic);
+    radiation.sigma = 1.0;
 
     // Initial Data:
     for(size_t k=0; k<grid.nz; k++)
@@ -1074,12 +909,12 @@ void StreamFlatBeam()
     Grid grid(nx, ny, nz, start, end);
     grid.SetCFL(0.5);
     Minkowski metric(grid, 1.0, 0.0);
-    Stencil stencil(15);
-    stencil.sigma = 100;
-    LebedevStencil3 lebedevStencil;
+    MyStencil stencil(15);
+    LebedevStencil lebedevStencil(3);
     Camera camera;
     // Radiation radiation(metric, stencil, lebedevStencil, camera, StreamingType::FlatDynamic);
     Radiation radiation(metric, stencil, lebedevStencil, camera, StreamingType::FlatStatic);
+    radiation.sigma = 100;
 
     // Initial Data:
     double beamWidth = 0.5;
@@ -1133,12 +968,12 @@ void StreamFlatBeamCrossing()
     Grid grid(nx, ny, nz, start, end);
     grid.SetCFL(0.5);
     Minkowski metric(grid, 1.0, 0.0);
-    Stencil stencil(15);
-    stencil.sigma = 100;
-    LebedevStencil3 lebedevStencil;
+    MyStencil stencil(15);
+    LebedevStencil lebedevStencil(3);
     Camera camera;
     Radiation radiation(metric, stencil, lebedevStencil, camera, StreamingType::FlatDynamic);
     // Radiation radiation(metric, stencil, lebedevStencil, camera, StreamingType::FlatStatic);
+    radiation.sigma = 100;
 
     // Initial Data:
     double beamWidth = 0.5;
@@ -1209,9 +1044,8 @@ void StreamCurvedBeamCrossing()
     Grid grid(nx, ny, nz, start, end);
     grid.SetCFL(0.5);
     SchwarzSchild metric(grid, 1.0, 0.0);
-    Stencil stencil(15);
-    stencil.sigma = 100;
-    LebedevStencil5 lebedevStencil;
+    MyStencil stencil(15);
+    LebedevStencil lebedevStencil(5);
 
     // Camera:
     size_t resX = 100;
@@ -1228,6 +1062,7 @@ void StreamCurvedBeamCrossing()
 
     // Radiation:
     Radiation radiation(metric, stencil, lebedevStencil, camera, StreamingType::CurvedDynamic);
+    radiation.sigma = 100;
 
     // Initial Data:
     double beamWidth = 0.5;
@@ -1300,9 +1135,8 @@ void StreamCurvedBeam(size_t nx, size_t ny, size_t nz, size_t nTh, int sigma, in
     grid.SetCFL(0.5);
     SchwarzSchild metric(grid, 1.0, 0.0);   // needs at least LebedevStencil5
     // KerrSchild metric(grid, 1.0, 0.0);   // initial direction is somehow wrong
-    Stencil stencil(nTh);
-    stencil.sigma = sigma;
-    LebedevStencil5 lebedevStencil;
+    MyStencil stencil(nTh);
+    LebedevStencil lebedevStencil(5);
 
     // Camera:
     size_t resX = 100;
@@ -1320,6 +1154,7 @@ void StreamCurvedBeam(size_t nx, size_t ny, size_t nz, size_t nTh, int sigma, in
     // Radiation:
     // Radiation radiation(metric, stencil, lebedevStencil, camera, StreamingType::CurvedStatic);
     Radiation radiation(metric, stencil, lebedevStencil, camera, StreamingType::CurvedDynamic);
+    radiation.sigma = sigma;
 
     // Initial Data:
     PARALLEL_FOR(3)
@@ -1413,9 +1248,8 @@ void ThinDiskE(size_t nx, size_t ny, size_t nz, size_t nTh, int sigma, int simTi
     Grid grid(nx, ny, nz, start, end);
     grid.SetCFL(0.5);
     SchwarzSchild metric(grid, m, a);
-    Stencil stencil(nTh);
-    stencil.sigma = sigma;
-    LebedevStencil5 lebedevStencil;
+    MyStencil stencil(nTh);
+    LebedevStencil lebedevStencil(5);
 
     // Camera:
     size_t resX = 400;
@@ -1432,6 +1266,7 @@ void ThinDiskE(size_t nx, size_t ny, size_t nz, size_t nTh, int sigma, int simTi
 
     // Radiation:
     Radiation radiation(metric, stencil, lebedevStencil, camera, streamingType);
+    radiation.sigma = sigma;
 
     // Initial Data:
     #pragma omp parallel for
@@ -1547,9 +1382,8 @@ void ThinDiskEta(size_t nx, size_t ny, size_t nz, size_t nTh, int sigma, int sim
     Grid grid(nx, ny, nz, start, end);
     grid.SetCFL(0.5);
     SchwarzSchild metric(grid, m, a);
-    Stencil stencil(nTh);
-    stencil.sigma = sigma;
-    LebedevStencil5 lebedevStencil;
+    MyStencil stencil(nTh);
+    LebedevStencil lebedevStencil(5);
 
     // Camera:
     size_t resX = 400;
@@ -1566,6 +1400,7 @@ void ThinDiskEta(size_t nx, size_t ny, size_t nz, size_t nTh, int sigma, int sim
 
     // Radiation:
     Radiation radiation(metric, stencil, lebedevStencil, camera, streamingType);
+    radiation.sigma = sigma;
 
     // Initial Data:
     #pragma omp parallel for
@@ -1667,6 +1502,111 @@ void ThinDiskEta(size_t nx, size_t ny, size_t nz, size_t nTh, int sigma, int sim
     radiation.RunSimulation(config);
 }
 
+void Test_HarmonicsBenchmark()
+{
+    LebedevStencil stencil(31);
+    double* data1 = new double[stencil.nDir];
+    double* data2 = new double[stencil.nDir];
+    double* coefficients1 = new double[stencil.nCoefficients];
+    double* coefficients2 = new double[stencil.nCoefficients];
+    double errorTheshhold = 1e-5;
+
+	Profiler::Session& session = Profiler::Session::Get();
+    {
+        PROFILE_SCOPE("ThPH");
+        {
+            PROFILE_SCOPE("Set Data ThPh");
+            for(int d=0; d<stencil.nDir; d++)
+            {
+                float theta = stencil.Theta(d);
+                float phi = stencil.Phi(d);
+
+                data1[d] = 0;
+                for(int k=0; k<stencil.nCoefficients; k++)
+                    data1[d] += (k+1) * SphericalHarmonicsThPh::Y(k,theta,phi);
+            }
+        }
+        {
+            PROFILE_SCOPE("Get Coefficients ThPh");
+            SphericalHarmonicsThPh::GetCoefficients(stencil, data1, coefficients1);
+            for(int k=0; k<stencil.nCoefficients; k++)
+                cout << "c[" << k << "]: " << coefficients1[k] << endl;
+        }
+        {
+            PROFILE_SCOPE("Get Values ThPh");
+            for(int d=0; d<stencil.nDir; d++)
+            {
+                float theta = stencil.Theta(d);
+                float phi = stencil.Phi(d);
+                data2[d] = SphericalHarmonicsThPh::GetValue(theta,phi,coefficients1,stencil.nCoefficients);
+            }
+        }
+        {
+            PROFILE_SCOPE("Check Results ThPh");
+            int errors = 0;
+            for(int d=0; d<stencil.nDir; d++)
+            {
+                if(abs(data2[d] - data1[d]) > errorTheshhold)
+                {
+                    // cout << "data1[" << d << "] = " << Format(data1[d]) << ", data2[" << d << "] = " << Format(data2[d]) << ", diff = " << Format(abs(data2[d] - data1[d])) << endl;
+                    errors++;
+                }
+            }
+            cout << "errors ThPh: " << errors << endl;
+        }
+    }
+    {
+        PROFILE_SCOPE("Xyz");
+        {
+            PROFILE_SCOPE("Set Data Xyz");
+            for(int d=0; d<stencil.nDir; d++)
+            {
+                float x = stencil.Cx(d);
+                float y = stencil.Cy(d);
+                float z = stencil.Cz(d);
+
+                data1[d] = 0;
+                for(int k=0; k<stencil.nCoefficients; k++)
+                    data1[d] += (k+1) * SphericalHarmonicsXyz::Y(k,x,y,z);
+            }
+        }
+        {
+            PROFILE_SCOPE("Get Coefficients Xyz");
+            SphericalHarmonicsXyz::GetCoefficients(stencil, data1, coefficients2);
+            for(int k=0; k<stencil.nCoefficients; k++)
+                cout << "c[" << k << "]: " << coefficients2[k] << endl;
+        }
+        {
+            PROFILE_SCOPE("Get Values Xyz");
+            for(int d=0; d<stencil.nDir; d++)
+            {
+                float x = stencil.Cx(d);
+                float y = stencil.Cy(d);
+                float z = stencil.Cz(d);
+                data2[d] = SphericalHarmonicsXyz::GetValue(x,y,z,coefficients2,stencil.nCoefficients);
+            }
+        }
+        {
+            PROFILE_SCOPE("Check Results Xyz");
+            int errors = 0;
+            for(int d=0; d<stencil.nDir; d++)
+            {
+                if(abs(data2[d] - data1[d]) > errorTheshhold)
+                {
+                    // cout << "data1[" << d << "] = " << Format(data1[d]) << ", data2[" << d << "] = " << Format(data2[d]) << ", diff = " << Format(abs(data2[d] - data1[d])) << endl;
+                    errors++;
+                }
+            }
+            cout << "errors Xyz: " << errors << endl;
+        }
+    }
+    cout << endl;
+
+	std::vector<std::string> names = session.GetAllFunctionNames();
+	for(int i=0; i<names.size(); i++)
+        session.PrintFunctionDuration(names[i]);
+}
+
 // Note:
 // -TE changed from 1e-6 to 1e-4
 
@@ -1689,10 +1629,9 @@ int main(int argc, char *argv[])
     // Test_PhotonVelocity();
     // Test_GeodesicEquationSolver();
     // Test_Stencil();
-    // Test_LebedevStencil();
-    // Test_Quadrature();
-    // Test_QuadratureLebedev();
-    // Test_QuadratureGaussLegendre();
+    // Test_Quadrature(MyStencil(7));
+    // Test_Quadrature(LebedevStencil(7));
+    // Test_Quadrature(GaussLegendreStencil(7));
     // Test_SphericalHarmonicsExpansion();
     // Test_QuaternionRotation();
     // Test_IntensityAt();
@@ -1701,6 +1640,7 @@ int main(int argc, char *argv[])
     // Test_MySin_MyCos();
     // Test_Camera();
     // Test_Emission( 25, 45, 50,  20,    15,10);
+    // Test_HarmonicsBenchmark();
 
     // Visualization data:
     // BlackHoleCsv();
@@ -1721,5 +1661,6 @@ int main(int argc, char *argv[])
 
   //ThinDisk( nx, ny, nz, nTh, sigma,simTime, intensityProfile, comment);
     // n€[3,10] 8 takes about 13.5h
-    ThinDiskE(n*21+1,n*27+1,n*12+1,  9, 1,80, StreamingType::CurvedDynamic ,IntensityProfile::Uniform,           "lowDir");
+    ThinDiskE(n*21+1,n*27+1,n*12+1,  9, 1,80, StreamingType::CurvedDynamic ,IntensityProfile::Uniform,           "harmonicRefactor");
+    ThinDiskE(n*21+1,n*27+1,n*12+1,  9, 1,80, StreamingType::CurvedStatic  ,IntensityProfile::Uniform,           "harmonicRefactor");
 }
