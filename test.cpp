@@ -1248,7 +1248,8 @@ void ThinDiskE(size_t nx, size_t ny, size_t nz, size_t nTh, int sigma, int simTi
     Coord   end( 14, 22, 15);
     Grid grid(nx, ny, nz, start, end);
     grid.SetCFL(0.5);
-    SchwarzSchild metric(grid, m, a);
+    Minkowski metric(grid, m, a);
+    // SchwarzSchild metric(grid, m, a);
     MyStencil stencil(nTh);
     LebedevStencil lebedevStencil(5);
 
@@ -1359,7 +1360,7 @@ void ThinDiskE(size_t nx, size_t ny, size_t nz, size_t nTh, int sigma, int simTi
               + std::to_string(nx) + "x" + std::to_string(ny) + "y" + std::to_string(nz) + "z" + std::to_string(simTime) + "t_"
               + "Leb" + std::to_string(lebedevStencil.nOrder) + "_" + StreamingName(streamingType) + "_" + IntensityProfileName(intensityProfile) + "_" + comment,
         .simTime = (double)simTime,
-        .writeFrequency = 50,
+        .writeFrequency = 25,
         .updateSphericalHarmonics = false,
         .keepSourceNodesActive = true,
         .writeData = true,
@@ -1714,10 +1715,10 @@ int main(int argc, char *argv[])
     // Test_Camera();
     // Test_Emission( 25, 45, 50,  20,    15,10);
     // Test_HarmonicsBenchmark();
-    Test_Radiation2(7);
-    Test_Radiation2(9);
-    Test_Radiation2(11);
-    Test_Radiation2(13);
+    // Test_Radiation2(7);
+    // Test_Radiation2(9);
+    // Test_Radiation2(11);
+    // Test_Radiation2(13);
 
     // Visualization data:
     // BlackHoleCsv();
@@ -1738,6 +1739,8 @@ int main(int argc, char *argv[])
 
   //ThinDisk( nx, ny, nz, nTh, sigma,simTime, intensityProfile, comment);
     // n€[3,10] 8 takes about 13.5h
+    // ThinDiskE(n*21+1,n*27+1,n*12+1,  9, 1,80, StreamingType::FlatStatic ,IntensityProfile::Uniform,           "harmonicRefactor");
+    ThinDiskE(n*21+1,n*27+1,n*12+1,  7, 1,80, StreamingType::FlatDynamic ,IntensityProfile::Uniform,           "harmonicRefactor");
     // ThinDiskE(n*21+1,n*27+1,n*12+1,  9, 1,80, StreamingType::CurvedDynamic ,IntensityProfile::Uniform,           "harmonicRefactor");
     // ThinDiskE(n*21+1,n*27+1,n*12+1,  9, 1,80, StreamingType::CurvedStatic  ,IntensityProfile::Uniform,           "harmonicRefactor");
 }

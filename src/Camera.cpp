@@ -77,6 +77,5 @@ void Camera::WriteImagetoCsv
         fileOut << position[1] + dist * lookDirection[1] << "," << position[2] + dist * lookDirection[2] << "," << position[3] + dist * lookDirection[3] << "," << 0 << "\n";
     }
 
-
     fileOut.close();
 }

@@ -23,12 +23,12 @@ public:
     std::vector<std::string> timeNames;
     std::vector<double> timeMeasurements;
 
-    Log(std::string name_, double simTime_, MyStencil& stencil_, LebedevStencil& lebedevStencil_, Metric& metric_) :
-    name(name_), stencil(stencil_), lebedevStencil(lebedevStencil_), metric(metric_)
+    Log(std::string name, double simTime_, MyStencil& stencil, LebedevStencil& lebedevStencil, Metric& metric) :
+    name(name), stencil(stencil), lebedevStencil(lebedevStencil), metric(metric)
     {
         // Derived from simulation parameters:
-	    timeSteps = ceil(simTime_/metric_.grid.dt);
-	    simTime = timeSteps * metric_.grid.dt;
+	    timeSteps = ceil(simTime/metric.grid.dt);
+	    simTime = timeSteps * metric.grid.dt;
 
 	    // Creation time:
         auto t = std::time(nullptr);

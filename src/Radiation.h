@@ -139,6 +139,7 @@ public:
 	void StreamCurvedDynamic();
 	void Collide();
 	void TakePicture();
+	void WriteIntensitiesToCsv(float time, const int frameNumber, std::string directory, std::string name);
 
 	void RunSimulation(Config config);
 };

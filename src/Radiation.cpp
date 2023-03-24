@@ -276,25 +276,13 @@ void Radiation::UpdateSphericalHarmonicsCoefficients()
 			dataCy[d] = vIF[2];
 			dataCz[d] = vIF[3];
     	}
-		std::vector<double> cS  = SphericalHarmonicsXyz::GetCoefficients(lebedevStencil, dataS );
-		std::vector<double> cX  = SphericalHarmonicsXyz::GetCoefficients(lebedevStencil, dataX );
-		std::vector<double> cY  = SphericalHarmonicsXyz::GetCoefficients(lebedevStencil, dataY );
-		std::vector<double> cZ  = SphericalHarmonicsXyz::GetCoefficients(lebedevStencil, dataZ );
-		std::vector<double> cCx = SphericalHarmonicsXyz::GetCoefficients(lebedevStencil, dataCx);
-		std::vector<double> cCy = SphericalHarmonicsXyz::GetCoefficients(lebedevStencil, dataCy);
-		std::vector<double> cCz = SphericalHarmonicsXyz::GetCoefficients(lebedevStencil, dataCz);
-
-		for(size_t f=0; f<lebedevStencil.nCoefficients; f++)
-		{
-			size_t fijk = HarmonicIndex(f,ijk);
-			coefficientsS[fijk] = cS[f];
-			coefficientsX[fijk] = cX[f];
-			coefficientsY[fijk] = cY[f];
-			coefficientsZ[fijk] = cZ[f];
-			coefficientsCx[fijk] = cCx[f];
-			coefficientsCy[fijk] = cCy[f];
-			coefficientsCz[fijk] = cCz[f];
-		}
+		SphericalHarmonicsXyz::GetCoefficients(lebedevStencil, dataS , &coefficientsS [HarmonicIndex(0,ijk)]);
+		SphericalHarmonicsXyz::GetCoefficients(lebedevStencil, dataX , &coefficientsX [HarmonicIndex(0,ijk)]);
+		SphericalHarmonicsXyz::GetCoefficients(lebedevStencil, dataY , &coefficientsY [HarmonicIndex(0,ijk)]);
+		SphericalHarmonicsXyz::GetCoefficients(lebedevStencil, dataZ , &coefficientsZ [HarmonicIndex(0,ijk)]);
+		SphericalHarmonicsXyz::GetCoefficients(lebedevStencil, dataCx, &coefficientsCx[HarmonicIndex(0,ijk)]);
+		SphericalHarmonicsXyz::GetCoefficients(lebedevStencil, dataCy, &coefficientsCy[HarmonicIndex(0,ijk)]);
+		SphericalHarmonicsXyz::GetCoefficients(lebedevStencil, dataCz, &coefficientsCz[HarmonicIndex(0,ijk)]);
 	}
 }
 
@@ -384,43 +372,22 @@ void Radiation::ComputeMomentsLF()
 Coord Radiation::GetTempCoordinate(size_t ijk, Tensor3 direction)
 {
 	Coord xyzTemp;
-	double evaluationCoefficients[lebedevStencil.nCoefficients];
-
-	for(size_t f=0; f<lebedevStencil.nCoefficients; f++)
-		evaluationCoefficients[f] = coefficientsX[HarmonicIndex(f,ijk)];
-	xyzTemp[1] = SphericalHarmonicsXyz::GetValue(direction,evaluationCoefficients,lebedevStencil.nCoefficients);
-	for(size_t f=0; f<lebedevStencil.nCoefficients; f++)
-		evaluationCoefficients[f] = coefficientsY[HarmonicIndex(f,ijk)];
-	xyzTemp[2] = SphericalHarmonicsXyz::GetValue(direction,evaluationCoefficients,lebedevStencil.nCoefficients);
-	for(size_t f=0; f<lebedevStencil.nCoefficients; f++)
-		evaluationCoefficients[f] = coefficientsZ[HarmonicIndex(f,ijk)];
-	xyzTemp[3] = SphericalHarmonicsXyz::GetValue(direction,evaluationCoefficients,lebedevStencil.nCoefficients);
-
+	xyzTemp[1] = SphericalHarmonicsXyz::GetValue(direction, &coefficientsX[HarmonicIndex(0,ijk)], lebedevStencil.nCoefficients);
+	xyzTemp[2] = SphericalHarmonicsXyz::GetValue(direction, &coefficientsY[HarmonicIndex(0,ijk)], lebedevStencil.nCoefficients);
+	xyzTemp[3] = SphericalHarmonicsXyz::GetValue(direction, &coefficientsZ[HarmonicIndex(0,ijk)], lebedevStencil.nCoefficients);
 	return xyzTemp;
 }
 Tensor3 Radiation::GetTemp3VelocityIF(size_t ijk, Tensor3 direction)
 {
 	Tensor3 vTempIF;
-	double evaluationCoefficients[lebedevStencil.nCoefficients];
-
-	for(size_t f=0; f<lebedevStencil.nCoefficients; f++)
-		evaluationCoefficients[f] = coefficientsCx[HarmonicIndex(f,ijk)];
-	vTempIF[1] = SphericalHarmonicsXyz::GetValue(direction,evaluationCoefficients,lebedevStencil.nCoefficients);
-	for(size_t f=0; f<lebedevStencil.nCoefficients; f++)
-		evaluationCoefficients[f] = coefficientsCy[HarmonicIndex(f,ijk)];
-	vTempIF[2] = SphericalHarmonicsXyz::GetValue(direction,evaluationCoefficients,lebedevStencil.nCoefficients);
-	for(size_t f=0; f<lebedevStencil.nCoefficients; f++)
-		evaluationCoefficients[f] = coefficientsCz[HarmonicIndex(f,ijk)];
-	vTempIF[3] = SphericalHarmonicsXyz::GetValue(direction,evaluationCoefficients,lebedevStencil.nCoefficients);
-
+	vTempIF[1] = SphericalHarmonicsXyz::GetValue(direction, &coefficientsCx[HarmonicIndex(0,ijk)], lebedevStencil.nCoefficients);
+	vTempIF[2] = SphericalHarmonicsXyz::GetValue(direction, &coefficientsCy[HarmonicIndex(0,ijk)], lebedevStencil.nCoefficients);
+	vTempIF[3] = SphericalHarmonicsXyz::GetValue(direction, &coefficientsCz[HarmonicIndex(0,ijk)], lebedevStencil.nCoefficients);
 	return vTempIF;
 }
 double Radiation::GetFrequencyShift(size_t ijk, Tensor3 direction)
 {
-	double evaluationCoefficients[lebedevStencil.nCoefficients];
-	for(size_t f=0; f<lebedevStencil.nCoefficients; f++)
-		evaluationCoefficients[f] = coefficientsS[HarmonicIndex(f,ijk)];
-	return SphericalHarmonicsXyz::GetValue(direction,evaluationCoefficients,lebedevStencil.nCoefficients);
+	return SphericalHarmonicsXyz::GetValue(direction, &coefficientsS[HarmonicIndex(0,ijk)], lebedevStencil.nCoefficients);
 }
 
 
@@ -624,21 +591,26 @@ void Radiation::StreamFlatKernal(size_t i, size_t j,size_t k, size_t d0, size_t 
 	// Interpolate intensity from neighbouring 8 lattice points to temporary point:
 	if constexpr(std::is_same<StaticOrDynamic,Dynamic>::value)
 	{
+		double intensityAt_i0j0k0 = IntensityAt(grid.Index(i0,j0,k0),vTempIF);
+		double intensityAt_i0j0k1 = IntensityAt(grid.Index(i0,j0,k1),vTempIF);
+		double intensityAt_i0j1k0 = IntensityAt(grid.Index(i0,j1,k0),vTempIF);
+		double intensityAt_i0j1k1 = IntensityAt(grid.Index(i0,j1,k1),vTempIF);
+		double intensityAt_i1j0k0 = IntensityAt(grid.Index(i1,j0,k0),vTempIF);
+		double intensityAt_i1j0k1 = IntensityAt(grid.Index(i1,j0,k1),vTempIF);
+		double intensityAt_i1j1k0 = IntensityAt(grid.Index(i1,j1,k0),vTempIF);
+		double intensityAt_i1j1k1 = IntensityAt(grid.Index(i1,j1,k1),vTempIF);
 		if constexpr(std::is_same<IntensityType,Bulk>::value)
-			Inew[index]
-			= TrilinearInterpolation(iTemp-i0, jTemp-j0, kTemp-k0,
-			 IntensityAt(grid.Index(i0,j0,k0), vTempIF), IntensityAt(grid.Index(i0,j0,k1), vTempIF), IntensityAt(grid.Index(i0,j1,k0), vTempIF), IntensityAt(grid.Index(i0,j1,k1), vTempIF),
-			 IntensityAt(grid.Index(i1,j0,k0), vTempIF), IntensityAt(grid.Index(i1,j0,k1), vTempIF), IntensityAt(grid.Index(i1,j1,k0), vTempIF), IntensityAt(grid.Index(i1,j1,k1), vTempIF));
+			Inew[index] = TrilinearInterpolation(iTemp-i0, jTemp-j0, kTemp-k0,
+						  intensityAt_i0j0k0, intensityAt_i0j0k1, intensityAt_i0j1k0, intensityAt_i0j1k1,
+						  intensityAt_i1j0k0, intensityAt_i1j0k1, intensityAt_i1j1k0, intensityAt_i1j1k1);
 		if constexpr(std::is_same<IntensityType,North>::value)
-			Inorth[ijk]
-			= TrilinearInterpolation(iTemp-i0, jTemp-j0, kTemp-k0,
-			 IntensityAt(grid.Index(i0,j0,k0), vTempIF), IntensityAt(grid.Index(i0,j0,k1), vTempIF), IntensityAt(grid.Index(i0,j1,k0), vTempIF), IntensityAt(grid.Index(i0,j1,k1), vTempIF),
-			 IntensityAt(grid.Index(i1,j0,k0), vTempIF), IntensityAt(grid.Index(i1,j0,k1), vTempIF), IntensityAt(grid.Index(i1,j1,k0), vTempIF), IntensityAt(grid.Index(i1,j1,k1), vTempIF));
+			Inorth[ijk] = TrilinearInterpolation(iTemp-i0, jTemp-j0, kTemp-k0,
+						  intensityAt_i0j0k0, intensityAt_i0j0k1, intensityAt_i0j1k0, intensityAt_i0j1k1,
+						  intensityAt_i1j0k0, intensityAt_i1j0k1, intensityAt_i1j1k0, intensityAt_i1j1k1);
 		if constexpr(std::is_same<IntensityType,South>::value)
-			Isouth[ijk]
-			= TrilinearInterpolation(iTemp-i0, jTemp-j0, kTemp-k0,
-			 IntensityAt(grid.Index(i0,j0,k0), vTempIF), IntensityAt(grid.Index(i0,j0,k1), vTempIF), IntensityAt(grid.Index(i0,j1,k0), vTempIF), IntensityAt(grid.Index(i0,j1,k1), vTempIF),
-			 IntensityAt(grid.Index(i1,j0,k0), vTempIF), IntensityAt(grid.Index(i1,j0,k1), vTempIF), IntensityAt(grid.Index(i1,j1,k0), vTempIF), IntensityAt(grid.Index(i1,j1,k1), vTempIF));	
+			Isouth[ijk] = TrilinearInterpolation(iTemp-i0, jTemp-j0, kTemp-k0,
+						  intensityAt_i0j0k0, intensityAt_i0j0k1, intensityAt_i0j1k0, intensityAt_i0j1k1,
+						  intensityAt_i1j0k0, intensityAt_i1j0k1, intensityAt_i1j1k0, intensityAt_i1j1k1);
 	}
 	if constexpr(std::is_same<StaticOrDynamic,Static>::value)
 		Inew[index]
@@ -757,24 +729,8 @@ void Radiation::StreamCurvedKernal(size_t i, size_t j, size_t k, size_t d0, size
 		if constexpr(std::is_same<IntensityType,South>::value)
 			direction = Tensor3(0,0,-1);
 	}
-
-	// Debug:
-	//if(i == grid.nx / 2 && j == grid.ny/2 && d0 == 4 && d1 == 5)
-	//{
-	//	std::cout << "ijk = " << ijk << std::endl;
-	//	std::cout << "d = " << d << std::endl;
-	//	std::cout << "index = " << index << std::endl;
-	//	stencil.Cxyz(d0,d1).Print("Cxyz");
-	//	direction.Print("direction");
-	//	qPrint(qNew[ijk],"qNew");
-	//	PrintDouble(stencil.Cxyz(d0,d1).EuklNorm(),"|Cxyz|");
-	//	PrintDouble(direction.EuklNorm(),"|direction|");
-	//	PrintDouble(qNorm(qNew[ijk]),"|qNew|");
-	//	std::cin.get();
-	//}
 	
-
-	// Frequency Shift (s), Coordinates (xyz), and IF Velocity (vIF) at temp lattice point:
+	// Get quantities at emission point:
 	double s = GetFrequencyShift(ijk, direction);
 	Coord xyzTemp = GetTempCoordinate(ijk, direction);
 	Tensor3 vTempIF = GetTemp3VelocityIF(ijk, direction);
@@ -812,20 +768,17 @@ void Radiation::StreamCurvedKernal(size_t i, size_t j, size_t k, size_t d0, size
 
 	// Interpolate intensity from neighbouring 4 lattice points to temporary point:
 	if constexpr(std::is_same<IntensityType,Bulk>::value)
-		Inew[index]
-		= IntegerPow<4>(s) * TrilinearInterpolation(iTemp-i0, jTemp-j0, kTemp-k0,
-		 intensityAt_i0j0k0, intensityAt_i0j0k1, intensityAt_i0j1k0, intensityAt_i0j1k1,
-		 intensityAt_i1j0k0, intensityAt_i1j0k1, intensityAt_i1j1k0, intensityAt_i1j1k1);
+		Inew[index] = IntegerPow<4>(s) * TrilinearInterpolation(iTemp-i0, jTemp-j0, kTemp-k0,
+					  intensityAt_i0j0k0, intensityAt_i0j0k1, intensityAt_i0j1k0, intensityAt_i0j1k1,
+					  intensityAt_i1j0k0, intensityAt_i1j0k1, intensityAt_i1j1k0, intensityAt_i1j1k1);
 	if constexpr(std::is_same<IntensityType,North>::value)
-		Inorth[ijk]
-		= IntegerPow<4>(s) * TrilinearInterpolation(iTemp-i0, jTemp-j0, kTemp-k0,
-		 intensityAt_i0j0k0, intensityAt_i0j0k1, intensityAt_i0j1k0, intensityAt_i0j1k1,
-		 intensityAt_i1j0k0, intensityAt_i1j0k1, intensityAt_i1j1k0, intensityAt_i1j1k1);
+		Inorth[ijk] = IntegerPow<4>(s) * TrilinearInterpolation(iTemp-i0, jTemp-j0, kTemp-k0,
+					  intensityAt_i0j0k0, intensityAt_i0j0k1, intensityAt_i0j1k0, intensityAt_i0j1k1,
+					  intensityAt_i1j0k0, intensityAt_i1j0k1, intensityAt_i1j1k0, intensityAt_i1j1k1);
 	if constexpr(std::is_same<IntensityType,South>::value)
-		Isouth[ijk]
-		= IntegerPow<4>(s) * TrilinearInterpolation(iTemp-i0, jTemp-j0, kTemp-k0,
-		 intensityAt_i0j0k0, intensityAt_i0j0k1, intensityAt_i0j1k0, intensityAt_i0j1k1,
-		 intensityAt_i1j0k0, intensityAt_i1j0k1, intensityAt_i1j1k0, intensityAt_i1j1k1);
+		Isouth[ijk] = IntegerPow<4>(s) * TrilinearInterpolation(iTemp-i0, jTemp-j0, kTemp-k0,
+					  intensityAt_i0j0k0, intensityAt_i0j0k1, intensityAt_i0j1k0, intensityAt_i0j1k1,
+					  intensityAt_i1j0k0, intensityAt_i1j0k1, intensityAt_i1j1k0, intensityAt_i1j1k1);
 }
 
 
@@ -906,7 +859,7 @@ void Radiation::TakePicture()
 		size_t i0 = std::floor(iTemp);	size_t i1 = i0 + 1;
 		size_t j0 = std::floor(jTemp);	size_t j1 = j0 + 1;
 		size_t k0 = std::floor(kTemp);	size_t k1 = k0 + 1;
-
+		
 		// Intensity interpolation:
 		//double alpha = metric.GetAlpha(pixel); // removed to get intensity as seen by observer infinitly far away.
 		double intensityAt_i0j0k0 = IntegerPow<4>(1.0 / metric.GetAlpha(grid.Index(i0,j0,k0))) * IntensityAt(grid.Index(i0,j0,k0),vIF);
@@ -929,6 +882,79 @@ void Radiation::TakePicture()
 		// E_LF[grid.Index(i0,j0,k0)], E_LF[grid.Index(i0,j0,k1)], E_LF[grid.Index(i0,j1,k0)], E_LF[grid.Index(i0,j1,k1)],
 		// E_LF[grid.Index(i1,j0,k0)], E_LF[grid.Index(i1,j0,k1)], E_LF[grid.Index(i1,j1,k0)], E_LF[grid.Index(i1,j1,k1)]);
 	}
+}
+
+
+
+void Radiation::WriteIntensitiesToCsv(float time, const int frameNumber, std::string directory, std::string name)
+{
+	PROFILE_FUNCTION();
+    CreateDirectory(directory);
+
+    name = name + name + FrameNumber(frameNumber) + ".csv";
+    std::ofstream fileOut(directory + "/" + name);
+
+	fileOut << "#x, y, z, color\n";
+	for(size_t k = 2; k < metric.grid.nz - 2; k++)
+	for(size_t j = 2; j < metric.grid.ny - 2; j++)
+	for(size_t i = 2; i < metric.grid.nx - 2; i++)
+	{
+		size_t ijk = grid.Index(i,j,k);
+		Coord xyz = grid.xyz(i,j,k);
+		fileOut << xyz[1] << ", " << xyz[2] << ", " << xyz[3] << ", " << 0 << "\n";
+		// Bulk:
+		for(size_t d=0; d<stencil.nDir; d++)
+		{
+			size_t index = Index(ijk,d);
+			if(I[index] > 1e-8)
+			{
+				Tensor3 dir = q[ijk] * stencil.C(d);
+				Coord pos = xyz;
+				pos[1] += dir[1] * grid.dt * 0.5;
+				pos[2] += dir[2] * grid.dt * 0.5;
+				pos[3] += dir[3] * grid.dt * 0.5;
+				fileOut << pos[1] << ", " << pos[2] << ", " << pos[3] << ", " << I[index] << "\n";
+			}
+		}
+		// North:
+		if(Inorth[ijk] > 1e-8)
+		{
+			Tensor3 dir = q[ijk] * Tensor3(0,0,1);
+			Coord pos = xyz;
+			pos[1] += dir[1] * grid.dt * 0.5;
+			pos[2] += dir[2] * grid.dt * 0.5;
+			pos[3] += dir[3] * grid.dt * 0.5;
+			fileOut << pos[1] << ", " << pos[2] << ", " << pos[3] << ", " << Inorth[ijk] << "\n";
+		}
+		// South:
+		if(Isouth[ijk] > 1e-8)
+		{
+			Tensor3 dir = q[ijk] * Tensor3(0,0,-1);
+			Coord pos = xyz;
+			pos[1] += dir[1] * grid.dt * 0.5;
+			pos[2] += dir[2] * grid.dt * 0.5;
+			pos[3] += dir[3] * grid.dt * 0.5;
+			fileOut << pos[1] << ", " << pos[2] << ", " << pos[3] << ", " << Isouth[ijk] << "\n";
+		}
+		// Orthogonal to Camera:
+		{
+			Tensor3 lookDir = camera.lookDirection;
+			Tensor4 uLF(1,-lookDir[1],-lookDir[2],-lookDir[3]);
+			uLF = NullNormalize(uLF,metric.GetMetric_ll(xyz));
+			Tensor3 dir = Vec3ObservedByEulObs<LF,IF>(uLF, xyz, metric);
+
+			Coord pos = xyz;
+			pos[1] += dir[1] * grid.dt * 0.7;
+			pos[2] += dir[2] * grid.dt * 0.7;
+			pos[3] += dir[3] * grid.dt * 0.7;
+			
+			double I = IntensityAt(ijk,dir);
+			
+			fileOut << pos[1] << ", " << pos[2] << ", " << pos[3] << ", " << I << "\n";
+		}
+	}
+	
+    fileOut.close();
 }
 
 
@@ -985,12 +1011,18 @@ void Radiation::RunSimulation(Config config)
 
 			if((config.writeData || config.useCamera) && (n % config.writeFrequency) == 0)
 				ComputeMomentsLF();
-			if(config.writeData && (n % config.writeFrequency) == 0)
-				grid.WriteFrametoCsv(n*grid.dt, E_LF, Fx_LF, Fy_LF, Fz_LF, n, logger.directoryPath + "/Moments", config.name);
-			if(config.useCamera && (n % config.writeFrequency) == 0)
+			if(n % config.writeFrequency == 0)
 			{
-				TakePicture();
-				camera.WriteImagetoCsv(n*grid.dt, n, logger.directoryPath + "/CameraImages");
+				if(config.writeData)
+				{
+					grid.WriteFrametoCsv(n*grid.dt, E_LF, Fx_LF, Fy_LF, Fz_LF, n, logger.directoryPath + "/Moments", config.name);
+					WriteIntensitiesToCsv(n*grid.dt, n, logger.directoryPath + "/Intensities", "I");
+				}
+				if(config.useCamera && (n % config.writeFrequency) == 0)
+				{
+					TakePicture();
+					camera.WriteImagetoCsv(n*grid.dt, n, logger.directoryPath + "/CameraImages");
+				}
 			}
 
 			if (config.updateSphericalHarmonics)
