@@ -5,7 +5,7 @@
 #include <fstream>						// File input/output.
 #include <vector>						// Basic vectors.
 #include <string>						// Basic strings.
-#include "Profiler.hh"              // Time measurement profiler.
+#include "Profiler.hh"                  // Time measurement profiler.
 #include "glm/glm/gtc/quaternion.hpp"   // Quaternions.
 #include "ControlFlow.hh"				// Template arguments and profiling macros.
 #include "Utility.hh"					// Utility functions.
@@ -19,26 +19,7 @@
 #include "SphericalHarmonics.h"     	// Real spherical harmonic functions and expansion.
 #include "Log.hh"						// log final results.
 #include "Camera.h"						// orthographic camera to take images of radiation field.
-
-
-
-// Input system:
-enum StreamingType { FlatStatic, FlatDynamic, CurvedStatic, CurvedDynamic };
-std::string StreamingName(int n);
-
-
-
-struct Config
-{
-    std::string name;
-    double simTime;
-    int writeFrequency;
-    bool updateSphericalHarmonics;
-    bool keepSourceNodesActive;
-    bool writeData;
-    bool printToTerminal;
-	bool useCamera;
-};
+#include "Config.hh"                    // Config for simulation parameters.
 
 
 
@@ -92,8 +73,8 @@ public:
     RealBuffer eta;
 	RealBuffer I;
 	RealBuffer Inew;
-	RealBuffer Inorth;
-	RealBuffer Isouth;
+    RealBuffer Inorth;
+    RealBuffer Isouth;
 	RealBuffer coefficientsS;
 	RealBuffer coefficientsX;
 	RealBuffer coefficientsY;
@@ -125,12 +106,12 @@ public:
 	void UpdateSphericalHarmonicsCoefficients();
 	void ComputeMomentsIF();
 	void ComputeMomentsLF();
+    void SetPoleIntensities();
 	void UpdateQuaternions();
-	void RandomizeQuaternions();
 
-	template<class IntensityType, class StaticOrDynamic>
+	template<class StaticOrDynamic>
 	void StreamFlatKernal(size_t i, size_t j, size_t k, size_t d0, size_t d1);
-	template<class IntensityType, class StaticOrDynamic>
+	template<class StaticOrDynamic>
 	void StreamCurvedKernal(size_t i, size_t j, size_t k, size_t d0, size_t d1);
 
 	void StreamFlatStatic();
@@ -139,7 +120,7 @@ public:
 	void StreamCurvedDynamic();
 	void Collide();
 	void TakePicture();
-	void WriteIntensitiesToCsv(float time, const int frameNumber, std::string directory, std::string name);
+	void WriteIntensitiesToCsv(double time, const int frameNumber, std::string directory, std::string name);
 
 	void RunSimulation(Config config);
 };

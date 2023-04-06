@@ -1,11 +1,11 @@
 #ifndef __INCLUDE_GUARD_TesorTypes_hh__
 #define __INCLUDE_GUARD_TesorTypes_hh__
-#include <iomanip>                  // std::setprecision().
-#include <iostream>                 // Output to terminal.
+#include <iomanip>                      // std::setprecision().
+#include <iostream>                     // Output to terminal.
 #include "glm/glm/gtc/quaternion.hpp"   // Quaternions.
-#include "ControlFlow.hh"           // Template arguments and profiling macros.
-#include "Utility.hh"               // Utility functions.
-#include "eigen/Eigen/Dense"        // Eigen library for solving linear systems.
+#include "ControlFlow.hh"               // Template arguments and profiling macros.
+#include "Utility.hh"                   // Utility functions.
+#include "eigen/Eigen/Dense"            // Eigen library for solving linear systems.
 
 
 
@@ -49,15 +49,23 @@ struct Coord
 private:
     double data[3];
 public:
+    // Constructors:
     Coord(double value=0)
     { data[0] = data[1] = data[2] = value; }
     Coord(double x, double y, double z)
     { data[0] = x; data[1] = y; data[2] = z; }
 
-    double RadiusSquared() const
+    // Accessors:
+    double& operator[](const int index)
+    { return data[index - 1]; }
+    const double& operator[](const int index) const
+    { return data[index - 1]; }
+
+    // Lengths and Angles:
+    double EuklNormSquared() const
     { return data[0] * data[0] + data[1] * data[1] + data[2] * data[2]; }
-    double Radius() const
-    { return sqrt(data[0] * data[0] + data[1] * data[1] + data[2] * data[2]); }
+    double EuklNorm() const
+    { return sqrt(EuklNormSquared()); }
     double Theta()
     { return MyAtan2(sqrt(data[0] * data[0] + data[1] * data[1]), data[2]); }
     double Phi()
@@ -66,21 +74,18 @@ public:
         return (phi < 0) ? phi + 2 * M_PI : phi;
     }
 
-    static double Dot(const Coord& lhs, const Coord& rhs)
-    { return lhs[1] * rhs[1] + lhs[2] * rhs[2] + lhs[3] * rhs[3]; }
-    static Coord Cross(const Coord& lhs, const Coord& rhs)
+    // Basic Math:
+    static double Dot(const Coord& a, const Coord& b)
+    { return a[1] * b[1] + a[2] * b[2] + a[3] * b[3]; }
+    static Coord Cross(const Coord& a, const Coord& b)
     {
         return Coord
-        (lhs[2] * rhs[3] - rhs[2] * lhs[3],
-         lhs[3] * rhs[1] - rhs[3] * lhs[1],
-         lhs[1] * rhs[2] - rhs[1] * lhs[2]);
+        (a[2] * b[3] - b[2] * a[3],
+         a[3] * b[1] - b[3] * a[1],
+         a[1] * b[2] - b[1] * a[2]);
     }
 
-    double& operator[](const int index)
-    { return data[index - 1]; }
-    const double& operator[](const int index) const
-    { return data[index - 1]; }
-
+    // Output:
     void Print(std::string name, bool newline = false, int precision = 6) const
     {
         std::cout << name << " = ("
@@ -89,11 +94,13 @@ public:
     	<< Format(data[2], precision) << ")\n";
         if(newline) std::cout << "\n";
     }
+    friend std::ostream& operator<<(std::ostream& os, const Coord& x);
 };
-// Additional operator overloading:
-// Coord addition:
+// Addition/Substraction:
 inline Coord operator+(const Coord& lhs, const Coord& rhs)
 { return Coord(lhs[1] + rhs[1], lhs[2] + rhs[2], lhs[3] + rhs[3]); }
+inline Coord operator-(const Coord& lhs, const Coord& rhs)
+{ return Coord(lhs[1] - rhs[1], lhs[2] - rhs[2], lhs[3] - rhs[3]); }
 
 // Scalar multiplication:
 inline Coord operator*(double lhs, const Coord& rhs)
@@ -101,7 +108,7 @@ inline Coord operator*(double lhs, const Coord& rhs)
 inline Coord operator*(const Coord& lhs, double rhs)
 { return Coord(lhs[1] * rhs, lhs[2] * rhs, lhs[3] * rhs); }
 
-// Quaternion rotation:
+// Quaternion multiplication:
 inline Coord operator*(const glm::quat& q, const Coord& p)
 {
     Coord u(q.x, q.y, q.z);
@@ -110,6 +117,15 @@ inline Coord operator*(const glm::quat& q, const Coord& p)
 	return p + 2.0 * ((up * q.w) + uup);
 }
 
+// Output:
+inline std::ostream& operator<<(std::ostream& os, const Coord& x) 
+{
+    os << x[1] << "," << x[2] << "," << x[3];
+    return os;
+}
+
+
+
 
 
 struct Tensor2
@@ -117,16 +133,19 @@ struct Tensor2
 private:
     double data[2];
 public:
+    // Constructors:
     Tensor2(double value=0)
-    { data[0] = data[1] = data[2]; }
+    { data[0] = data[1]; }
     Tensor2(double y, double z)
     { data[0] = y; data[1] = z; }
     
+    // Accessors:
     double& operator[](const int index)
     { return data[index - 2]; }
     const double& operator[](const int index) const
     { return data[index - 2]; }
     
+    // Output:
     void Print(std::string name, bool newline = false, int precision = 6) const
     {
         std::cout << name << " = ("
@@ -134,17 +153,50 @@ public:
     	<< Format(data[1], precision) << ")\n";
         if(newline) std::cout << "\n";
     }
+    friend std::ostream& operator<<(std::ostream& os, const Tensor2& x);
 };
+inline std::ostream& operator<<(std::ostream& os, const Tensor2& x) 
+{
+    os << x[2] << "," << x[3];
+    return os;
+}
+
+
+
+
+
 struct Tensor3
 {
 private:
     double data[3];
 public:
+    // Constructors:
     Tensor3(double value=0)
     { data[0] = data[1] = data[2] = value; }
     Tensor3(double x, double y, double z)
     { data[0] = x; data[1] = y; data[2] = z; }
+    
+    // Accessors:
+    double& operator[](const int index)
+    { return data[index - 1]; }
+    const double& operator[](const int index) const
+    { return data[index - 1]; }
 
+    // Lengths and Angles:
+    double EuklNorm() const
+    { return sqrt(Dot((*this), (*this))); }
+    Tensor3 EuklNormalized() const
+    {
+        double norm = EuklNorm();
+        return Tensor3(data[0] / norm, data[1] / norm, data[2] / norm);
+    }
+    // Arc distance between a and b on unit sphere. (assumes a and b are normalized)
+    static double UnitSphereNorm(const Tensor3& a, const Tensor3& b)
+    {
+        double crossNorm = Tensor3::Cross(a, b).EuklNorm();
+        double dot = Tensor3::Dot(a, b);
+        return MyAtan2(crossNorm,dot);
+    }
     double Theta()
     { return MyAtan2(sqrt(data[0] * data[0] + data[1] * data[1]), data[2]); }
     double Phi()
@@ -153,28 +205,18 @@ public:
         return (phi < 0) ? phi + 2 * M_PI : phi;
     }
 
-    static double Dot(const Tensor3& lhs, const Tensor3& rhs)
-    { return lhs[1] * rhs[1] + lhs[2] * rhs[2] + lhs[3] * rhs[3]; }
-    static Tensor3 Cross(const Tensor3& lhs, const Tensor3& rhs)
+    // Basic Math:
+    static double Dot(const Tensor3& a, const Tensor3& b)
+    { return a[1] * b[1] + a[2] * b[2] + a[3] * b[3]; }
+    static Tensor3 Cross(const Tensor3& a, const Tensor3& b)
     {
         return Tensor3
-        (lhs[2] * rhs[3] - rhs[2] * lhs[3],
-         lhs[3] * rhs[1] - rhs[3] * lhs[1],
-         lhs[1] * rhs[2] - rhs[1] * lhs[2]);
-    }
-    double EuklNorm() const
-    { return sqrt(Dot((*this), (*this))); }
-    Tensor3 EuklNormalized() const
-    {
-        double norm = EuklNorm();
-        return Tensor3(data[0] / norm, data[1] / norm, data[2] / norm);
+        (a[2] * b[3] - b[2] * a[3],
+         a[3] * b[1] - b[3] * a[1],
+         a[1] * b[2] - b[1] * a[2]);
     }
     
-    double& operator[](const int index)
-    { return data[index - 1]; }
-    const double& operator[](const int index) const
-    { return data[index - 1]; }
-    
+    // Output:
     void Print(std::string name, bool newline = false, int precision = 6) const
     {
         std::cout << name << " = ("
@@ -183,11 +225,15 @@ public:
     	<< Format(data[2], precision) << ")\n";
         if(newline) std::cout << "\n";
     }
+    friend std::ostream& operator<<(std::ostream& os, const Tensor3& v);
 };
-// Additional operator overloading:
-// Tensor3 addition:
+// Addition/Substraction:
 inline Tensor3 operator+(const Tensor3& lhs, const Tensor3& rhs)
 { return Tensor3(lhs[1] + rhs[1], lhs[2] + rhs[2], lhs[3] + rhs[3]); }
+inline Tensor3 operator-(const Tensor3& lhs, const Tensor3& rhs)
+{ return Tensor3(lhs[1] - rhs[1], lhs[2] - rhs[2], lhs[3] - rhs[3]); }
+inline Tensor3 operator-(const Tensor3& tensor)
+{ return {-tensor[1], -tensor[2], -tensor[3]}; }
 
 // Scalar multiplication:
 inline Tensor3 operator*(double lhs, const Tensor3& rhs)
@@ -204,21 +250,35 @@ inline Tensor3 operator*(const glm::quat& q, const Tensor3& p)
 	return p + 2.0 * ((up * q.w) + uup);
 }
 
+// Output
+inline std::ostream& operator<<(std::ostream& os, const Tensor3& v) 
+{
+    os << v[1] << "," << v[2] << "," << v[3];
+    return os;
+}
+
+
+
+
+
 struct Tensor4
 {
 private:
     double data[4];
 public:
+    // Constructors:
     Tensor4(double value=0)
     { data[0] = data[1] = data[2] = data[3] = value; }
     Tensor4(double t, double x, double y, double z)
     { data[0] = t; data[1] = x; data[2] = y; data[3] = z; }
 
+    // Accessors:
     double& operator[](const int index)
     { return data[index]; }
     const double& operator[](const int index) const
     { return data[index]; }
     
+    // Output:
     void Print(std::string name, bool newline = false, int precision = 6) const
     {
         std::cout << name << " = ("
@@ -228,7 +288,15 @@ public:
     	<< Format(data[3], precision) << ")\n";
         if(newline) std::cout << "\n";
     }
+    friend std::ostream& operator<<(std::ostream& os, const Tensor4& v);
 };
+inline std::ostream& operator<<(std::ostream& os, const Tensor4& v) 
+{
+    os << v[0] << "," << v[1] << "," << v[2] << "," << v[3];
+    return os;
+}
+
+
 
 
 
@@ -237,6 +305,7 @@ struct Tensor2x2
 private:
     double data[4];
 public:
+    // Constructors:
     Tensor2x2(double value=0)
     { data[0] = data[1] = data[2] = data[3] = value; }
     Tensor2x2(double yy, double yz,
@@ -245,7 +314,14 @@ public:
         data[0*2 + 0] = yy; data[0*2 + 1] = yz;
         data[1*2 + 0] = zy; data[1*2 + 1] = zz;
     }
+
+    // Accessors:
+    double& operator[](const rank2Indices& index)
+    { return data[(index.i - 2) * 2 + (index.j - 2)]; }
+    const double& operator[](const rank2Indices& index) const
+    { return data[(index.i - 2) * 2 + (index.j - 2)]; }
     
+    // Basic Math:
     Tensor2x2 Invert()
     {
         Tensor2x2 invers;
@@ -256,11 +332,7 @@ public:
         return invers;
     }
 
-    double& operator[](const rank2Indices& index)
-    { return data[(index.i - 2) * 2 + (index.j - 2)]; }
-    const double& operator[](const rank2Indices& index) const
-    { return data[(index.i - 2) * 2 + (index.j - 2)]; }
-
+    // Output:
     void Print(std::string name, bool newline = false, int precision = 6) const
     {
         int size = name.size();
@@ -269,12 +341,24 @@ public:
         std::cout << space << "   (" << Format(data[1 * 2 + 0], precision) << "," << Format(data[1 * 1 + 1], precision) << ")" << "\n";
         if(newline) std::cout << "\n";
     }
+    friend std::ostream& operator<<(std::ostream& os, const Tensor2x2& v);
 };
+inline std::ostream& operator<<(std::ostream& os, const Tensor2x2& v) 
+{
+    os << "(" << v[{2,2}] << "," << v[{2,3}] << "|" << v[{3,2}] << "," << v[{3,3}] << ")";
+    return os;
+}
+
+
+
+
+
 struct Tensor3x3
 {
 private:
     double data[9];
 public:
+    // Constructors:
     Tensor3x3(double value=0)
     {
         for(int i=0; i<9; i++)
@@ -289,6 +373,13 @@ public:
         data[6] = zx; data[7] = zy; data[8] = zz;
     }
 
+    // Accessors:
+    double& operator[](const rank2Indices& index)
+    { return data[(index.i - 1) * 3 + (index.j - 1)]; }
+    const double& operator[](const rank2Indices& index) const
+    { return data[(index.i - 1) * 3 + (index.j - 1)]; }
+
+    // Basic Math:
     Tensor3x3 Invert()
     {
         Tensor3x3 invers;
@@ -299,11 +390,7 @@ public:
         return invers;
     }
     
-    double& operator[](const rank2Indices& index)
-    { return data[(index.i - 1) * 3 + (index.j - 1)]; }
-    const double& operator[](const rank2Indices& index) const
-    { return data[(index.i - 1) * 3 + (index.j - 1)]; }
-    
+    // Output
     void Print(std::string name, bool newline = false, int precision = 6) const
     {
         int size = name.size();
@@ -313,12 +400,26 @@ public:
         std::cout << space << "   (" << Format(data[2 * 3 + 0], precision) << "," << Format(data[2 * 3 + 1], precision) << "," << Format(data[2 * 3 + 2], precision) << ")" << "\n";
         if(newline) std::cout << "\n";
     }
+    friend std::ostream& operator<<(std::ostream& os, const Tensor3x3& v);
 };
+inline std::ostream& operator<<(std::ostream& os, const Tensor3x3& v) 
+{
+    os << "(" << v[{1,1}] << "," << v[{1,2}] << "," << v[{1,3}]
+       << "|" << v[{2,1}] << "," << v[{2,2}] << "," << v[{2,3}]
+       << "|" << v[{3,1}] << "," << v[{3,2}] << "," << v[{3,3}] << ")";
+    return os;
+}
+
+
+
+
+
 struct Tensor4x4
 {
 private:
     double data[16];
 public:
+    // Constructors:
     Tensor4x4(double value=0)
     {
         for(int i=0; i<16; i++)
@@ -335,6 +436,13 @@ public:
         data[12] = zt; data[13] = zx; data[14] = zy; data[15] = zz;
     }
 
+    // Accessors:
+    double& operator[](const rank2Indices& index)
+    { return data[index.i * 4 + index.j]; }
+    const double& operator[](const rank2Indices& index) const
+    { return data[index.i * 4 + index.j]; }
+
+    // Basic Math:
     Tensor4x4 Invert()
     {
         Tensor4x4 invers;
@@ -345,11 +453,7 @@ public:
         return invers;
     }
     
-    double& operator[](const rank2Indices& index)
-    { return data[index.i * 4 + index.j]; }
-    const double& operator[](const rank2Indices& index) const
-    { return data[index.i * 4 + index.j]; }
-    
+    // Output
     void Print(std::string name, bool newline = false, int precision = 6) const
     {
         int size = name.size();
@@ -360,7 +464,18 @@ public:
         std::cout << space << "   (" << Format(data[3 * 4 + 0], precision) << "," << Format(data[3 * 4 + 1], precision) << "," << Format(data[3 * 4 + 2], precision) << "," << Format(data[3 * 4 + 3], precision) << ")" << "\n";
         if(newline) std::cout << "\n";
     }
+    friend std::ostream& operator<<(std::ostream& os, const Tensor4x4& v);
 };
+inline std::ostream& operator<<(std::ostream& os, const Tensor4x4& v) 
+{
+    os << "(" << v[{0,0}] << "," << v[{0,1}] << "," << v[{0,2}] << "," << v[{0,3}]
+       << "|" << v[{1,0}] << "," << v[{1,1}] << "," << v[{1,2}] << "," << v[{1,3}]
+       << "|" << v[{2,0}] << "," << v[{2,1}] << "," << v[{2,2}] << "," << v[{2,3}]
+       << "|" << v[{3,0}] << "," << v[{3,1}] << "," << v[{3,2}] << "," << v[{3,3}] << ")";
+    return os;
+}
+
+
 
 
 
@@ -369,6 +484,7 @@ struct Tensor3x3x3
 private:
     double data[27];
 public:
+    // Constructors:
     Tensor3x3x3(double value=0)
     {
         for(int i=0; i<27; i++)
@@ -396,11 +512,13 @@ public:
         data[2 * 9 + 2 * 3 + 0] = zzx; data[2 * 9 + 2 * 3 + 1] = zzy; data[2 * 9 + 2 * 3 + 2] = zzz;
     }
     
+    // Accessors:
     double& operator[](const rank3Indices& index)
     { return data[(index.i - 1) * 9 + (index.j - 1) * 3 + (index.k - 1)]; }
     const double& operator[](const rank3Indices& index) const
     { return data[(index.i - 1) * 9 + (index.j - 1) * 3 + (index.k - 1)]; }
     
+    // Output
     void Print(std::string name, bool newline = false, int precision = 6) const
     {
         int size = name.size();
@@ -418,12 +536,32 @@ public:
         std::cout << space << "   (" << Format(data[2 * 9 + 2 * 3 + 0], precision) << "," << Format(data[2 * 9 + 2 * 3 + 1], precision) << "," << Format(data[2 * 9 + 2 * 3 + 2], precision) << ")" << "\n";
         if(newline) std::cout << "\n";
     }
+    friend std::ostream& operator<<(std::ostream& os, const Tensor3x3x3& v);
 };
+inline std::ostream& operator<<(std::ostream& os, const Tensor3x3x3& v) 
+{
+    os << "(" << v[{1,1,1}] << "," << v[{1,1,2}] << "," << v[{1,1,3}]
+       << "|" << v[{1,2,1}] << "," << v[{1,2,2}] << "," << v[{1,2,3}]
+       << "|" << v[{1,3,1}] << "," << v[{1,3,2}] << "," << v[{1,3,3}] << ")\n";
+    os << "(" << v[{2,1,1}] << "," << v[{2,1,2}] << "," << v[{2,1,3}]
+       << "|" << v[{2,2,1}] << "," << v[{2,2,2}] << "," << v[{2,2,3}]
+       << "|" << v[{2,3,1}] << "," << v[{2,3,2}] << "," << v[{2,3,3}] << ")\n";
+    os << "(" << v[{3,1,1}] << "," << v[{3,1,2}] << "," << v[{3,1,3}]
+       << "|" << v[{3,2,1}] << "," << v[{3,2,2}] << "," << v[{3,2,3}]
+       << "|" << v[{3,3,1}] << "," << v[{3,3,2}] << "," << v[{3,3,3}] << ")";
+    return os;
+}
+
+
+
+
+
 struct Tensor4x4x4
 {
 private:
     double data[64];
 public:
+    // Constructors:
     Tensor4x4x4(double value=0)
     {
         for(int i=0; i<64; i++)
@@ -465,11 +603,13 @@ public:
         data[3 * 16 + 3 * 4 + 0] = zzt; data[3 * 16 + 3 * 4 + 1] = zzx; data[3 * 16 + 3 * 4 + 2] = zzy; data[3 * 16 + 3 * 4 + 3] = zzz;
     }
     
+    // Accessors:
     double& operator[](const rank3Indices& index)
     { return data[index.i*16 + index.j*4 + index.k]; }
     const double& operator[](const rank3Indices& index) const
     { return data[index.i*16 + index.j*4 + index.k]; }
     
+    // Output
     void Print(std::string name, bool newline = false, int precision = 6) const
     {
         int size = name.size();
@@ -494,6 +634,96 @@ public:
         std::cout << space << "   (" << Format(data[3 * 16 + 2 * 4 + 0], precision) << "," << Format(data[3 * 16 + 2 * 4 + 1], precision) << "," << Format(data[3 * 16 + 2 * 4 + 2], precision) << "," << Format(data[3 * 16 + 2 * 4 + 3], precision) << ")" << "\n";
         std::cout << space << "   (" << Format(data[3 * 16 + 3 * 4 + 0], precision) << "," << Format(data[3 * 16 + 3 * 4 + 1], precision) << "," << Format(data[3 * 16 + 3 * 4 + 2], precision) << "," << Format(data[3 * 16 + 3 * 4 + 3], precision) << ")" << "\n";
         if(newline) std::cout << "\n";
+    }
+    friend std::ostream& operator<<(std::ostream& os, const Tensor4x4x4& v);
+};
+inline std::ostream& operator<<(std::ostream& os, const Tensor4x4x4& v) 
+{
+    os << "(" << v[{0,0,0}] << "," << v[{0,0,1}] << "," << v[{0,0,2}] << "," << v[{0,0,3}]
+       << "|" << v[{0,1,0}] << "," << v[{0,1,1}] << "," << v[{0,1,2}] << "," << v[{0,1,3}]
+       << "|" << v[{0,2,0}] << "," << v[{0,2,1}] << "," << v[{0,2,2}] << "," << v[{0,2,3}]
+       << "|" << v[{0,3,0}] << "," << v[{0,3,1}] << "," << v[{0,3,2}] << "," << v[{0,3,3}] << ")\n";
+    os << "(" << v[{1,0,0}] << "," << v[{1,0,1}] << "," << v[{1,0,2}] << "," << v[{1,0,3}]
+       << "|" << v[{1,1,0}] << "," << v[{1,1,1}] << "," << v[{1,1,2}] << "," << v[{1,1,3}]
+       << "|" << v[{1,2,0}] << "," << v[{1,2,1}] << "," << v[{1,2,2}] << "," << v[{1,2,3}]
+       << "|" << v[{1,3,0}] << "," << v[{1,3,1}] << "," << v[{1,3,2}] << "," << v[{1,3,3}] << ")\n";
+    os << "(" << v[{2,0,0}] << "," << v[{2,0,1}] << "," << v[{2,0,2}] << "," << v[{2,0,3}]
+       << "|" << v[{2,1,0}] << "," << v[{2,1,1}] << "," << v[{2,1,2}] << "," << v[{2,1,3}]
+       << "|" << v[{2,2,0}] << "," << v[{2,2,1}] << "," << v[{2,2,2}] << "," << v[{2,2,3}]
+       << "|" << v[{2,3,0}] << "," << v[{2,3,1}] << "," << v[{2,3,2}] << "," << v[{2,3,3}] << ")\n";
+    os << "(" << v[{3,0,0}] << "," << v[{3,0,1}] << "," << v[{3,0,2}] << "," << v[{3,0,3}]
+       << "|" << v[{3,1,0}] << "," << v[{3,1,1}] << "," << v[{3,1,2}] << "," << v[{3,1,3}]
+       << "|" << v[{3,2,0}] << "," << v[{3,2,1}] << "," << v[{3,2,2}] << "," << v[{3,2,3}]
+       << "|" << v[{3,3,0}] << "," << v[{3,3,1}] << "," << v[{3,3,2}] << "," << v[{3,3,3}] << ")";
+    return os;
+}
+
+
+
+
+
+template<typename T>
+struct UnstructuredMatrix
+{
+private:
+    std::vector<T,AlignedArrayAllocator<T>> entries;
+    std::vector<size_t,AlignedArrayAllocator<size_t>> indexes;
+
+public:
+    UnstructuredMatrix()
+    { indexes.push_back(0); }
+
+    void AddRow(T* data, size_t count)
+    {
+        for(size_t i=0; i<count; i++)
+            entries.push_back(data[i]);
+        indexes.push_back(indexes[indexes.size() - 1] + count);
+    }
+    void AddRow(std::vector<T> data)
+    {
+        for(size_t i=0; i<data.size(); i++)
+            entries.push_back(data[i]);
+        indexes.push_back(indexes[indexes.size() - 1] + data.size());
+    }
+
+    size_t Start(size_t row)
+    { return indexes[row]; }
+    size_t End(size_t row)
+    { return indexes[row+1]; }
+
+    T& operator[](const size_t index)
+    { return entries[index]; }
+    const T& operator[](const size_t index) const
+    { return entries[index]; }
+    T& operator[](const rank2Indices& index)
+    { return entries[indexes[index.i] + index.j]; }
+    const T& operator[](const rank2Indices& index) const
+    { return entries[indexes[index.i] + index.j]; }
+
+    void Print()
+    {
+        std::cout << "index: [entries]\n";
+        for(size_t i=0; i<indexes.size()-1; i++)   // last entry outside for loop
+        {
+            std::cout << i << ": [";
+            for(size_t j=indexes[i]; j<indexes[i+1] - 1; j++)  // last entry outside for loop
+                std::cout << entries[j] << ", ";
+            std::cout << entries[indexes[i+1] - 1];
+            std::cout << "]\n";
+        }
+        std::cout << indexes.size()-1 << ": []" << std::endl;
+    }
+
+    void PrintFlat()
+    {
+        std::cout << "entries: ";
+        for(size_t i=0; i<entries.size(); i++)
+            std::cout << entries[i] << ", ";
+        std::cout << std::endl;
+        std::cout << "indexes: ";
+        for(size_t i=0; i<indexes.size(); i++)
+            std::cout << indexes[i] << ", ";
+        std::cout << std::endl;
     }
 };
 #endif //__INCLUDE_GUARD_TesorTypes_hh__

@@ -1,17 +1,5 @@
 #include "Radiation2.h"
 
-std::string StreamingName2(int n)
-{
-	std::string name("unknown");
-	switch (n)
-	{
-   		case 0: { name = "Flat";    } break;
-   		case 1: { name = "Curved";	} break;
-		default: { exit_on_error("Invalid StreamingType"); }
-	}
-	return name;
-}
-
 
 
 Radiation2::Radiation2(Metric& metric, Stencil& intensityStencil, Stencil& streamingStencil, Camera& camera):
@@ -138,9 +126,10 @@ void Radiation2::LoadInitialData()
 		{
 			if(initialNx[ijk] == 0 && initialNy[ijk] == 0 && initialNz[ijk] == 0)
 			{// Uniform intensity distribution:
-                coefficientsI[0] = initialE[ijk];
-                for(int d=1; d<intensityStencil.nCoefficients; d++)
-                    coefficientsI[d] = 0;
+                double I[intensityStencil.nDir];
+				for(size_t d=0; d<intensityStencil.nDir; d++)
+					I[d] = initialE[ijk];
+                SphericalHarmonicsXyz::GetCoefficients(intensityStencil, I, &coefficientsI[IntensityHarmonicIndex(ijk,0)]);
 			}
 			else
 			{// Kent intensity distribution: https://en.wikipedia.org/wiki/Kent_distribution
@@ -230,7 +219,7 @@ void Radiation2::UpdateStreamingCoefficients()
 void Radiation2::ComputeMomentsIF()
 {
 	PROFILE_FUNCTION();
-	constexpr double fourPiInv = 1.0 / (4.0 * M_PI);
+	// constexpr double fourPiInv = 1.0 / (4.0 * M_PI);
 	
 	PARALLEL_FOR(1)
 	for(size_t ijk=0; ijk<grid.nxyz; ijk++)
@@ -248,29 +237,28 @@ void Radiation2::ComputeMomentsIF()
 		for(size_t d=0; d<intensityStencil.nDir; d++)
 		{
 			Tensor3 dir = intensityStencil.C(d);
-            double I = IntensityAt(ijk,dir);
-			double c = intensityStencil.W(d) * I;
-			E[ijk]   += c;
-			Fx[ijk]  += c * dir[1];
-			Fy[ijk]  += c * dir[2];
-			Fz[ijk]  += c * dir[3];
-			Pxx[ijk] += c * dir[1] * dir[1];
-			Pxy[ijk] += c * dir[1] * dir[2];
-			Pxz[ijk] += c * dir[1] * dir[3];
-			Pyy[ijk] += c * dir[2] * dir[2];
-			Pyz[ijk] += c * dir[2] * dir[3];
-			Pzz[ijk] += c * dir[3] * dir[3];
+            double I_d = intensityStencil.W(d) * IntensityAt(ijk,dir);
+			E[ijk]   += I_d;
+			Fx[ijk]  += I_d * dir[1];
+			Fy[ijk]  += I_d * dir[2];
+			Fz[ijk]  += I_d * dir[3];
+			Pxx[ijk] += I_d * dir[1] * dir[1];
+			Pxy[ijk] += I_d * dir[1] * dir[2];
+			Pxz[ijk] += I_d * dir[1] * dir[3];
+			Pyy[ijk] += I_d * dir[2] * dir[2];
+			Pyz[ijk] += I_d * dir[2] * dir[3];
+			Pzz[ijk] += I_d * dir[3] * dir[3];
 		}
-        E[ijk]   *= fourPiInv;
-        Fx[ijk]  *= fourPiInv;
-        Fy[ijk]  *= fourPiInv;
-        Fz[ijk]  *= fourPiInv;
-        Pxx[ijk] *= fourPiInv;
-        Pxy[ijk] *= fourPiInv;
-        Pxz[ijk] *= fourPiInv;
-        Pyy[ijk] *= fourPiInv;
-        Pyz[ijk] *= fourPiInv;
-        Pzz[ijk] *= fourPiInv;
+        // E[ijk]   *= fourPiInv;
+        // Fx[ijk]  *= fourPiInv;
+        // Fy[ijk]  *= fourPiInv;
+        // Fz[ijk]  *= fourPiInv;
+        // Pxx[ijk] *= fourPiInv;
+        // Pxy[ijk] *= fourPiInv;
+        // Pxz[ijk] *= fourPiInv;
+        // Pyy[ijk] *= fourPiInv;
+        // Pyz[ijk] *= fourPiInv;
+        // Pzz[ijk] *= fourPiInv;
 	}
 }
 void Radiation2::ComputeMomentsLF()
@@ -353,15 +341,6 @@ void Radiation2::Stream()
 			double s = GetFrequencyShift(ijk, direction);
 			Coord xyzTemp = GetTempCoordinate(ijk, direction);
 			Tensor3 vTempIF = GetTemp3VelocityIF(ijk, direction);
-
-			//if ( i == grid.nx/2 && j == grid.ny/2 && k == grid.nz/2)
-			//{
-			//	grid.xyz(i,j,k).Print("x0");
-			//	direction.Print("dir");
-			//	xyzTemp.Print("xTemp");
-			//	vTempIF.Print("vTempIF");
-			//	PrintDouble(s,"s",1);
-			//}
 			
 			if(metric.InsideBH(xyzTemp))
 			{
@@ -400,7 +379,7 @@ void Radiation2::Stream()
 
 
 
-void Radiation2::RunSimulation(Config2 config)
+void Radiation2::RunSimulation(Config config)
 {
 	// -------------------- Initialization --------------------
 	int timeSteps = ceil(config.simTime / grid.dt);

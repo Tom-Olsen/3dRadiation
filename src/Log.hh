@@ -149,7 +149,7 @@ public:
 	    file << "cfl  = " << metric.grid.GetCFL() << std::endl << std::endl;
     
 	    file << "Stencil Properties:" << std::endl;
-	    file << "Instensity Stencil: nDir          = " << intensityStencil.nDir << std::endl;
+	    file << "Instensity Stencil: nDir         = " << intensityStencil.nDir << std::endl;
 	    file << "Intensity Stencil: nOrder        = " << intensityStencil.nOrder << std::endl;
 	    file << "Intensity Stencil: nCoefficients = " << intensityStencil.nCoefficients << std::endl;
 	    file << "Streaming Stencil: nDir          = " << streamingStencil.nDir << std::endl;

@@ -47,6 +47,9 @@ public:
     double i(double x);
     double j(double y);
     double k(double z);
+    size_t i(size_t ijk);
+    size_t j(size_t ijk);
+    size_t k(size_t ijk);
     Coord ijk(const Coord& xyz);
 
     // Domain Checks:

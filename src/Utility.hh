@@ -45,8 +45,11 @@ public:
         if constexpr(std::is_same<U,glm::quat>::value)
             *p = glm::quat(1,0,0,0);
         else
-            *p = 0;
+            new (p) U(std::forward<Args>(args)...);
     }
+    template<class U>
+    void destroy(U* p)
+    { p->~U(); }
 
     // Needed for std::swap(..., ...):
     bool operator==(const AlignedArrayAllocator &)
@@ -425,9 +428,14 @@ inline void PrintMat(const Eigen::MatrixXd& A, int precision=6)
 // Nested directories possible, e.g: path="data/output/xValues"
 inline bool CreateDirectory(std::string path)
 {
-	namespace fs = std::filesystem;
-    fs::path currentPath = fs::current_path();
-	std::string directoryPath = currentPath/path;
-    return fs::create_directories(directoryPath);
+    if (path != "")
+    {
+	    namespace fs = std::filesystem;
+        fs::path currentPath = fs::current_path();
+	    std::string directoryPath = currentPath/path;
+        return fs::create_directories(directoryPath);
+    }
+    else
+        return false;
 }
 #endif //__INCLUDE_GUARD_Utility_hh__

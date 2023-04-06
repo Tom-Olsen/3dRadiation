@@ -1,8 +1,10 @@
 #ifndef __INCLUDE_GUARD_Stencil_h__
 #define __INCLUDE_GUARD_Stencil_h__
-#include <fstream>                  // File input/output.
+#include <vector>
+#include <set>
 #include "Utility.hh"
 #include "TensorTypes.hh"
+#include "ConvexHull.h"
 
 
 
@@ -23,9 +25,14 @@
 struct Stencil
 {
 public:
-    size_t nDir;            // Number of directions in stencil.
-    size_t nOrder;          // Quadrature integration.
-    size_t nCoefficients;   // Number of exact Spherical Harmonics, counted with flat index i = l * (l + 1) + m.
+    size_t nDir;                        // Number of directions in stencil.
+    size_t nOrder;                      // Quadrature integration.
+    size_t nCoefficients;               // Number of exact Spherical Harmonics, counted with flat index i = l * (l + 1) + m.
+    double minMaxDot;                   // Used to optimize nearest neighbor search.
+    std::vector<Vector3Int> triangles;  // Triangulation for barycentric interpolaton.
+    // List of lists of all triangles that are connected to one direction vector c.
+    UnstructuredMatrix<Vector3Int> connectedTriangles;
+    UnstructuredMatrix<size_t> connectedVertices;
 protected:
     RealBuffer w;
     RealBuffer cx;
@@ -33,10 +40,14 @@ protected:
     RealBuffer cz;
     RealBuffer theta;
     RealBuffer phi;
-public:
+protected:
     void SetCoefficientCount();
     void AllocateBuffers();
-
+    void SortDirections();
+    void InitializeConnectedTriangles();
+    void InitializeConnectedVertices();
+    void InitializeMinMaxDot();
+public:
     virtual double W(size_t d) const;
     virtual double Theta(size_t d) const;
     virtual double Phi(size_t d) const;
@@ -44,6 +55,9 @@ public:
     virtual double Cy(size_t d) const;
     virtual double Cz(size_t d) const;
     virtual Tensor3 C(size_t d) const;
+
+    void Print() const;
+
 };
 
 

@@ -14,6 +14,132 @@ void Stencil::AllocateBuffers()
     theta.resize(nDir);
     phi.resize(nDir);
 }
+void Stencil::SortDirections()
+{
+    int index[nDir];
+    for(int i = 0; i < nDir; i++)
+        index[i] = i;
+
+    // sort index array based on custom compare function
+    std::sort(index, index + nDir, [this](int i, int j)
+    {
+        // if(phi[i] != phi[j])
+            // return phi[i] < phi[j];
+        // else
+            // return theta[i] < theta[j];
+            
+        if(theta[i] != theta[j])
+            return theta[i] < theta[j];
+        else
+            return phi[i] < phi[j];
+    });
+
+    // create temporary arrays to hold sorted values
+    double sorted_w[nDir];
+    double sorted_cx[nDir];
+    double sorted_cy[nDir];
+    double sorted_cz[nDir];
+    double sorted_phi[nDir];
+    double sorted_theta[nDir];
+
+    // copy values from original arrays to temporary arrays
+    for(int i = 0; i < nDir; i++)
+    {
+        sorted_w[i] = w[index[i]];
+        sorted_cx[i] = cx[index[i]];
+        sorted_cy[i] = cy[index[i]];
+        sorted_cz[i] = cz[index[i]];
+        sorted_phi[i] = phi[index[i]];
+        sorted_theta[i] = theta[index[i]];
+    }
+
+    // overwrite original arrays with sorted values
+    for(int i = 0; i < nDir; i++)
+    {
+        w[i] = sorted_w[i];
+        cx[i] = sorted_cx[i];
+        cy[i] = sorted_cy[i];
+        cz[i] = sorted_cz[i];
+        phi[i] = sorted_phi[i];
+        theta[i] = sorted_theta[i];
+    }
+}
+void Stencil::InitializeConnectedTriangles()
+{
+    // Setup vertices vector for convex hull triangulation:
+    std::vector<Vector3> vertices;
+    vertices.reserve(nDir);
+    for(int d=0; d<nDir; d++)
+    {
+        Vector3 v(Cx(d),Cy(d),Cz(d));
+        vertices.push_back(v);
+    }
+
+    // Triangulate vertices:
+    ConvexHull convexHull(vertices);
+    convexHull.OriginalOrdering(vertices);
+
+    // Extract connectedTriangles:
+    std::vector<Vector3Int> allTriangles = convexHull.GetTriangles();
+    for(int i=0; i<nDir; i++)
+    {
+        std::vector<Vector3Int> triangles;
+        for(int j=0; j<allTriangles.size(); j++)
+        {
+            Vector3Int triangle = allTriangles[j];
+            if(triangle[0] == i
+            || triangle[1] == i
+            || triangle[2] == i)
+                triangles.push_back(triangle);
+        }
+        connectedTriangles.AddRow(triangles);
+    }
+}
+void Stencil::InitializeConnectedVertices()
+{
+    for(int d=0; d<nDir; d++)
+    {
+        // Get unique indices of connected triangles:
+        std::set<size_t> indices;
+        int start = connectedTriangles.Start(d);
+        int end = connectedTriangles.End(d);
+        for(int k=start; k<end; k++)
+        {
+            Vector3Int triangle = connectedTriangles[k];
+            indices.insert(triangle[0]);
+            indices.insert(triangle[1]);
+            indices.insert(triangle[2]);
+        }
+
+        // Extract corresponding vertices:
+        std::vector<size_t> vertices;
+        for(auto it : indices)
+            vertices.push_back(it);
+
+        // Add list of vertices to connected vertices:
+        connectedVertices.AddRow(vertices);
+    }
+}
+void Stencil::InitializeMinMaxDot()
+{
+    minMaxDot = 1;
+    int n = 500;
+    for(int i=0; i<n; i++)
+    for(int j=0; j<2*n; j++)
+    {
+        double theta = M_PI * (i + 0.5) / (double)n;
+        double phi = 2.0 * M_PI * j / (double)n;
+        Tensor3 c(sin(theta) * cos(phi), sin(theta) * sin(phi), cos(theta));
+        double maxDot = -1;
+        for(int d=0; d<nDir; d++)
+        {
+            double dot = Tensor3::Dot(C(d), c);
+            maxDot = std::max(maxDot,dot);
+        }
+        minMaxDot = std::min(minMaxDot,maxDot);
+    }
+}
+
 double Stencil::W(size_t d) const
 { return w[d]; }
 double Stencil::Theta(size_t d) const
@@ -28,6 +154,17 @@ double Stencil::Cz(size_t d) const
 { return cz[d]; }
 Tensor3 Stencil::C(size_t d) const
 { return Tensor3(Cx(d), Cy(d), Cz(d)); }
+
+void Stencil::Print() const
+{
+    std::cout << "        d\t        w\t    theta\t      phi\t       cx\t       cy\t       cz\n";
+    for(int d=0; d<nDir; d++)
+    {
+        std::cout << Format(d) << "\t" << Format(W(d)) << "\t" << Format(Theta(d)) << "\t" << Format(Phi(d)) << "\t";
+        std::cout << Format(Cx(d)) << "\t" << Format(Cy(d)) << "\t" << Format(Cz(d)) << "\n";
+    }
+    std::cout << std::endl;
+}
 // -----------------------------------------------------------------------
 
 
@@ -55,6 +192,10 @@ MyStencil::MyStencil(size_t nOrder)
         default:
             exit_on_error("MyStencil, invalid nOrder.");
     }
+    
+    InitializeConnectedTriangles();
+    InitializeConnectedVertices();
+    InitializeMinMaxDot();
 
     // Initialize weights:
     w0 = 0;
@@ -189,10 +330,24 @@ LebedevStencil::LebedevStencil(size_t nOrder)
         case 31: nDir = 350; AllocateBuffers();
                  #include "../stencils/LebedevStencil/LebedevStencil31"
                  break;
+        case 35: nDir = 434; AllocateBuffers();
+                 #include "../stencils/LebedevStencil/LebedevStencil35"
+                 break;
+        case 41: nDir = 590; AllocateBuffers();
+                 #include "../stencils/LebedevStencil/LebedevStencil41"
+                 break;
+        case 47: nDir = 770; AllocateBuffers();
+                 #include "../stencils/LebedevStencil/LebedevStencil47"
+                 break;
         default:
-            exit_on_error("Invalid LebedevStencil nOrder. Must be odd and smaller 32.");
+            exit_on_error("Invalid LebedevStencil nOrder. See stencil/LebedevStencil for valid orders.");
             break;
     }
+    
+    SortDirections();
+    InitializeConnectedTriangles();
+    InitializeConnectedVertices();
+    InitializeMinMaxDot();
 }
 // ---------------------------------------------------------------------
 
@@ -256,5 +411,10 @@ GaussLegendreStencil::GaussLegendreStencil(size_t nOrder)
             exit_on_error("Invalid GaussLegendreStencil nOrder. Must be odd and smaller 32.");
             break;
     }
+    
+    SortDirections();
+    InitializeConnectedTriangles();
+    InitializeConnectedVertices();
+    InitializeMinMaxDot();
 }
 // ---------------------------------------------------------------------

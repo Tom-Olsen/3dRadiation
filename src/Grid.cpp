@@ -59,6 +59,19 @@ double Grid::j(double y)
 { return (y - starty) / dy; }
 double Grid::k(double z)
 { return (z - startz) / dz; }
+size_t Grid::i(size_t ijk)
+{
+    size_t K = k(ijk);
+    size_t J = j(ijk);
+    return ijk - J*nx - K*nxy;
+}
+size_t Grid::j(size_t ijk)
+{
+    size_t K = k(ijk);
+    return (ijk - K*nxy) / nx;
+}
+size_t Grid::k(size_t ijk)
+{ return ijk / nxy;}
 Coord Grid::ijk(const Coord& xyz)
 { return Coord(i(xyz[1]), j(xyz[2]), k(xyz[3])); }
 

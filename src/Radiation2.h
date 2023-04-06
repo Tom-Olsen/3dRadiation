@@ -19,22 +19,14 @@
 #include "SphericalHarmonics.h"     	// Real spherical harmonic functions and expansion.
 #include "Log.hh"						// log final results.
 #include "Camera.h"						// orthographic camera to take images of radiation field.
+#include "Config.hh"                    // Config for simulation parameters.
 
-
-
-struct Config2
-{
-    std::string name;
-    double simTime;
-    int writeFrequency;
-    bool updateSphericalHarmonics;
-    bool keepSourceNodesActive;
-    bool writeData;
-    bool printToTerminal;
-	bool useCamera;
-};
-
-
+// This version uses spherical harmonic coefficiens instead of intensity distributions.
+// I[ijk,d] = SphericalHarmonicsXyz::GetValue(C(d), &coefficientsI[ijk], nCoefficients)
+// Is the actual intensity I(x,c) at position x, in direction c.
+// It is not an intesity population I_d(x) = w(d) * I(x,c)
+// => E = sum_d w_d I(x,c_d) instead of E = sum_d I_d
+// Sadly it is way to slow.
 
 class Radiation2
 {
@@ -115,6 +107,6 @@ public:
 	void Collide();
 	void TakePicture();
 
-	void RunSimulation(Config2 config);
+	void RunSimulation(Config config);
 };
 #endif //__INCLUDE_GUARD_Radiation2_h__

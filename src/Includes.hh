@@ -16,9 +16,13 @@
 #include "Spacetimes.h"             // Metric data.
 #include "GeodesicEquationSolver.h" // Solves geodesic equation, given xyz coordinates, LF 3 velocity, and metric.
 #include "TensorOperations.h"       // More specific tensor operations, nullNormalize etc.
+#include "Mesh.h"                   // Unity like mesh class.
+#include "ConvexHull.h"             // Unity like mesh class.
 #include "Stencil.h"                // Velocity stencil.
 #include "SphericalHarmonics.h"     // Real spherical harmonic functions and expansion.
-#include "Radiation.h"              // 'General Relativistic Lattice Boltzmann Method for Radiative Transport' code.
 #include "Camera.h"                 // Orthographic Camera to grab 2d slices of intensities orthogonal to camera plane.
+#include "Radiation.h"              // 'General Relativistic Lattice Boltzmann Method for Radiative Transport' code.
+#include "Radiation2.h"             // Alternative version.
+#include "Radiation3.h"             // Alternative version.
 
 #endif //__INCLUDE_GUARD_Includes_hh__

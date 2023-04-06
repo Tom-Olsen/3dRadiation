@@ -20,13 +20,6 @@ class LF {};
 
 
 
-// IntensityTypes:
-class Bulk {};
-class North {};
-class South {};
-
-
-
 // StaticOrDynamic:
 class Static {};
 class Dynamic {};

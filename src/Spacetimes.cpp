@@ -38,7 +38,7 @@ SchwarzSchild::SchwarzSchild(Grid& grid_, double m_, double a_) : Metric(grid_, 
 bool SchwarzSchild::InsideBH(const Coord& xyz)
 {
     // Buffer zone must be bigger here or geodesic equations dont converge.
-    return xyz.RadiusSquared() <= 2.5 * 2.5 * this->m * this->m;
+    return xyz.EuklNormSquared() <= 2.5 * 2.5 * this->m * this->m;
 }
 std::string SchwarzSchild::Name()
 {
@@ -48,7 +48,7 @@ std::string SchwarzSchild::Name()
 Tensor4x4 SchwarzSchild::MetricFunction(const Coord& xyz)
 {
     double rs = 2.0 * this->m;
-    double r2 = xyz.RadiusSquared();
+    double r2 = xyz.EuklNormSquared();
     double r = sqrt(r2);
     if(r > 2.0*this->m)
     {
@@ -80,7 +80,7 @@ KerrSchild::KerrSchild(Grid& grid_, double m_, double a_) : Metric(grid_, m_, a_
 
 bool KerrSchild::InsideBH(const Coord& xyz)
 {
-    return xyz.RadiusSquared() <= 2.5 * 2.5 * this->m * this->m;
+    return xyz.EuklNormSquared() <= 2.5 * 2.5 * this->m * this->m;
 }
 std::string KerrSchild::Name()
 {
@@ -90,7 +90,7 @@ std::string KerrSchild::Name()
 Tensor4x4 KerrSchild::MetricFunction(const Coord& xyz)
 {
     double a2 = this->a * this->a;
-    double R2 = xyz.RadiusSquared();
+    double R2 = xyz.EuklNormSquared();
     if(R2 > a2)
     {
         double r2 = R2 - a2;
