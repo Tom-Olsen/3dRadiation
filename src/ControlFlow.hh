@@ -27,8 +27,8 @@ class Dynamic {};
 
 
 // Output Directory:
-// #define OUTPUTDIR "output/"
-#define OUTPUTDIR "/mnt/ceph/tolsen/output/"
+#define OUTPUTDIR "/mnt/ceph/tolsen/3dRadiation/output/"
+// #define OUTPUTDIR "/mnt/ceph/tolsen/output/"
 
 
 

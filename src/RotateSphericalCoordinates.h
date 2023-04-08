@@ -82,7 +82,7 @@ struct Complex2
             case 0: return x;
             case 1: return y;
         }
-        exit_on_error("Invalid index in Complex2[index].");
+        ExitOnError("Invalid index in Complex2[index].");
         return x;
     }
     const Complex& operator[](const int index) const
@@ -92,7 +92,7 @@ struct Complex2
             case 0: return x;
             case 1: return y;
         }
-        exit_on_error("Invalid index in Complex2[index].");
+        ExitOnError("Invalid index in Complex2[index].");
         return x;
     }
 };
@@ -117,7 +117,7 @@ struct Complex2x2
             case 2: return yx;
             case 3: return yy;
         }
-        exit_on_error("Invalid index in Complex2x2[index].");
+        ExitOnError("Invalid index in Complex2x2[index].");
         return xx;
     }
     const Complex& operator[](const rank2Indices& index) const
@@ -129,7 +129,7 @@ struct Complex2x2
             case 2: return yx;
             case 3: return yy;
         }
-        exit_on_error("Invalid index in Complex2x2[index].");
+        ExitOnError("Invalid index in Complex2x2[index].");
         return xx;
     }
 };

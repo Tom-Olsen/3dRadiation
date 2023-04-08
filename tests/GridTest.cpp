@@ -1,6 +1,5 @@
 #include <iostream>
 #include "../src/Grid.h"
-
 using namespace std;
 
 
@@ -41,7 +40,7 @@ int main()
         data2[ijk] = (dist(bOrb,xyz) < 0.2) ? 1 : 0;
         data3[ijk] = 1;
     }
-    grid.WriteFrametoCsv (0,data0,data1,data2,data3,0,"../output","GridTest");
+    grid.WriteFrametoCsv (0,data0,data1,data2,data3,0,OUTPUTDIR,"GridTest");
 
-    cout << "output/GridTest.csv has been created. Plot it with ParaView (Filter:Table to Points)." << endl;
+    cout << "output/GridTest... has been created. Plot it with ParaView (Filter:Table to Points)." << endl;
 }

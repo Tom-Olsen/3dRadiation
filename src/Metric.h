@@ -1,9 +1,6 @@
 #ifndef __INCLUDE_GUARD_Metric_h__
 #define __INCLUDE_GUARD_Metric_h__
-#include <string>
-#include "ControlFlow.hh"       // Template arguments and profiling macros.
-#include "Utility.hh"           // Utility functions.
-#include "TensorTypes.hh"       // General relativity tensors.
+// #include "ControlFlow.hh"       // Template arguments and profiling macros.
 #include "Grid.h"               // Numerical Grid and mapping to physical domain.
 #include "Interpolation.hh"     // Basic interpolation schemes.
 

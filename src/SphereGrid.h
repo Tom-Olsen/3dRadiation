@@ -1,8 +1,8 @@
 #ifndef __INCLUDE_GUARD_SphereGrid_h__
 #define __INCLUDE_GUARD_SphereGrid_h__
-#include <iostream>
 #include <math.h>
 #include "TensorTypes.hh"
+
 
 
 struct SphereGrid

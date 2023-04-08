@@ -1,10 +1,6 @@
 #ifndef __INCLUDE_GUARD_Spacetimes_h__
 #define __INCLUDE_GUARD_Spacetimes_h__
-#include <string>
-#include "ControlFlow.hh"   // Template arguments and profiling macros.
-#include "TensorTypes.hh"   // General relativity tensors.
-#include "Grid.h"           // Numerical Grid and mapping to physical domain.
-#include "Metric.h"         // Metric parent class.
+#include "Metric.h" // Metric parent class.
 
 
 

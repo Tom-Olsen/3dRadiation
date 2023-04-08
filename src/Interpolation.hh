@@ -87,24 +87,25 @@ inline double BicubicInterpolation
 
 
 
-
-
-
-
 inline bool RayTriangleIntersection(const Vector3& rayOrigin, const Vector3& rayDirection,
 const Vector3& v0, const Vector3& v1, const Vector3& v2, Vector3& intersectionPoint)
 {
-    constexpr double epsilon = 1e-16;
-    Vector3 normal = Vector3::Cross(v1 - v0, v2 - v0);
+    constexpr double epsilon = 1e-8;
 
-    // Return false, if rayDirection is pointing orthogonal to normal or in wrong direction:
+    Vector3 v01 = v1 - v0;
+    Vector3 v02 = v2 - v0;
+    Vector3 normal = Vector3::Cross(v01, v02);
+
+    // Check if ray is orthogonal to normal:
     double normalDotDirection = Vector3::Dot(normal, rayDirection);
-    if(normalDotDirection <= 0)
+    if(abs(normalDotDirection) < epsilon)
         return false;
 
-    // Plane Equation: d = -Dot(normal,x), x = any point in plane
+    // Check if triangle is behind the ray
     double d = -Vector3::Dot(normal, v0);
     double t = -(d + Vector3::Dot(normal, rayOrigin)) / normalDotDirection;
+    if (t < 0)
+        return false;
 
     // Intersection of ray with plane of triangle:
     intersectionPoint = rayOrigin + t * rayDirection;
@@ -113,19 +114,19 @@ const Vector3& v0, const Vector3& v1, const Vector3& v2, Vector3& intersectionPo
     Vector3 c0 = intersectionPoint - v0;
     Vector3 e0 = v1 - v0;
     double V2 = Vector3::Dot(normal, Vector3::Cross(e0, c0));
-    if(V2 < -epsilon)
+    if(V2 < epsilon)
         return false;
 
     Vector3 c1 = intersectionPoint - v1;
     Vector3 e1 = v2 - v1;
     double V0 = Vector3::Dot(normal, Vector3::Cross(e1, c1));
-    if(V0 < -epsilon)
+    if(V0 < epsilon)
         return false;
 
     Vector3 c2 = intersectionPoint - v2;
     Vector3 e2 = v0 - v2;
     double V1 = Vector3::Dot(normal, Vector3::Cross(e2, c2));
-    if(V1 < -epsilon)
+    if(V1 < epsilon)
         return false;
 
     return true;
@@ -133,17 +134,22 @@ const Vector3& v0, const Vector3& v1, const Vector3& v2, Vector3& intersectionPo
 inline bool RayTriangleIntersection(const Tensor3& rayOrigin, const Tensor3& rayDirection,
 const Tensor3& v0, const Tensor3& v1, const Tensor3& v2, Tensor3& intersectionPoint)
 {
-    constexpr double epsilon = 1e-16;
-    Tensor3 normal = Tensor3::Cross(v1 - v0, v2 - v0);
+    constexpr double epsilon = 1e-8;
 
-    // Return false, if rayDirection is pointing orthogonal to normal or in wrong direction:
+    Tensor3 v01 = v1 - v0;
+    Tensor3 v02 = v2 - v0;
+    Tensor3 normal = Tensor3::Cross(v01, v02);
+
+    // Check if ray is orthogonal to normal:
     double normalDotDirection = Tensor3::Dot(normal, rayDirection);
-    if(normalDotDirection <= 0)
+    if(abs(normalDotDirection) < epsilon)
         return false;
 
-    // Plane Equation: d = -Dot(normal,x), x = any point in plane
+    // Check if triangle is behind the ray
     double d = -Tensor3::Dot(normal, v0);
     double t = -(d + Tensor3::Dot(normal, rayOrigin)) / normalDotDirection;
+    if (t < 0)
+        return false;
 
     // Intersection of ray with plane of triangle:
     intersectionPoint = rayOrigin + t * rayDirection;
@@ -152,19 +158,19 @@ const Tensor3& v0, const Tensor3& v1, const Tensor3& v2, Tensor3& intersectionPo
     Tensor3 c0 = intersectionPoint - v0;
     Tensor3 e0 = v1 - v0;
     double V2 = Tensor3::Dot(normal, Tensor3::Cross(e0, c0));
-    if(V2 < -epsilon)
+    if(V2 < epsilon)
         return false;
 
     Tensor3 c1 = intersectionPoint - v1;
     Tensor3 e1 = v2 - v1;
     double V0 = Tensor3::Dot(normal, Tensor3::Cross(e1, c1));
-    if(V0 < -epsilon)
+    if(V0 < epsilon)
         return false;
 
     Tensor3 c2 = intersectionPoint - v2;
     Tensor3 e2 = v0 - v2;
     double V1 = Tensor3::Dot(normal, Tensor3::Cross(e2, c2));
-    if(V1 < -epsilon)
+    if(V1 < epsilon)
         return false;
 
     return true;
@@ -175,17 +181,22 @@ const Tensor3& v0, const Tensor3& v1, const Tensor3& v2, Tensor3& intersectionPo
 inline bool BarycentricWeights(const Vector3& rayOrigin, const Vector3& rayDirection,
 const Vector3& v0, const Vector3& v1, const Vector3& v2, Vector3& weights)
 {
-    constexpr double epsilon = 1e-16;
-    Vector3 normal = Vector3::Cross(v1 - v0, v2 - v0);
+    constexpr double epsilon = 1e-8;
 
-    // Return false, if rayDirection is pointing orthogonal to normal or in wrong direction:
+    Vector3 v01 = v1 - v0;
+    Vector3 v02 = v2 - v0;
+    Vector3 normal = Vector3::Cross(v01, v02);
+
+    // Check if ray is orthogonal to normal:
     double normalDotDirection = Vector3::Dot(normal, rayDirection);
-    if(normalDotDirection <= 0)
+    if(abs(normalDotDirection) < epsilon)
         return false;
 
-    // Plane Equation: d = -Dot(normal,x), x = any point in plane
+    // Check if triangle is behind the ray
     double d = -Vector3::Dot(normal, v0);
     double t = -(d + Vector3::Dot(normal, rayOrigin)) / normalDotDirection;
+    if (t < 0)
+        return false;
 
     // Intersection of ray with plane of triangle:
     Vector3 intersectionPoint = rayOrigin + t * rayDirection;
@@ -194,19 +205,19 @@ const Vector3& v0, const Vector3& v1, const Vector3& v2, Vector3& weights)
     Vector3 c0 = intersectionPoint - v0;
     Vector3 e0 = v1 - v0;
     double V2 = Vector3::Dot(normal, Vector3::Cross(e0, c0));
-    if(V2 < -epsilon)
+    if(V2 < epsilon)
         return false;
 
     Vector3 c1 = intersectionPoint - v1;
     Vector3 e1 = v2 - v1;
     double V0 = Vector3::Dot(normal, Vector3::Cross(e1, c1));
-    if(V0 < -epsilon)
+    if(V0 < epsilon)
         return false;
 
     Vector3 c2 = intersectionPoint - v2;
     Vector3 e2 = v0 - v2;
     double V1 = Vector3::Dot(normal, Vector3::Cross(e2, c2));
-    if(V1 < -epsilon)
+    if(V1 < epsilon)
         return false;
 
     // Determine Barycentric Weights:
@@ -220,17 +231,22 @@ const Vector3& v0, const Vector3& v1, const Vector3& v2, Vector3& weights)
 inline bool BarycentricWeights(const Tensor3& rayOrigin, const Tensor3& rayDirection,
 const Tensor3& v0, const Tensor3& v1, const Tensor3& v2, Tensor3& weights)
 {
-    constexpr double epsilon = 1e-16;
-    Tensor3 normal = Tensor3::Cross(v1 - v0, v2 - v0);
+    constexpr double epsilon = 1e-8;
 
-    // Return false, if rayDirection is pointing orthogonal to normal or in wrong direction:
+    Tensor3 v01 = v1 - v0;
+    Tensor3 v02 = v2 - v0;
+    Tensor3 normal = Tensor3::Cross(v01, v02);
+
+    // Check if ray is orthogonal to normal:
     double normalDotDirection = Tensor3::Dot(normal, rayDirection);
-    if(normalDotDirection <= 0)
+    if(abs(normalDotDirection) < epsilon)
         return false;
 
-    // Plane Equation: d = -Dot(normal,x), x = any point in plane
+    // Check if triangle is behind the ray
     double d = -Tensor3::Dot(normal, v0);
     double t = -(d + Tensor3::Dot(normal, rayOrigin)) / normalDotDirection;
+    if (t < 0)
+        return false;
 
     // Intersection of ray with plane of triangle:
     Tensor3 intersectionPoint = rayOrigin + t * rayDirection;
@@ -239,19 +255,19 @@ const Tensor3& v0, const Tensor3& v1, const Tensor3& v2, Tensor3& weights)
     Tensor3 c0 = intersectionPoint - v0;
     Tensor3 e0 = v1 - v0;
     double V2 = Tensor3::Dot(normal, Tensor3::Cross(e0, c0));
-    if(V2 < -epsilon)
+    if(V2 < epsilon)
         return false;
 
     Tensor3 c1 = intersectionPoint - v1;
     Tensor3 e1 = v2 - v1;
     double V0 = Tensor3::Dot(normal, Tensor3::Cross(e1, c1));
-    if(V0 < -epsilon)
+    if(V0 < epsilon)
         return false;
 
     Tensor3 c2 = intersectionPoint - v2;
     Tensor3 e2 = v0 - v2;
     double V1 = Tensor3::Dot(normal, Tensor3::Cross(e2, c2));
-    if(V1 < -epsilon)
+    if(V1 < epsilon)
         return false;
 
     // Determine Barycentric Weights:

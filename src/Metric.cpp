@@ -89,14 +89,14 @@ Metric::Metric(Grid& grid_, double m_, double a_) : grid(grid_), m(m_), a(a_)
 
 std::string Metric::Name()
 {
-    exit_on_error("Metric virtual Method (Name) has been called!");
+    ExitOnError("Metric virtual Method (Name) has been called!");
     return "";
 }
 
 // Initialization:
 Tensor4x4 Metric::MetricFunction(const Coord& xyz)
 {
-    exit_on_error("Metric virtual Method (MetricFunction) has been called!");
+    ExitOnError("Metric virtual Method (MetricFunction) has been called!");
     return Tensor4x4(0);
 }
 
@@ -359,7 +359,7 @@ double Metric::InterpolateArrayTo_ijk(const RealBuffer& array, double i, double 
 
 bool Metric::InsideBH(const Coord& xyz)
 {
-    exit_on_error("Metric virtual Method (InsideBH(xyz)) has been called!");
+    ExitOnError("Metric virtual Method (InsideBH(xyz)) has been called!");
     return false;
 }
 

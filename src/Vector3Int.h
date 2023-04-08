@@ -1,7 +1,6 @@
 #ifndef __INCLUDE_GUARD_Vector3Int_h__
 #define __INCLUDE_GUARD_Vector3Int_h__
 #include <iostream>
-#include <vector>
 #include "Vector3.h"
 
 

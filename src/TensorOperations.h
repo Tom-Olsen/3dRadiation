@@ -1,7 +1,7 @@
 #ifndef __INCLUDE_GUARD_TensorOperations_h__
 #define __INCLUDE_GUARD_TensorOperations_h__
 #include "TensorTypes.hh"   // General relativity tensors.
-#include "Metric.h"         // Metric data.
+#include "Spacetimes.h"     // Metric data.
 
 double Norm2(const Tensor3& vector, const Tensor3x3& gamma_ll);
 double Norm2(const Tensor4& vector, const Tensor4x4& g_ll);

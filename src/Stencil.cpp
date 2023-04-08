@@ -157,11 +157,11 @@ Tensor3 Stencil::C(size_t d) const
 
 void Stencil::Print() const
 {
-    std::cout << "        d\t        w\t    theta\t      phi\t       cx\t       cy\t       cz\n";
+    std::cout << "        d,\t        w,\t    theta,\t      phi,\t       cx,\t       cy,\t       cz\n";
     for(int d=0; d<nDir; d++)
     {
-        std::cout << Format(d) << "\t" << Format(W(d)) << "\t" << Format(Theta(d)) << "\t" << Format(Phi(d)) << "\t";
-        std::cout << Format(Cx(d)) << "\t" << Format(Cy(d)) << "\t" << Format(Cz(d)) << "\n";
+        std::cout << Format(d) << ",\t" << Format(W(d)) << ",\t" << Format(Theta(d)) << ",\t" << Format(Phi(d)) << ",\t";
+        std::cout << Format(Cx(d)) << ",\t" << Format(Cy(d)) << ",\t" << Format(Cz(d)) << "\n";
     }
     std::cout << std::endl;
 }
@@ -190,7 +190,7 @@ MyStencil::MyStencil(size_t nOrder)
         case 17: dTheta = 0.17917455393695525; break;
         case 19: dTheta = 0.16083171772074056; break;
         default:
-            exit_on_error("MyStencil, invalid nOrder.");
+            ExitOnError("MyStencil, invalid nOrder.");
     }
     
     InitializeConnectedTriangles();
@@ -340,7 +340,7 @@ LebedevStencil::LebedevStencil(size_t nOrder)
                  #include "../stencils/LebedevStencil/LebedevStencil47"
                  break;
         default:
-            exit_on_error("Invalid LebedevStencil nOrder. See stencil/LebedevStencil for valid orders.");
+            ExitOnError("Invalid LebedevStencil nOrder. See stencil/LebedevStencil for valid orders.");
             break;
     }
     
@@ -408,7 +408,7 @@ GaussLegendreStencil::GaussLegendreStencil(size_t nOrder)
                  #include "../stencils/GaussLegendreStencil/GaussLegendreStencil31"
                  break;
         default:
-            exit_on_error("Invalid GaussLegendreStencil nOrder. Must be odd and smaller 32.");
+            ExitOnError("Invalid GaussLegendreStencil nOrder. Must be odd and smaller 32.");
             break;
     }
     

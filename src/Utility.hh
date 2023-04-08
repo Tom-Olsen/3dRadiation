@@ -1,21 +1,16 @@
 #ifndef __INCLUDE_GUARD_Utility_hh__
 #define __INCLUDE_GUARD_Utility_hh__
-#include <iomanip>                  // std::setprecision(), std::put:time
-#include <iostream>                 // Output to terminal.
-#include <fstream>                  // File input/output.
-#include <cmath>                    // signbit.
-#include <algorithm>                // clamp.
-#include <sstream>                  // stringstream.
-#include <filesystem>               // Folder/file management.
-#include <vector>                   // basic c++ vector
+#include <iostream>                     // Output to terminal.
+#include <filesystem>                   // Folder/file management.
+#include <vector>                       // basic c++ vector
 #include "glm/glm/gtc/quaternion.hpp"   // Quaternions.
-#include "ControlFlow.hh"           // Template arguments and profiling macros.
-#include "eigen/Eigen/Dense"        // Eigen library for solving linear systems.
+#include "ControlFlow.hh"               // Template arguments and profiling macros.
+#include "eigen/Eigen/Dense"            // Eigen library for solving linear systems.
 
 
 
 // Exit programm with Error Message.
-inline void exit_on_error(std::string msg="")
+inline void ExitOnError(std::string msg="")
 {
     std::cout << "ERROR: " + msg + "\n";
     exit(errno);
@@ -234,7 +229,7 @@ inline double MySin(double x)
     else if ( 3.0 * pi_2 <= x && x <= 5.0 * pi_2)
         x = x - 2.0 * pi;
     else
-        exit_on_error("sin input outside domain: " + std::to_string(x));
+        ExitOnError("sin input outside domain: " + std::to_string(x));
     
     x *= 2.0f / pi;
 

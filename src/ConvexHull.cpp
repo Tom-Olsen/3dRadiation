@@ -5,7 +5,7 @@
 ConvexHull::ConvexHull(const std::vector<Vector3>& vertices) : m_vertices(vertices)
 {
     if(m_vertices.size() < 4)
-        exit_on_error("At least 4 points reqired.");
+        ExitOnError("At least 4 points reqired.");
     m_hull.reserve(m_vertices.size());
     InitialTetrahedron();
     
@@ -21,7 +21,7 @@ ConvexHull::ConvexHull(const std::vector<Vector3>& vertices) : m_vertices(vertic
 void ConvexHull::OriginalOrdering(const std::vector<Vector3>& vertices)
 {
     if(vertices.size() < m_hull.size())
-        exit_on_error("Reordering makes no sense, given vertices are to short.");
+        ExitOnError("Reordering makes no sense, given vertices are to short.");
 
     // Only concider verticies that are on the convex hull:
     std::vector<Vector3> orderedHull;
@@ -101,7 +101,7 @@ void ConvexHull::InitialTetrahedron()
         }
     }
     if (vertex3 == -1)
-        exit_on_error("All given points are coplanar.");
+        ExitOnError("All given points are coplanar.");
     // Add the 4 none coplanar points to Convex m_hull to form a Tetrahedron:
     m_hull.push_back(m_vertices[vertex0]);
     m_hull.push_back(m_vertices[vertex1]);

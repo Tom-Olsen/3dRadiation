@@ -2,7 +2,6 @@
 #define __INCLUDE_GUARD_SphericalHarmonics_h__
 #include <math.h>           // Basic math.
 #include <vector>           // Basic vector.
-#include <iostream>         // Output to terminal.
 #include "Utility.hh"       // Utility functions.
 #include "Stencil.h"        // Velocity stencil.
 #include "TensorTypes.hh"   // General relativity tensors.

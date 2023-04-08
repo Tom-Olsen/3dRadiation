@@ -28,7 +28,7 @@ std::vector<Vector3Int> Mesh::GetTriangles()
 { return m_triangles; }
 
 // Output:
-void Mesh::WriteToUnityCsv(std::string directory, std::string name)
+void Mesh::WriteToCsv(std::string directory, std::string name)
 {
     CreateDirectory(directory);
     std::string fullPath = (directory == "") ? name + ".csv" : directory + "/" + name + ".csv";

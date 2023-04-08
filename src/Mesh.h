@@ -27,6 +27,6 @@ public:
     std::vector<Vector3Int> GetTriangles();
 
     // Output:
-    void WriteToUnityCsv(std::string directory, std::string name);
+    void WriteToCsv(std::string directory, std::string name);
 };
 #endif //__INCLUDE_GUARD_Mesh_h__

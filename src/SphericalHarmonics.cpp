@@ -312,7 +312,7 @@ double SphericalHarmonicsThPh::Y(double theta, double phi)
     if constexpr(I == 255) return Y<15, 15>(theta, phi);
     if constexpr(I > 255)
     {
-        exit_on_error("Spherical Harmonic index i to big.");
+        ExitOnError("Spherical Harmonic index i to big.");
         return 0;
     }
 }
@@ -682,7 +682,7 @@ double SphericalHarmonicsXyz::Y(double x, double y, double z)
 
     if constexpr(I > 255)
     {
-        exit_on_error("Spherical Harmonic index i to big.");
+        ExitOnError("Spherical Harmonic index i to big.");
         return 0;
     }
 }

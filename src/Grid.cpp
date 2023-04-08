@@ -9,13 +9,13 @@ startx(start[1]), starty(start[2]), startz(start[3]),
 endx(end[1]), endy(end[2]), endz(end[3])
 {
     if(end[1] < start[1])
-        exit_on_error("Grid x€[a,b] has b<a!");
+        ExitOnError("Grid x€[a,b] has b<a!");
     if(end[2] < start[2])
-        exit_on_error("Grid y€[a,b] has b<a!");
+        ExitOnError("Grid y€[a,b] has b<a!");
     if(end[3] < start[3])
-        exit_on_error("Grid z€[a,b] has b<a!");
+        ExitOnError("Grid z€[a,b] has b<a!");
     if(nx==1 or ny==1 or nz==1)
-        exit_on_error("Grid must have at least 2 LP in each Dimension.");
+        ExitOnError("Grid must have at least 2 LP in each Dimension.");
 
     dx = (endx - startx) / (nx - 1.0);
     dy = (endy - starty) / (ny - 1.0);

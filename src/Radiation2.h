@@ -1,25 +1,12 @@
 #ifndef __INCLUDE_GUARD_Radiation2_h__
 #define __INCLUDE_GUARD_Radiation2_h__
-#include <math.h>						// Basic math.
-#include <omp.h>						// Multithreading.
-#include <fstream>						// File input/output.
-#include <vector>						// Basic vectors.
-#include <string>						// Basic strings.
-#include "Profiler.hh"              // Time measurement profiler.
-#include "glm/glm/gtc/quaternion.hpp"   // Quaternions.
-#include "ControlFlow.hh"				// Template arguments and profiling macros.
-#include "Utility.hh"					// Utility functions.
-#include "TensorTypes.hh" 				// General relativity tensors.
-#include "Grid.h"						// Numerical Grid and mapping to physical domain.
-#include "Interpolation.hh"				// Basic interpolation schemes.
-#include "Metric.h"				    	// Metric parent class.
-#include "GeodesicEquationSolver.h"		// Solves geodesic equation, given xyz coordinates, LF 3 velocity, and metric.
-#include "TensorOperations.h"       	// More specific tensor operations, nullNormalize etc.
-#include "Stencil.h"					// Velocity stencils.
-#include "SphericalHarmonics.h"     	// Real spherical harmonic functions and expansion.
-#include "Log.hh"						// log final results.
-#include "Camera.h"						// orthographic camera to take images of radiation field.
-#include "Config.hh"                    // Config for simulation parameters.
+#include "GeodesicEquationSolver.h" // Solves geodesic equation, given xyz coordinates, LF 3 velocity, and metric.
+#include "TensorOperations.h"       // More specific tensor operations, nullNormalize etc.
+#include "SphereGrid.h"             // Helps interpolation on sphere.
+#include "SphericalHarmonics.h"     // Real spherical harmonic functions and expansion.
+#include "Log.hh"                   // log final results.
+#include "Camera.h"                 // orthographic camera to take images of radiation field.
+#include "Config.hh"                // Config for simulation parameters.
 
 // This version uses spherical harmonic coefficiens instead of intensity distributions.
 // I[ijk,d] = SphericalHarmonicsXyz::GetValue(C(d), &coefficientsI[ijk], nCoefficients)

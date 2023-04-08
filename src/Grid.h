@@ -1,6 +1,6 @@
 #ifndef __INCLUDE_GUARD_Grid_h__
 #define __INCLUDE_GUARD_Grid_h__
-#include <iomanip>              // std::setprecision.
+// #include <iomanip>              // std::setprecision.
 #include <fstream>              // File input/output.
 #include "ControlFlow.hh"       // Template arguments and profiling macros.
 #include "Utility.hh"           // Utility functions.

@@ -1,9 +1,8 @@
 #ifndef __INCLUDE_GUARD_GeodesicEquationSolver_h__
 #define __INCLUDE_GUARD_GeodesicEquationSolver_h__
-#include <fstream>          // File input/output.
-#include "Utility.hh"       // Utility functions.
-#include "TensorTypes.hh"   // General relativity tensors.
-#include "Metric.h"         // Metric data.
+#include "Spacetimes.h"     // Metric data.
+
+
 
 // Geodesic frequency Equation.
 double Dnu(const double nu, const Coord& x, const Tensor3& v, Metric& metric);

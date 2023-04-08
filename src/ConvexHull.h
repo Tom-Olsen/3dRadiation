@@ -3,7 +3,6 @@
 #include <iostream>
 #include <vector>
 #include <set>
-#include <fstream>
 #include "Utility.hh"
 #include "Vector3.h"
 #include "Vector3Int.h"

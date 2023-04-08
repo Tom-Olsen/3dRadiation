@@ -16,9 +16,7 @@
 #ifndef __INCLUDE_Profiler_hh__
 #define __INCLUDE_Profiler_hh__
 #include <iostream>     // Terminal Output.
-#include <string>       // Basic strings.
 #include <chrono>       // Time measurement.
-#include <algorithm>    // ???.
 #include <fstream>      // File input/output.
 #include <mutex>        // Mutex for multi thread time profiling.
 #include <omp.h>        // Multithreading support.

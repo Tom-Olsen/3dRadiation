@@ -1,7 +1,7 @@
 #ifndef __INCLUDE_GUARD_Log_hh__
 #define __INCLUDE_GUARD_Log_hh__
 #include <math.h>       // Basic math.
-#include "Metric.h"     // Metric data.
+#include "Spacetimes.h" // Metric data.
 #include "Stencil.h"    // Velocity stencil.
 
 
@@ -41,7 +41,7 @@ public:
 	    directoryPath = OUTPUTDIR + name;
 	    if(!CreateDirectory(directoryPath))
 	    	double a = 0;
-	    	// exit_on_error("Failed to create output directory.");
+	    	// ExitOnError("Failed to create output directory.");
     }
     ~Log()
     {
@@ -123,7 +123,7 @@ public:
 	    directoryPath = OUTPUTDIR + name;
 	    if(!CreateDirectory(directoryPath))
 	    	double a = 0;
-		// exit_on_error("Failed to create output directory.");
+		// ExitOnError("Failed to create output directory.");
     }
     ~Log2()
     {

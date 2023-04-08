@@ -1,6 +1,5 @@
 #ifndef __INCLUDE_GUARD_TesorTypes_hh__
 #define __INCLUDE_GUARD_TesorTypes_hh__
-#include <iomanip>                      // std::setprecision().
 #include <iostream>                     // Output to terminal.
 #include "glm/glm/gtc/quaternion.hpp"   // Quaternions.
 #include "ControlFlow.hh"               // Template arguments and profiling macros.
@@ -711,7 +710,6 @@ public:
             std::cout << entries[indexes[i+1] - 1];
             std::cout << "]\n";
         }
-        std::cout << indexes.size()-1 << ": []" << std::endl;
     }
 
     void PrintFlat()
