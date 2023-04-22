@@ -1,6 +1,6 @@
 #include "Radiation.h"
 
-
+/*
 
 Radiation::Radiation(Metric& metric, MyStencil& stencil, LebedevStencil& lebedevStencil, Camera& camera, StreamingType streamingType):
 grid(metric.grid), metric(metric), stencil(stencil), lebedevStencil(lebedevStencil), camera(camera), streamingType(streamingType)
@@ -70,30 +70,30 @@ Radiation::~Radiation()
 
 size_t Radiation::Index(size_t ijk, size_t d)
 {
-	#ifdef ijkd0d1
+	#ifdef ijkd
 		return ijk + d * grid.nxyz;
 	#endif
-	#ifdef d0d1ijk
+	#ifdef dijk
 		return ijk * stencil.nDir + d;
 	#endif
 }
 size_t Radiation::Index(size_t ijk, size_t d0, size_t d1)
 {
 	size_t d = stencil.Index(d0,d1);
-	#ifdef ijkd0d1
+	#ifdef ijkd
 		return ijk + d * grid.nxyz;
 	#endif
-	#ifdef d0d1ijk
+	#ifdef dijk
 		return ijk * stencil.nDir + d;
 	#endif
 }
 size_t Radiation::Index(size_t i, size_t j, size_t k, size_t d)
 {
 	size_t ijk = grid.Index(i,j,k);
-	#ifdef ijkd0d1
+	#ifdef ijkd
 		return ijk + d * grid.nxyz;
 	#endif
-	#ifdef d0d1ijk
+	#ifdef dijk
 		return ijk * stencil.nDir + d;
 	#endif
 }
@@ -101,10 +101,10 @@ size_t Radiation::Index(size_t i, size_t j, size_t k, size_t d0, size_t d1)
 {
 	size_t ijk = grid.Index(i,j,k);
 	size_t d = stencil.Index(d0,d1);
-	#ifdef ijkd0d1
+	#ifdef ijkd
 		return ijk + d * grid.nxyz;
 	#endif
-	#ifdef d0d1ijk
+	#ifdef dijk
 		return ijk * stencil.nDir + d;
 	#endif
 }
@@ -659,14 +659,14 @@ void Radiation::StreamFlatStatic()
 {
 	PROFILE_FUNCTION();
 	PARALLEL_FOR(5)
-	#ifdef ijkd0d1
+	#ifdef ijkd
 	for(size_t d1=0; d1<stencil.nPh; d1++)
 	for(size_t d0=0; d0<stencil.nTh; d0++)
 	for(size_t k=2; k<grid.nz-2; k++)
 	for(size_t j=2; j<grid.ny-2; j++)
 	for(size_t i=2; i<grid.nx-2; i++)
 	#endif
-	#ifdef d0d1ijk
+	#ifdef dijk
 	for(size_t k=2; k<grid.nz-2; k++)
 	for(size_t j=2; j<grid.ny-2; j++)
 	for(size_t i=2; i<grid.nx-2; i++)
@@ -681,14 +681,14 @@ void Radiation::StreamFlatDynamic()
 {
 	PROFILE_FUNCTION();
 	PARALLEL_FOR(5)
-	#ifdef ijkd0d1
+	#ifdef ijkd
 	for(size_t d1=0; d1<stencil.nPh; d1++)
 	for(size_t d0=0; d0<stencil.nTh; d0++)
 	for(size_t k=2; k<grid.nz-2; k++)
 	for(size_t j=2; j<grid.ny-2; j++)
 	for(size_t i=2; i<grid.nx-2; i++)
 	#endif
-	#ifdef d0d1ijk
+	#ifdef dijk
 	for(size_t k=2; k<grid.nz-2; k++)
 	for(size_t j=2; j<grid.ny-2; j++)
 	for(size_t i=2; i<grid.nx-2; i++)
@@ -755,14 +755,14 @@ void Radiation::StreamCurvedStatic()
 {
 	PROFILE_FUNCTION();
 	PARALLEL_FOR(5)
-	#ifdef ijkd0d1
+	#ifdef ijkd
 	for(size_t d1=0; d1<stencil.nPh; d1++)
 	for(size_t d0=0; d0<stencil.nTh; d0++)
 	for(size_t k=2; k<grid.nz-2; k++)
 	for(size_t j=2; j<grid.ny-2; j++)
 	for(size_t i=2; i<grid.nx-2; i++)
 	#endif
-	#ifdef d0d1ijk
+	#ifdef dijk
 	for(size_t k=2; k<grid.nz-2; k++)
 	for(size_t j=2; j<grid.ny-2; j++)
 	for(size_t i=2; i<grid.nx-2; i++)
@@ -777,14 +777,14 @@ void Radiation::StreamCurvedDynamic()
 {
 	PROFILE_FUNCTION();
 	PARALLEL_FOR(5)
-	#ifdef ijkd0d1
+	#ifdef ijkd
 	for(size_t d1=0; d1<stencil.nPh; d1++)
 	for(size_t d0=0; d0<stencil.nTh; d0++)
 	for(size_t k=2; k<grid.nz-2; k++)
 	for(size_t j=2; j<grid.ny-2; j++)
 	for(size_t i=2; i<grid.nx-2; i++)
 	#endif
-	#ifdef d0d1ijk
+	#ifdef dijk
 	for(size_t k=2; k<grid.nz-2; k++)
 	for(size_t j=2; j<grid.ny-2; j++)
 	for(size_t i=2; i<grid.nx-2; i++)
@@ -1132,3 +1132,4 @@ void Radiation::RunSimulation(Config config)
 	}
 	// --------------------------------------------------------
 }
+*/

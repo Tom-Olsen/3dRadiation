@@ -10,11 +10,13 @@ class LF {};
 
 
 // Datastructure:
-// #define ijkd0d1
-#define d0d1ijk // is faster on CPU
+// #define ijkd
+#define dijk // is faster on CPU
 
 
 
+// If defined std::sin etc are used. Otherwise the Mysin etc. optimisations are used.
+// #define USE_STD_MATH
 // Order of polynomial approximation for MySin, MyCos, MyAtan, MyAtan2:
 #define APPROXIMATION_ORDER 9
 
@@ -27,7 +29,7 @@ class Dynamic {};
 
 
 // Output Directory:
-#define OUTPUTDIR "/mnt/ceph/tolsen/3dRadiation/output/"
+#define OUTPUTDIR (std::string)"/mnt/ceph/tolsen/3dRadiation/output/"
 // #define OUTPUTDIR "/mnt/ceph/tolsen/output/"
 
 

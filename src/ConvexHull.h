@@ -36,6 +36,6 @@ public:
     
     std::vector<Vector3Int> RemoveBadTriangles(Vector3 vertex);
     std::vector<Vector2Int> PolygonEdges(const std::vector<Vector3Int>& badTriangles);
-    void RemoveBadVertices(const std::vector<Vector3Int>& badTriangles, const std::vector<Vector2Int>& polygonEdges);
+    void RemoveBadVertices(const std::vector<Vector3Int>& badTriangles, std::vector<Vector2Int>& polygonEdges);
 };
 #endif //__INCLUDE_GUARD_ConvexHull_h__

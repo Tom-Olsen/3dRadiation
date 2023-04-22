@@ -5,7 +5,7 @@
 ConvexHull::ConvexHull(const std::vector<Vector3>& vertices) : m_vertices(vertices)
 {
     if(m_vertices.size() < 4)
-        ExitOnError("At least 4 points reqired.");
+        ExitOnError("Convex Hull requires at least 4 points.");
     m_hull.reserve(m_vertices.size());
     InitialTetrahedron();
     
@@ -113,7 +113,7 @@ void ConvexHull::InitialTetrahedron()
     m_triangles.push_back(OrientedTriangle(0, 1, 3));
     m_triangles.push_back(OrientedTriangle(0, 2, 3));
     m_triangles.push_back(OrientedTriangle(1, 2, 3));
-    // Remove already used m_vertices:
+    // Remove already used vertices:
     m_vertices.erase(m_vertices.begin() + vertex0);
     m_vertices.erase(m_vertices.begin() + vertex1);
     m_vertices.erase(m_vertices.begin() + vertex2);
@@ -209,7 +209,7 @@ std::vector<Vector2Int> ConvexHull::PolygonEdges(const std::vector<Vector3Int>& 
     }
     return polygonEdges;
 }
-void ConvexHull::RemoveBadVertices(const std::vector<Vector3Int>& badTriangles, const std::vector<Vector2Int>& polygonEdges)
+void ConvexHull::RemoveBadVertices(const std::vector<Vector3Int>& badTriangles, std::vector<Vector2Int>& polygonEdges)
 {
     // use set to keep badVertices unique.
     std::set<int> badVertices;
@@ -240,5 +240,18 @@ void ConvexHull::RemoveBadVertices(const std::vector<Vector3Int>& badTriangles, 
     }
     // Remove badVertices in reversed order:
     for (auto rit = badVertices.rbegin(); rit != badVertices.rend(); rit++)
-        m_vertices.erase(m_vertices.begin() + *rit);
+    {
+        m_hull.erase(m_vertices.begin() + *rit);
+        for(int i=0; i<m_triangles.size(); i++)
+        {
+            if (m_triangles[i][0] >= *rit) m_triangles[i][0] -= 1;
+            if (m_triangles[i][1] >= *rit) m_triangles[i][1] -= 1;
+            if (m_triangles[i][2] >= *rit) m_triangles[i][2] -= 1;
+        }
+        for(int i=0; i<polygonEdges.size(); i++)
+        {
+            if (polygonEdges[i][0] >= *rit) polygonEdges[i][0] -= 1;
+            if (polygonEdges[i][1] >= *rit) polygonEdges[i][1] -= 1;
+        }
+    }
 }

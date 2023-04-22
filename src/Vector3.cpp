@@ -89,8 +89,8 @@ Vector3 Vector3::Normalized() const
 Vector3 Vector3::GetCenter(const std::vector<Vector3>& vertices)
 {
     Vector3 center(0,0,0);
-    for(const Vector3& Vector3 : vertices)
-        center += Vector3;
+    for(const Vector3& v : vertices)
+        center += v;
     center /= vertices.size();
     return center;
 }

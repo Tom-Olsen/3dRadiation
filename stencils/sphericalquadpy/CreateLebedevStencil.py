@@ -28,6 +28,8 @@ def WriteLebedevStencilToFile(order):
         phi.append(ph)
 
     with open("../LebedevStencil/LebedevStencil" + str(order), "w") as f:
+        f.write(f"nDir = {len(weights)};\n")
+        f.write(f"AllocateBuffers();\n")
         for i in range(len(weights)):
             f.write(f"w[{i:>3}] = {weights[i]: .60f}; ")
             f.write(f"cx[{i:>3}] = {xyz[i][0]: .60f}; ")
@@ -36,7 +38,9 @@ def WriteLebedevStencilToFile(order):
             f.write(f"theta[{i:>3}] = {theta[i]: .60f}; ")
             f.write(f"phi[{i:>3}] = {phi[i]: .60f};\n")
             
-# for i in range(3,32,2):
-    # WriteLebedevStencilToFile(i)
+for i in range(3,32,2):
+    WriteLebedevStencilToFile(i)
     
+WriteLebedevStencilToFile(35)
+WriteLebedevStencilToFile(41)
 WriteLebedevStencilToFile(47)

@@ -34,8 +34,12 @@ def DistanceDeltaList(list):
 def WriteGaussLegendreStencilToFile(order):
     Q = sphericalquadpy.gausslegendre.gausslegendre.GaussLegendre(order = order)
     weights = Q.weights
+    weights = np.append(weights, 0)
+    weights = np.append(weights, 0)
+    
     xyz = Q.xyz
-    #print(len(xyz))
+    xyz = np.append(xyz, [np.array([0, 0, 1])], axis=0)
+    xyz = np.append(xyz, [np.array([0, 0, -1])], axis=0)
     
     theta = []
     phi = []
@@ -48,6 +52,8 @@ def WriteGaussLegendreStencilToFile(order):
         phi.append(ph)
         
     with open("../GaussLegendreStencil/GaussLegendreStencil" + str(order), "w") as f:
+        f.write(f"nDir = {len(weights)};\n")
+        f.write(f"AllocateBuffers();\n")
         for i in range(len(weights)):
             f.write(f"w[{i:>3}] = {weights[i]: .60f}; ")
             f.write(f"cx[{i:>3}] = {xyz[i][0]: .60f}; ")
@@ -91,5 +97,5 @@ def GaußLegendreQuadratureToGrid(order):
     # GaußLegendreQuadratureToGrid(order)
     
 
-for i in range(3,32,2):
+for i in range(3,36,2):
     WriteGaussLegendreStencilToFile(i)

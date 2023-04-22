@@ -12,7 +12,7 @@ public:
     // General simulation parameters:
     int timeSteps;
     float simTime;
-    MyStencil& stencil;
+    Stencil& stencil;
     LebedevStencil& lebedevStencil;
     Metric& metric;
 
@@ -23,7 +23,7 @@ public:
     std::vector<std::string> timeNames;
     std::vector<double> timeMeasurements;
 
-    Log(std::string name, double simTime_, MyStencil& stencil, LebedevStencil& lebedevStencil, Metric& metric) :
+    Log(std::string name, double simTime_, Stencil& stencil, LebedevStencil& lebedevStencil, Metric& metric) :
     name(name), stencil(stencil), lebedevStencil(lebedevStencil), metric(metric)
     {
         // Derived from simulation parameters:
@@ -67,8 +67,7 @@ public:
 	    file << "cfl  = " << metric.grid.GetCFL() << std::endl << std::endl;
     
 	    file << "Stencil Properties:" << std::endl;
-	    file << "nTh    = " << stencil.nTh << std::endl;
-	    file << "nPh    = " << stencil.nPh << std::endl;
+	    file << "nDir     = " << stencil.nDir << std::endl;
 	    file << "nLebedev = " << lebedevStencil.nDir << std::endl;
 	    file << "oLebedev = " << lebedevStencil.nOrder << std::endl;
 	    file << "n Coeff  = " << lebedevStencil.nCoefficients << std::endl << std::endl;

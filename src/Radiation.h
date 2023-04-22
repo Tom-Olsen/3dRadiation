@@ -8,7 +8,7 @@
 #include "Camera.h"                 // orthographic camera to take images of radiation field.
 #include "Config.hh"                // Config for simulation parameters.
 
-
+/*
 class Radiation
 {
 public:
@@ -110,4 +110,5 @@ public:
 
 	void RunSimulation(Config config);
 };
+*/
 #endif //__INCLUDE_GUARD_Radiation_h__

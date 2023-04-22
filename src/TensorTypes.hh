@@ -196,9 +196,9 @@ public:
         double dot = Tensor3::Dot(a, b);
         return MyAtan2(crossNorm,dot);
     }
-    double Theta()
+    double Theta() const
     { return MyAtan2(sqrt(data[0] * data[0] + data[1] * data[1]), data[2]); }
-    double Phi()
+    double Phi() const
     {
         double phi = MyAtan2(data[1], data[0]);
         return (phi < 0) ? phi + 2 * M_PI : phi;

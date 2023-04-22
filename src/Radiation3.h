@@ -16,12 +16,12 @@ public:
 	StreamingType streamingType;
 	Grid& grid;
 	Metric& metric;
-	LebedevStencil& stencil;
+	Stencil& stencil;
 	LebedevStencil& streamingStencil;
-
 	Camera& camera;
-	double sigma = 1.0;
 
+	double sigma = 1.0;
+    glm::vec3 from = glm::vec3(0,0,1);
 
 	bool* isInitialGridPoint;
 	RealBuffer initialE;
@@ -70,12 +70,9 @@ public:
 	RealBuffer coefficientsCx;
 	RealBuffer coefficientsCy;
 	RealBuffer coefficientsCz;
-    
-    SphereGrid sphereGrid;
-    RealBuffer indexOfNearestDirection;
 
 	Radiation3() = delete;
-	Radiation3(Metric& metric, LebedevStencil& stencil, LebedevStencil& streamingStencil, Camera& camera, StreamingType streamingType);
+	Radiation3(Metric& metric, Stencil& stencil, LebedevStencil& streamingStencil, Camera& camera, StreamingType streamingType);
 	~Radiation3();
 
 	size_t Index(size_t ijk, size_t d);
@@ -86,6 +83,7 @@ public:
 	Coord GetTempCoordinate(size_t ijk, Tensor3 direction);
 	Tensor3 GetTemp3VelocityIF(size_t ijk, Tensor3 direction);
 	double GetFrequencyShift(size_t ijk, Tensor3 direction);
+	size_t GetNearestDirectionIndex(const Tensor3& v);
 	double IntensityAt(size_t ijk, Tensor3 vTempIF);
 	Tensor3 AverageF(size_t i, size_t j, size_t k);
 
@@ -96,7 +94,7 @@ public:
 	void ComputeMomentsIF();
 	void ComputeMomentsLF();
 	void UpdateQuaternions();
-    void RandomizeQuaternions();
+    void SetQuaternions();
 
 	void StreamFlatStatic();
 	void StreamFlatDynamic();

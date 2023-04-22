@@ -13,6 +13,9 @@ void Stencil::AllocateBuffers()
     cz.resize(nDir);
     theta.resize(nDir);
     phi.resize(nDir);
+    neighbour0.resize(nDir * 2*nDir);
+    neighbour1.resize(nDir * 2*nDir);
+    neighbour2.resize(nDir * 2*nDir);
 }
 void Stencil::SortDirections()
 {
@@ -39,8 +42,8 @@ void Stencil::SortDirections()
     double sorted_cx[nDir];
     double sorted_cy[nDir];
     double sorted_cz[nDir];
-    double sorted_phi[nDir];
     double sorted_theta[nDir];
+    double sorted_phi[nDir];
 
     // copy values from original arrays to temporary arrays
     for(int i = 0; i < nDir; i++)
@@ -49,8 +52,8 @@ void Stencil::SortDirections()
         sorted_cx[i] = cx[index[i]];
         sorted_cy[i] = cy[index[i]];
         sorted_cz[i] = cz[index[i]];
-        sorted_phi[i] = phi[index[i]];
         sorted_theta[i] = theta[index[i]];
+        sorted_phi[i] = phi[index[i]];
     }
 
     // overwrite original arrays with sorted values
@@ -60,8 +63,8 @@ void Stencil::SortDirections()
         cx[i] = sorted_cx[i];
         cy[i] = sorted_cy[i];
         cz[i] = sorted_cz[i];
-        phi[i] = sorted_phi[i];
         theta[i] = sorted_theta[i];
+        phi[i] = sorted_phi[i];
     }
 }
 void Stencil::InitializeConnectedTriangles()
@@ -97,13 +100,12 @@ void Stencil::InitializeConnectedTriangles()
 }
 void Stencil::InitializeConnectedVertices()
 {
+    // First order of connected vertices:
     for(int d=0; d<nDir; d++)
     {
         // Get unique indices of connected triangles:
         std::set<size_t> indices;
-        int start = connectedTriangles.Start(d);
-        int end = connectedTriangles.End(d);
-        for(int k=start; k<end; k++)
+        for(int k=connectedTriangles.Start(d); k<connectedTriangles.End(d); k++)
         {
             Vector3Int triangle = connectedTriangles[k];
             indices.insert(triangle[0]);
@@ -117,26 +119,33 @@ void Stencil::InitializeConnectedVertices()
             vertices.push_back(it);
 
         // Add list of vertices to connected vertices:
-        connectedVertices.AddRow(vertices);
+        connectedVerticesOrder1.AddRow(vertices);
     }
-}
-void Stencil::InitializeMinMaxDot()
-{
-    minMaxDot = 1;
-    int n = 500;
-    for(int i=0; i<n; i++)
-    for(int j=0; j<2*n; j++)
+
+    // Second order of connected vertices:
+    for(int d=0; d<nDir; d++)
     {
-        double theta = M_PI * (i + 0.5) / (double)n;
-        double phi = 2.0 * M_PI * j / (double)n;
-        Tensor3 c(sin(theta) * cos(phi), sin(theta) * sin(phi), cos(theta));
-        double maxDot = -1;
-        for(int d=0; d<nDir; d++)
+        // Get unique indices of connected triangles:
+        std::set<size_t> indices;
+        for(int k=connectedVerticesOrder1.Start(d); k<connectedVerticesOrder1.End(d); k++)
         {
-            double dot = Tensor3::Dot(C(d), c);
-            maxDot = std::max(maxDot,dot);
+            size_t index = connectedVerticesOrder1[k];
+            for(int p=connectedTriangles.Start(index); p<connectedTriangles.End(index); p++)
+            {
+                Vector3Int triangle = connectedTriangles[p];
+                indices.insert(triangle[0]);
+                indices.insert(triangle[1]);
+                indices.insert(triangle[2]);
+            }
         }
-        minMaxDot = std::min(minMaxDot,maxDot);
+
+        // Extract corresponding vertices:
+        std::vector<size_t> vertices;
+        for(auto it : indices)
+            vertices.push_back(it);
+
+        // Add list of vertices to connected vertices:
+        connectedVerticesOrder2.AddRow(vertices);
     }
 }
 
@@ -155,6 +164,90 @@ double Stencil::Cz(size_t d) const
 Tensor3 Stencil::C(size_t d) const
 { return Tensor3(Cx(d), Cy(d), Cz(d)); }
 
+void Stencil::InitializeNearestNeighbourGrid()
+{
+    sphereGrid = SphereGrid(nDir, 2*nDir);
+
+    for(size_t j=0; j<sphereGrid.nPh; j++)
+    for(size_t i=0; i<sphereGrid.nTh; i++)
+    {
+        Tensor3 c = sphereGrid.C(i,j);
+        double dot0 = -1;
+        double dot1 = -1;
+        double dot2 = -1;
+        int index0 = -1;
+        int index1 = -1;
+        int index2 = -1;
+        for(size_t d=0; d<nDir; d++)
+        {
+            double dot = Tensor3::Dot(c,C(d));
+            if(dot > dot0)
+            {
+                dot2 = dot1;
+                dot1 = dot0;
+                dot0 = dot;
+                index2 = index1;
+                index1 = index0;
+                index0 = d;
+            }
+            else if(dot > dot1)
+            {
+                dot2 = dot1;
+                dot1 = dot;
+                index2 = index1;
+                index1 = d;
+            }
+            else if(dot > dot2)
+            {
+                dot2 = dot;
+                index2 = d;
+            }
+        }
+        neighbour0[sphereGrid.Index(i,j)] = index0;
+        neighbour1[sphereGrid.Index(i,j)] = index1;
+        neighbour2[sphereGrid.Index(i,j)] = index2;
+    }
+}
+size_t Stencil::GetNeighbourIndex0(const Tensor3& p)
+{
+    size_t i = std::round(sphereGrid.i(p.Theta()));
+    size_t j = ((int)std::round(sphereGrid.j(p.Phi())) + sphereGrid.nPh) % sphereGrid.nPh;
+    return neighbour0[sphereGrid.Index(i,j)];
+}
+size_t Stencil::GetNeighbourIndex1(const Tensor3& p)
+{
+    size_t i = std::round(sphereGrid.i(p.Theta()));
+    size_t j = ((int)std::round(sphereGrid.j(p.Phi())) + sphereGrid.nPh) % sphereGrid.nPh;
+    return neighbour1[sphereGrid.Index(i,j)];
+}
+size_t Stencil::GetNeighbourIndex2(const Tensor3& p)
+{
+    size_t i = std::round(sphereGrid.i(p.Theta()));
+    size_t j = ((int)std::round(sphereGrid.j(p.Phi())) + sphereGrid.nPh) % sphereGrid.nPh;
+    return neighbour2[sphereGrid.Index(i,j)];
+}
+Tensor3 Stencil::GetNeighbour0(const Tensor3& p)
+{
+    size_t i = std::round(sphereGrid.i(p.Theta()));
+    size_t j = ((int)std::round(sphereGrid.j(p.Phi())) + sphereGrid.nPh) % sphereGrid.nPh;
+    size_t d = neighbour0[sphereGrid.Index(i,j)];
+    return C(d);
+}
+Tensor3 Stencil::GetNeighbour1(const Tensor3& p)
+{
+    size_t i = std::round(sphereGrid.i(p.Theta()));
+    size_t j = ((int)std::round(sphereGrid.j(p.Phi())) + sphereGrid.nPh) % sphereGrid.nPh;
+    size_t d = neighbour1[sphereGrid.Index(i,j)];
+    return C(d);
+}
+Tensor3 Stencil::GetNeighbour2(const Tensor3& p)
+{
+    size_t i = std::round(sphereGrid.i(p.Theta()));
+    size_t j = ((int)std::round(sphereGrid.j(p.Phi())) + sphereGrid.nPh) % sphereGrid.nPh;
+    size_t d = neighbour2[sphereGrid.Index(i,j)];
+    return C(d);
+}
+
 void Stencil::Print() const
 {
     std::cout << "        d,\t        w,\t    theta,\t      phi,\t       cx,\t       cy,\t       cz\n";
@@ -169,174 +262,67 @@ void Stencil::Print() const
 
 
 
-// ------------------------------ MyStencil ------------------------------
-MyStencil::MyStencil(size_t nOrder)
-{
-    nTh = nOrder;
-    nPh = 2 * nOrder;
-    this->nOrder = nOrder;
-    this->nDir = nTh * nPh;
-    SetCoefficientCount();
-
-    switch(nOrder)
-    {
-        case  3: dTheta = 0.88607712379261370; break;
-        case  5: dTheta = 0.56708068878468730; break;
-        case  7: dTheta = 0.41679707883494480; break;
-        case  9: dTheta = 0.32944347754574150; break;
-        case 11: dTheta = 0.27234940787623110; break;
-        case 13: dTheta = 0.23211697811143664; break;
-        case 15: dTheta = 0.20223903140287983; break;
-        case 17: dTheta = 0.17917455393695525; break;
-        case 19: dTheta = 0.16083171772074056; break;
-        default:
-            ExitOnError("MyStencil, invalid nOrder.");
-    }
-    
-    InitializeConnectedTriangles();
-    InitializeConnectedVertices();
-    InitializeMinMaxDot();
-
-    // Initialize weights:
-    w0 = 0;
-    for(size_t d1=0; d1<nPh; d1++)
-    for(size_t d0=0; d0<nTh; d0++)
-        w0 += MySin(Theta(d0,d1));
-    w0 = 4.0 * M_PI / w0;
-}
-// Overrides:
-double MyStencil::W(size_t d) const
-{
-    int d0 = d % nTh;
-    int d1 = d / nTh;
-    return W(d0,d1);
-}
-double MyStencil::Theta(size_t d) const
-{
-    int d0 = d % nTh;
-    int d1 = d / nTh;
-    return Theta(d0,d1);
-}
-double MyStencil::Phi(size_t d) const
-{
-    int d0 = d % nTh;
-    int d1 = d / nTh;
-    return Phi(d0,d1);
-}
-double MyStencil::Cx(size_t d) const
-{
-    int d0 = d % nTh;
-    int d1 = d / nTh;
-    return Cx(d0,d1);
-}
-double MyStencil::Cy(size_t d) const
-{
-    int d0 = d % nTh;
-    int d1 = d / nTh;
-    return Cy(d0,d1);
-}
-double MyStencil::Cz(size_t d) const
-{
-    int d0 = d % nTh;
-    int d1 = d / nTh;
-    return Cz(d0,d1);
-}
-Tensor3 MyStencil::C(size_t d) const
-{
-    int d0 = d % nTh;
-    int d1 = d / nTh;
-    return Tensor3(Cx(d0,d1), Cy(d0,d1), Cz(d0,d1));
-}
-
-// Indexing:
-size_t MyStencil::Index(size_t d0, size_t d1) const
-{ return d0 + d1 * nTh; }
-double MyStencil::d0(double theta) const
-{ return nTh / 2 + (theta - M_PI_2) / dTheta; }
-double MyStencil::d1(double phi) const
-{ return phi * nPh / (2.0 * M_PI) - 0.5; }
-
-// Acces with two indices:
-double MyStencil::W(size_t d0, size_t d1) const
-{ return w0 * MySin(Theta(d0,d1)); }
-
-double MyStencil::Theta(double d0, double d1) const
-{ return M_PI_2 + (d0 - nTh / 2) * dTheta; }
-double MyStencil::Phi(double d0, double d1) const
-{ return 2.0 * M_PI * (d1 + 0.5) / nPh; }
-
-double MyStencil::Cx(double d0, double d1) const
-{ return MySin(Theta(d0,d1)) * MyCos(Phi(d0,d1)); }
-double MyStencil::Cy(double d0, double d1) const
-{ return MySin(Theta(d0,d1)) * MySin(Phi(d0,d1)); }
-double MyStencil::Cz(double d0, double d1) const
-{ return MyCos(Theta(d0,d1)); }
-Tensor3 MyStencil::C(double d0, double d1) const
-{ return Tensor3(Cx(d0,d1), Cy(d0,d1), Cz(d0,d1)); }
-// ---------------------------------------------------------------------
-
-
-
 // -------------------------- LebedevStencil ---------------------------
 LebedevStencil::LebedevStencil(size_t nOrder)
 {
+    name = "Lebedev" + std::to_string(nOrder);
     this->nOrder = nOrder;
     SetCoefficientCount();
 
     switch (nOrder)
     {
-        case  3: nDir =   6; AllocateBuffers();
+        case  3:
                  #include "../stencils/LebedevStencil/LebedevStencil3" 
                  break;
-        case  5: nDir =  14; AllocateBuffers();
+        case  5:
                  #include "../stencils/LebedevStencil/LebedevStencil5" 
                  break;
-        case  7: nDir =  26; AllocateBuffers();
+        case  7:
                  #include "../stencils/LebedevStencil/LebedevStencil7" 
                  break;
-        case  9: nDir =  38; AllocateBuffers();
+        case  9:
                  #include "../stencils/LebedevStencil/LebedevStencil9" 
                  break;
-        case 11: nDir =  50; AllocateBuffers();
+        case 11:
                  #include "../stencils/LebedevStencil/LebedevStencil11"
                  break;
-        case 13: nDir =  74; AllocateBuffers();
+        case 13:
                  #include "../stencils/LebedevStencil/LebedevStencil13"
                  break;
-        case 15: nDir =  86; AllocateBuffers();
+        case 15:
                  #include "../stencils/LebedevStencil/LebedevStencil15"
                  break;
-        case 17: nDir = 110; AllocateBuffers();
+        case 17:
                  #include "../stencils/LebedevStencil/LebedevStencil17"
                  break;
-        case 19: nDir = 146; AllocateBuffers();
+        case 19:
                  #include "../stencils/LebedevStencil/LebedevStencil19"
                  break;
-        case 21: nDir = 170; AllocateBuffers();
+        case 21:
                  #include "../stencils/LebedevStencil/LebedevStencil21"
                  break;
-        case 23: nDir = 194; AllocateBuffers();
+        case 23:
                  #include "../stencils/LebedevStencil/LebedevStencil23"
                  break;
-        case 25: nDir = 230; AllocateBuffers();
+        case 25:
                  #include "../stencils/LebedevStencil/LebedevStencil25"
                  break;
-        case 27: nDir = 266; AllocateBuffers();
+        case 27:
                  #include "../stencils/LebedevStencil/LebedevStencil27"
                  break;
-        case 29: nDir = 302; AllocateBuffers();
+        case 29:
                  #include "../stencils/LebedevStencil/LebedevStencil29"
                  break;
-        case 31: nDir = 350; AllocateBuffers();
+        case 31:
                  #include "../stencils/LebedevStencil/LebedevStencil31"
                  break;
-        case 35: nDir = 434; AllocateBuffers();
+        case 35:
                  #include "../stencils/LebedevStencil/LebedevStencil35"
                  break;
-        case 41: nDir = 590; AllocateBuffers();
+        case 41:
                  #include "../stencils/LebedevStencil/LebedevStencil41"
                  break;
-        case 47: nDir = 770; AllocateBuffers();
+        case 47:
                  #include "../stencils/LebedevStencil/LebedevStencil47"
                  break;
         default:
@@ -347,7 +333,7 @@ LebedevStencil::LebedevStencil(size_t nOrder)
     SortDirections();
     InitializeConnectedTriangles();
     InitializeConnectedVertices();
-    InitializeMinMaxDot();
+    InitializeNearestNeighbourGrid();
 }
 // ---------------------------------------------------------------------
 
@@ -356,65 +342,71 @@ LebedevStencil::LebedevStencil(size_t nOrder)
 // ----------------------- GaussLegendreStencil ------------------------
 GaussLegendreStencil::GaussLegendreStencil(size_t nOrder)
 {
+    name = "GaussLegendre" + std::to_string(nOrder);
     this->nOrder = nOrder;
-    this->nDir = nOrder * (2 * nOrder);
     SetCoefficientCount();
 
     switch (nOrder)
     {
-        case  3: AllocateBuffers();
+        case  3:
                  #include "../stencils/GaussLegendreStencil/GaussLegendreStencil3" 
                  break;
-        case  5: AllocateBuffers();
+        case  5:
                  #include "../stencils/GaussLegendreStencil/GaussLegendreStencil5" 
                  break;
-        case  7: AllocateBuffers();
+        case  7:
                  #include "../stencils/GaussLegendreStencil/GaussLegendreStencil7" 
                  break;
-        case  9: AllocateBuffers();
+        case  9:
                  #include "../stencils/GaussLegendreStencil/GaussLegendreStencil9" 
                  break;
-        case 11: AllocateBuffers();
+        case 11:
                  #include "../stencils/GaussLegendreStencil/GaussLegendreStencil11"
                  break;
-        case 13: AllocateBuffers();
+        case 13:
                  #include "../stencils/GaussLegendreStencil/GaussLegendreStencil13"
                  break;
-        case 15: AllocateBuffers();
+        case 15:
                  #include "../stencils/GaussLegendreStencil/GaussLegendreStencil15"
                  break;
-        case 17: AllocateBuffers();
+        case 17:
                  #include "../stencils/GaussLegendreStencil/GaussLegendreStencil17"
                  break;
-        case 19: AllocateBuffers();
+        case 19:
                  #include "../stencils/GaussLegendreStencil/GaussLegendreStencil19"
                  break;
-        case 21: AllocateBuffers();
+        case 21:
                  #include "../stencils/GaussLegendreStencil/GaussLegendreStencil21"
                  break;
-        case 23: AllocateBuffers();
+        case 23:
                  #include "../stencils/GaussLegendreStencil/GaussLegendreStencil23"
                  break;
-        case 25: AllocateBuffers();
+        case 25:
                  #include "../stencils/GaussLegendreStencil/GaussLegendreStencil25"
                  break;
-        case 27: AllocateBuffers();
+        case 27:
                  #include "../stencils/GaussLegendreStencil/GaussLegendreStencil27"
                  break;
-        case 29: AllocateBuffers();
+        case 29:
                  #include "../stencils/GaussLegendreStencil/GaussLegendreStencil29"
                  break;
-        case 31: AllocateBuffers();
+        case 31:
                  #include "../stencils/GaussLegendreStencil/GaussLegendreStencil31"
                  break;
+        case 33:
+                 #include "../stencils/GaussLegendreStencil/GaussLegendreStencil33"
+                 break;
+        case 35:
+                 #include "../stencils/GaussLegendreStencil/GaussLegendreStencil35"
+                 break;
         default:
-            ExitOnError("Invalid GaussLegendreStencil nOrder. Must be odd and smaller 32.");
+            ExitOnError("Invalid GaussLegendreStencil nOrder. Must be odd and smaller 36.");
             break;
     }
     
     SortDirections();
     InitializeConnectedTriangles();
     InitializeConnectedVertices();
-    InitializeMinMaxDot();
+    InitializeNearestNeighbourGrid();
 }
 // ---------------------------------------------------------------------

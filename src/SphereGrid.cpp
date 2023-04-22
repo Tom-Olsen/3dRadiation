@@ -2,6 +2,7 @@
 
 
 
+SphereGrid::SphereGrid() : nTh(3), nPh(6), nDir(3*6) {}
 SphereGrid::SphereGrid(size_t nTh, size_t nPh) : nTh(nTh), nPh(nPh), nDir(nTh*nPh) {}
 
 double SphereGrid::Theta(size_t i) const
@@ -25,5 +26,5 @@ Tensor3 SphereGrid::C(size_t i, size_t j)
 {
     double theta = Theta(i);
     double phi = Phi(j);
-    return Tensor3(sin(theta) * cos(phi), sin(theta) * sin(phi), cos(theta));
+    return Tensor3(MySin(theta) * MyCos(phi), MySin(theta) * MySin(phi), MyCos(theta));
 }

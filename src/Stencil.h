@@ -5,6 +5,7 @@
 #include "Utility.hh"
 #include "TensorTypes.hh"
 #include "ConvexHull.h"
+#include "SphereGrid.h"
 
 
 
@@ -25,14 +26,15 @@
 struct Stencil
 {
 public:
+    std::string name;
     size_t nDir;                        // Number of directions in stencil.
     size_t nOrder;                      // Quadrature integration.
     size_t nCoefficients;               // Number of exact Spherical Harmonics, counted with flat index i = l * (l + 1) + m.
-    double minMaxDot;                   // Used to optimize nearest neighbor search.
-    std::vector<Vector3Int> triangles;  // Triangulation for barycentric interpolaton.
     // List of lists of all triangles that are connected to one direction vector c.
     UnstructuredMatrix<Vector3Int> connectedTriangles;
-    UnstructuredMatrix<size_t> connectedVertices;
+    UnstructuredMatrix<size_t> connectedVerticesOrder1;
+    UnstructuredMatrix<size_t> connectedVerticesOrder2;
+    SphereGrid sphereGrid;
 protected:
     RealBuffer w;
     RealBuffer cx;
@@ -40,13 +42,16 @@ protected:
     RealBuffer cz;
     RealBuffer theta;
     RealBuffer phi;
+    SizeTBuffer neighbour0;
+    SizeTBuffer neighbour1;
+    SizeTBuffer neighbour2;
 protected:
     void SetCoefficientCount();
     void AllocateBuffers();
     void SortDirections();
     void InitializeConnectedTriangles();
     void InitializeConnectedVertices();
-    void InitializeMinMaxDot();
+    void InitializeNearestNeighbourGrid();
 public:
     virtual double W(size_t d) const;
     virtual double Theta(size_t d) const;
@@ -56,47 +61,14 @@ public:
     virtual double Cz(size_t d) const;
     virtual Tensor3 C(size_t d) const;
 
+    size_t GetNeighbourIndex0(const Tensor3& p);
+    size_t GetNeighbourIndex1(const Tensor3& p);
+    size_t GetNeighbourIndex2(const Tensor3& p);
+    Tensor3 GetNeighbour0(const Tensor3& p);
+    Tensor3 GetNeighbour1(const Tensor3& p);
+    Tensor3 GetNeighbour2(const Tensor3& p);
+
     void Print() const;
-
-};
-
-
-
-// Custom Stencil, that mimics that ob the Gauß-Legendre Quadrature as close as possible,
-// Uniform grid in (theta,phi) space. Quadrature sligly inaccurate. Faster velcoity interpolation.
-struct MyStencil : public Stencil
-{
-private:
-    double w0;
-    double dTheta;
-public:
-    int nTh;
-    int nPh;
-
-    MyStencil(size_t nOrder);
-
-    // Overrides:
-    double W(size_t d) const override;
-    double Theta(size_t d) const override;
-    double Phi(size_t d) const override;
-    double Cx(size_t d) const override;
-    double Cy(size_t d) const override;
-    double Cz(size_t d) const override;
-    Tensor3 C(size_t d) const override;
-
-    // Indexing:
-    size_t Index(size_t d0, size_t d1) const;
-    double d0(double theta) const;
-    double d1(double phi) const;
-
-    // Acces with two indices:
-    double W(size_t d0, size_t d1) const;
-    double Theta(double d0, double d1) const;
-    double Phi(double d0, double d1) const;
-    double Cx(double d0, double d1) const;
-    double Cy(double d0, double d1) const;
-    double Cz(double d0, double d1) const;
-    Tensor3 C(double d0, double d1) const;
 };
 
 

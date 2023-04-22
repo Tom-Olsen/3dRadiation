@@ -6,6 +6,8 @@
 #include "glm/glm/gtc/quaternion.hpp"   // Quaternions.
 #include "ControlFlow.hh"               // Template arguments and profiling macros.
 #include "eigen/Eigen/Dense"            // Eigen library for solving linear systems.
+#include "Vector2Int.h"                 // struct of 2 ints.
+#include "Vector3Int.h"                 // struct of 3 ints.
 
 
 
@@ -50,8 +52,18 @@ public:
     bool operator==(const AlignedArrayAllocator &)
     { return true; }
 };
+using IntBuffer = std::vector<int,AlignedArrayAllocator<int>>;
+using SizeTBuffer = std::vector<size_t,AlignedArrayAllocator<size_t>>;
 using RealBuffer = std::vector<double,AlignedArrayAllocator<double>>;
+using Vec2IntBuffer = std::vector<Vector2Int,AlignedArrayAllocator<Vector2Int>>;
+using Vec3IntBuffer = std::vector<Vector3Int,AlignedArrayAllocator<Vector3Int>>;
 using QuatBuffer = std::vector<glm::quat,AlignedArrayAllocator<glm::quat>>;
+
+
+
+// Random number, seed = 1.
+inline double RandomRange(double min, double max)
+{ return min + ((double) rand() / RAND_MAX) * (max - min); }
 
 
 
@@ -156,7 +168,13 @@ inline double MyAtan(double z)
 /// @param z Bound to [-1,1].
 /// @return Polynomial approximation of: atan(z)
 inline double MyAtan(double x)
-{ return MyAtan<APPROXIMATION_ORDER>(x); }
+{
+#ifdef USE_STD_MATH
+    return atan(x);
+#else
+    return MyAtan<APPROXIMATION_ORDER>(x);
+#endif
+}
 
 
 
@@ -205,7 +223,13 @@ inline double MyAtan2(double y, double x)
 /// @param x Coordinate on 2D Cartesian plane.
 /// @return Polynomial approximation of: atan2(y,x)
 inline double MyAtan2(double y, double x)
-{ return MyAtan2<APPROXIMATION_ORDER>(y,x); }
+{
+#ifdef USE_STD_MATH
+    return atan2(y,x);
+#else
+    return MyAtan2<APPROXIMATION_ORDER>(y,x);
+#endif
+}
 
 
 
@@ -267,7 +291,13 @@ inline double MySin(double x)
 /// @param x Angle in radians. Bound to [-pi/2,5pi/2].
 /// @return Polynomial approximation of: sin(x)
 inline double MySin(double x)
-{ return MySin<APPROXIMATION_ORDER>(x); }
+{ 
+#ifdef USE_STD_MATH
+    return sin(x);
+#else
+    return MySin<APPROXIMATION_ORDER>(x);
+#endif
+}
 
 
 
@@ -289,7 +319,13 @@ inline float MyCos(float x)
 /// @param x Angle in radians. Bound to [-pi/2,5pi/2].
 /// @return Polynomial approximation of: cos(x)
 inline double MyCos(double x)
-{ return MyCos<APPROXIMATION_ORDER>(x); }
+{ 
+#ifdef USE_STD_MATH
+    return cos(x);
+#else
+    return MyCos<APPROXIMATION_ORDER>(x);
+#endif
+}
 
 
 
@@ -298,6 +334,12 @@ inline glm::quat Invert(const glm::quat& q)
 {
     double a = q.w * q.w + q.x * q.x + q.y * q.y + q.z * q.z;
     return glm::quat(q.w/a, -q.x/a, -q.y/a, -q.z/a);
+}
+// Normalize quaternion:
+inline glm::quat Normalized(const glm::quat& q)
+{
+    double norm = sqrt(q.w * q.w + q.x * q.x + q.y * q.y + q.z * q.z);
+    return glm::quat(q.w/norm, q.x/norm, q.y/norm, q.z/norm);
 }
 
 

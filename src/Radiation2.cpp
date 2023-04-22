@@ -58,20 +58,20 @@ Radiation2::~Radiation2()
 
 size_t Radiation2::IntensityHarmonicIndex(size_t ijk, size_t d)
 {
-	#ifdef ijkd0d1
+	#ifdef ijkd
 		return ijk + d * grid.nxyz;
 	#endif
-	#ifdef d0d1ijk
+	#ifdef dijk
 		return d + ijk * intensityStencil.nCoefficients;
 	#endif
 }
 size_t Radiation2::IntensityHarmonicIndex(size_t i, size_t j, size_t k, size_t d)
 {
 	size_t ijk = grid.Index(i,j,k);
-	#ifdef ijkd0d1
+	#ifdef ijkd
 		return ijk + d * grid.nxyz;
 	#endif
-	#ifdef d0d1ijk
+	#ifdef dijk
 		return d + ijk * intensityStencil.nCoefficients;
 	#endif
 }

@@ -11,6 +11,7 @@ struct SphereGrid
     size_t nPh;
     size_t nDir;
 
+    SphereGrid();
     SphereGrid(size_t nTh, size_t nPh);
     double Theta(size_t i) const;
     double Phi(size_t j) const;

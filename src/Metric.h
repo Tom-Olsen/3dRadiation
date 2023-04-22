@@ -2,7 +2,7 @@
 #define __INCLUDE_GUARD_Metric_h__
 // #include "ControlFlow.hh"       // Template arguments and profiling macros.
 #include "Grid.h"               // Numerical Grid and mapping to physical domain.
-#include "Interpolation.hh"     // Basic interpolation schemes.
+#include "Interpolation.h"     // Basic interpolation schemes.
 
 
 
