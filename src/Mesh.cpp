@@ -3,16 +3,20 @@
 
 
 // Constructors:
-Mesh::Mesh(Vector3* m_vertices, int vertexCount, Vector3Int* m_triangles, int triangleCount)
+Mesh::Mesh()
+{
+    vertexCount = 0;
+}
+Mesh::Mesh(Vector3* vertices, int vertexCount, Vector3Int* triangles, int triangleCount)
 {
     this->vertexCount = vertexCount;
     this->m_vertices.reserve(vertexCount);
     for(int i=0; i<vertexCount; i++)
-        this->m_vertices.push_back(m_vertices[i]);
+        this->m_vertices.push_back(vertices[i]);
         
     this->m_triangles.reserve(triangleCount);
     for(int i=0; i<triangleCount; i++)
-        this->m_triangles.push_back(m_triangles[i]);
+        this->m_triangles.push_back(triangles[i]);
 }
 Mesh::Mesh(std::vector<Vector3> vertices, std::vector<Vector3Int> triangles)
 {

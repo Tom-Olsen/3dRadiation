@@ -17,7 +17,7 @@ struct SphereGrid
     double Phi(size_t j) const;
     double i(double theta) const;
     double j(double phi) const;
-    size_t Index(size_t i, size_t j);
-    Tensor3 C(size_t i, size_t j);
+    size_t Index(size_t i, size_t j) const;
+    Tensor3 C(size_t i, size_t j) const;
 };
 #endif //__INCLUDE_GUARD_SphereGrid_h__

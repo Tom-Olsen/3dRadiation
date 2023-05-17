@@ -3,6 +3,8 @@
 #include <iostream>
 #include <vector>
 #include <math.h>
+#include "Utility.hh"
+#include "glm/glm/gtc/quaternion.hpp"
 
 
 
@@ -37,9 +39,11 @@ public:
     double Norm() const; 
     void Normalize();
     Vector3 Normalized() const;
+    double Theta() const;
+    double Phi() const;
     static Vector3 GetCenter(const std::vector<Vector3>& vertices);
     static bool AreCoplanar(const Vector3& p0, const Vector3& p1, const Vector3& p2, const Vector3& p3);
-    
+
     // Output:
     friend std::ostream& operator<<(std::ostream& os, const Vector3& v);
 };
@@ -48,4 +52,8 @@ std::ostream& operator<<(std::ostream& os, const Vector3& v);
 // Operators that can only be defined outside of class:
 Vector3 operator*(const Vector3& v, double s);
 Vector3 operator*(double s, const Vector3& v);
+Vector3 operator/(const Vector3& v, double s);
+
+// Quaternion rotation:
+Vector3 operator*(const glm::quat& q, const Vector3& p);
 #endif //__INCLUDE_GUARD_Vector3_h__

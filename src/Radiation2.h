@@ -1,7 +1,7 @@
 #ifndef __INCLUDE_GUARD_Radiation2_h__
 #define __INCLUDE_GUARD_Radiation2_h__
 #include "GeodesicEquationSolver.h" // Solves geodesic equation, given xyz coordinates, LF 3 velocity, and metric.
-#include "TensorOperations.h"       // More specific tensor operations, nullNormalize etc.
+#include "AdvancedMath.h"       // More specific tensor operations, nullNormalize etc.
 #include "SphereGrid.h"             // Helps interpolation on sphere.
 #include "SphericalHarmonics.h"     // Real spherical harmonic functions and expansion.
 #include "Log.hh"                   // log final results.

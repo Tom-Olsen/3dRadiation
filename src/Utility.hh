@@ -3,6 +3,7 @@
 #include <iostream>                     // Output to terminal.
 #include <filesystem>                   // Folder/file management.
 #include <vector>                       // basic c++ vector
+#include <span>                         // span = subvector
 #include "glm/glm/gtc/quaternion.hpp"   // Quaternions.
 #include "ControlFlow.hh"               // Template arguments and profiling macros.
 #include "eigen/Eigen/Dense"            // Eigen library for solving linear systems.
@@ -16,6 +17,18 @@ inline void ExitOnError(std::string msg="")
 {
     std::cout << "ERROR: " + msg + "\n";
     exit(errno);
+}
+
+
+
+// ListOfT = { std::span<T>, std::vector<T, std::array<T>, ??? }
+template<typename ListOfT, typename T>
+bool Contains(ListOfT vector, T& item)
+{
+    for(const T& v : vector)
+        if(v == item)
+            return true;
+    return false;
 }
 
 
@@ -52,18 +65,25 @@ public:
     bool operator==(const AlignedArrayAllocator &)
     { return true; }
 };
-using IntBuffer = std::vector<int,AlignedArrayAllocator<int>>;
-using SizeTBuffer = std::vector<size_t,AlignedArrayAllocator<size_t>>;
-using RealBuffer = std::vector<double,AlignedArrayAllocator<double>>;
-using Vec2IntBuffer = std::vector<Vector2Int,AlignedArrayAllocator<Vector2Int>>;
-using Vec3IntBuffer = std::vector<Vector3Int,AlignedArrayAllocator<Vector3Int>>;
-using QuatBuffer = std::vector<glm::quat,AlignedArrayAllocator<glm::quat>>;
+using IntBuffer     = std::vector<int       , AlignedArrayAllocator<int>       >;
+using SizeTBuffer   = std::vector<size_t    , AlignedArrayAllocator<size_t>    >;
+using RealBuffer    = std::vector<double    , AlignedArrayAllocator<double>    >;
+using Vec2IntBuffer = std::vector<Vector2Int, AlignedArrayAllocator<Vector2Int>>;
+using Vec3IntBuffer = std::vector<Vector3Int, AlignedArrayAllocator<Vector3Int>>;
+using QuatBuffer    = std::vector<glm::quat , AlignedArrayAllocator<glm::quat> >;
 
 
 
 // Random number, seed = 1.
 inline double RandomRange(double min, double max)
 { return min + ((double) rand() / RAND_MAX) * (max - min); }
+
+
+
+// Clamps input v between min and max:
+template<typename T>
+inline T Clamp(T value, T min, T max)
+{ return std::min(std::max(value, min), max); }
 
 
 
@@ -456,6 +476,17 @@ inline void PrintMat(const Eigen::MatrixXd& A, int precision=6)
             std::cout << ", " << Format(A(i,j),precision);
         std::cout << ")" << std::endl;
     }
+}
+
+
+// ListOfT = { std::span<T>, std::vector<T, std::array<T>, ??? }
+template<typename ListOfT>
+inline void PrintList(ListOfT span, std::string name)
+{
+    std::cout << name << ": [" << span[0];
+    for(auto it=next(begin(span)); it!=end(span); it++)
+        std::cout << "|" << *it;
+    std::cout << "]\n";
 }
 
 

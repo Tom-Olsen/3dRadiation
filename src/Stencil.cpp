@@ -3,8 +3,222 @@
 
 
 // ------------------------------- Stencil -------------------------------
+double Stencil::W(size_t d) const
+{ return w[d]; }
+double Stencil::Cx(size_t d) const
+{ return cx[d]; }
+double Stencil::Cy(size_t d) const
+{ return cy[d]; }
+double Stencil::Cz(size_t d) const
+{ return cz[d]; }
+double Stencil::Theta(size_t d) const
+{ return theta[d]; }
+double Stencil::Phi(size_t d) const
+{ return phi[d]; }
+Tensor3 Stencil::Ct3(size_t d) const
+{ return Tensor3(Cx(d), Cy(d), Cz(d)); }
+Vector3 Stencil::Cv3(size_t d) const
+{ return Vector3(Cx(d), Cy(d), Cz(d)); }
+
+size_t Stencil::NearestNeighbour(const Tensor3& p) const
+{
+    size_t i = std::round(sphereGrid.i(p.Theta()));
+    size_t j = ((int)std::round(sphereGrid.j(p.Phi())) + sphereGrid.nPh) % sphereGrid.nPh;
+
+    size_t d0 = neighbour0OnGrid[sphereGrid.Index(i,j)];
+    size_t d1 = neighbour1OnGrid[sphereGrid.Index(i,j)];
+    size_t d2 = neighbour2OnGrid[sphereGrid.Index(i,j)];
+    double dot0 = Tensor3::Dot(p,Ct3(d0));
+    double dot1 = Tensor3::Dot(p,Ct3(d1));
+    double dot2 = Tensor3::Dot(p,Ct3(d2));
+
+    if      (dot0 >= dot1 && dot0 >= dot2) return d0;
+    else if (dot1 >= dot0 && dot1 >= dot2) return d1;
+    else    return d2;
+}
+std::span<const Vector3Int> Stencil::TrianglesConnectedTo(size_t d) const
+{ return connectedTriangles.Row(d); }
+std::span<const Vector3> Stencil::VoronoiCellOf(size_t d) const
+{ return voronoiCells.Row(d); }
+std::span<const size_t> Stencil::VoronoiNeighbourOf(size_t d) const
+{ return voronoiNeighbours.Row(d); }
+
+
+
+Vector3 Stencil::BarycentricWeights(const Tensor3& p, Vector3Int& triangle) const
+{
+    size_t d = NearestNeighbour(p);
+    Vector3 weights;
+    Tensor3 rayOrigin(0,0,0);
+    
+    bool foundTriangle = false;
+    std::span triangles = connectedTriangles.Row(d);
+    for(auto t = begin(triangles); t != end(triangles); t++)
+    {
+        triangle = *t;
+        Tensor3 v0 = Ct3(triangle[0]);
+        Tensor3 v1 = Ct3(triangle[1]);
+        Tensor3 v2 = Ct3(triangle[2]);
+        if (::BarycentricWeights(rayOrigin, p, v0, v1, v2, weights))
+        {
+            foundTriangle = true;
+            break;
+        }
+    }
+
+    // Search through triangles connected to natural neighbours.
+    if(!foundTriangle)
+    {
+        std::span<const size_t> neighbours = VoronoiNeighbourOf(d);
+        for(size_t index : neighbours)
+        {
+            std::span triangles = connectedTriangles.Row(index);
+            for(auto t = begin(triangles); t != end(triangles); t++)
+            {
+                triangle = *t;
+                Tensor3 v0 = Ct3(triangle[0]);
+                Tensor3 v1 = Ct3(triangle[1]);
+                Tensor3 v2 = Ct3(triangle[2]);
+                if (::BarycentricWeights(rayOrigin, p, v0, v1, v2, weights))
+                {
+                    foundTriangle = true;
+                    break;
+                }
+            }
+            if(foundTriangle)
+                break;
+        }
+    }
+
+    return weights;
+}
+std::vector<double> Stencil::VoronoiWeights(const Tensor3& p, std::vector<size_t>& naturalNeighbours) const
+{
+    std::vector<Vector3> pointsInsideCell;
+    std::vector<Vector3> virtualCell = VirtualVoronoiCellOf(p, naturalNeighbours, pointsInsideCell);
+    if(pointsInsideCell.size() == 0)
+    {
+        size_t index = NearestNeighbour(p);
+        naturalNeighbours.push_back(index);
+        std::vector<double> output;
+        output.push_back(1);
+        return output;
+    }
+    return VoronoiWeights(virtualCell, naturalNeighbours, pointsInsideCell);
+}
+std::vector<double> Stencil::VoronoiWeights(const std::vector<Vector3>& virtualCell, const std::vector<size_t>& naturalNeighbours, const std::vector<Vector3>& pointsInsideCell) const
+{
+    double totalArea = 0.0;
+    std::vector<double> weights;
+    weights.reserve(naturalNeighbours.size());
+    for (size_t i = 0; i < naturalNeighbours.size(); i++)
+    {
+        // Construct intersection polygon of virtualCell and cell:
+        std::span<const Vector3> cell = VoronoiCellOf(naturalNeighbours[i]);
+        std::vector<Vector3> points;
+        points.push_back(virtualCell[i]);
+        points.push_back(virtualCell[(i + 1) % naturalNeighbours.size()]);
+        for(Vector3 p : pointsInsideCell)
+            if (Contains(cell, p))
+                points.push_back(p);
+
+        // Get center of polygon:
+        Vector3 center = Vector3(0,0,0);
+        for(Vector3 p : points)
+            center += p;
+        center = center.Normalized();
+
+        // Sort polygon around center:
+        points = SortPointsOnSphereAroundCenter(points);
+
+        // Slice polycon into triangles and determine area:
+        double area = 0.0;
+        for (size_t j = 0; j < points.size(); j++)
+            area += SphericalTriangleArea(points[j], points[(j + 1) % points.size()], center);
+        weights.push_back(area);
+        totalArea += area;
+    }
+    // Normalize weights:
+    for (size_t i = 0; i < weights.size(); i++)
+        weights[i] /= totalArea;
+    return weights;
+}
+std::vector<Vector3> Stencil::VirtualVoronoiCellOf
+(const Tensor3& p, std::vector<size_t>& naturalNeighbours, std::vector<Vector3>& pointsInsideCell) const
+{
+    // Initial cell given by nearest direction:
+    size_t startCellIndex = NearestNeighbour(p);
+    size_t cellIndex = startCellIndex;
+
+    // Check if p overlaps with central vertex of cell:
+    if (Tensor3::Dot(Ct3(cellIndex) - p, Ct3(cellIndex) - p) < 1e-8)
+    {
+        std::span<const Vector3> temp = VoronoiCellOf(cellIndex);
+        return std::vector<Vector3>(temp.begin(), temp.end());
+    }
+
+    // Declerations:
+    Vector3 pVec3 = Vector3(p[1], p[2], p[3]);
+    std::vector<Vector3> virtualCell;
+    Vector3 intersect;
+    Vector3 intersectTemp;
+    Vector3 rayOrigin;
+    for (size_t i = 0; i < 100; i++)   // should be at most 6 itterations!
+    {
+        // Get current localized cell:
+        std::span<const Vector3> cell = VoronoiCellOf(cellIndex);
+        Vector3 cellCenter = Cv3(cellIndex);
+
+        // Prepare geometry for ray-lineSegment intersection:
+        Vector3 dir = (cellCenter - pVec3) / 2.0;
+        Vector3 mid = (pVec3 + dir).Normalized();
+        Vector3 perp = Vector3::Cross(mid, dir);
+        if (i == 0)
+            rayOrigin = mid;
+
+        // Find intersection with the edge of the cell that is hit by perp head on:
+        size_t index;
+        double tMin = 1e10;
+        double t;
+        for (size_t j = 0; j < cell.size(); j++)
+        {
+            Vector3 cellWallDir = cell[j] - cell[(j + 1) % cell.size()];
+            Vector3 planeNormal = Vector3::Cross(cell[j], cellWallDir);
+            
+            if (RayPlaneIntersection(rayOrigin, perp, cell[j], planeNormal, intersectTemp, t))
+            {
+                if (t < tMin)
+                {
+                    tMin = t;
+                    index = j;
+                    intersect = intersectTemp;
+                }
+            }
+        }
+        // Add to virtual cell:
+        intersect = intersect.Normalized();
+        virtualCell.push_back(intersect);
+
+        // Add vertex which will end up inside the virtual cell:
+        if (!Contains(pointsInsideCell, cell[index]))
+            pointsInsideCell.push_back(cell[index]);
+
+        // Prepare next cell: (only works because of ordering of cells and orientation of virtual cell)
+        rayOrigin = intersect;
+        cellIndex = VoronoiNeighbourOf(cellIndex)[index];
+        naturalNeighbours.push_back(cellIndex);
+
+        // End loop once we are back at initial cell:
+        if (cellIndex == startCellIndex)
+            break;
+    }
+    return virtualCell;
+}
+
+
+
 void Stencil::SetCoefficientCount()
-{ nCoefficients = ((nOrder + 1) / 2) * ((nOrder + 1) / 2); }
+{ nCoefficients = IntegerPow<2>((nOrder + 1) / 2); }
 void Stencil::AllocateBuffers()
 {
     w.resize(nDir);
@@ -13,24 +227,19 @@ void Stencil::AllocateBuffers()
     cz.resize(nDir);
     theta.resize(nDir);
     phi.resize(nDir);
-    neighbour0.resize(nDir * 2*nDir);
-    neighbour1.resize(nDir * 2*nDir);
-    neighbour2.resize(nDir * 2*nDir);
+    neighbour0OnGrid.resize(sphereGridRes * 2 * sphereGridRes);
+    neighbour1OnGrid.resize(sphereGridRes * 2 * sphereGridRes);
+    neighbour2OnGrid.resize(sphereGridRes * 2 * sphereGridRes);
 }
 void Stencil::SortDirections()
 {
-    int index[nDir];
-    for(int i = 0; i < nDir; i++)
+    size_t index[nDir];
+    for(size_t i = 0; i < nDir; i++)
         index[i] = i;
 
     // sort index array based on custom compare function
-    std::sort(index, index + nDir, [this](int i, int j)
+    std::sort(index, index + nDir, [this](size_t i, size_t j)
     {
-        // if(phi[i] != phi[j])
-            // return phi[i] < phi[j];
-        // else
-            // return theta[i] < theta[j];
-            
         if(theta[i] != theta[j])
             return theta[i] < theta[j];
         else
@@ -46,7 +255,7 @@ void Stencil::SortDirections()
     double sorted_phi[nDir];
 
     // copy values from original arrays to temporary arrays
-    for(int i = 0; i < nDir; i++)
+    for(size_t i = 0; i < nDir; i++)
     {
         sorted_w[i] = w[index[i]];
         sorted_cx[i] = cx[index[i]];
@@ -57,7 +266,7 @@ void Stencil::SortDirections()
     }
 
     // overwrite original arrays with sorted values
-    for(int i = 0; i < nDir; i++)
+    for(size_t i = 0; i < nDir; i++)
     {
         w[i] = sorted_w[i];
         cx[i] = sorted_cx[i];
@@ -67,12 +276,12 @@ void Stencil::SortDirections()
         phi[i] = sorted_phi[i];
     }
 }
-void Stencil::InitializeConnectedTriangles()
+void Stencil::InitializeMesh()
 {
     // Setup vertices vector for convex hull triangulation:
     std::vector<Vector3> vertices;
     vertices.reserve(nDir);
-    for(int d=0; d<nDir; d++)
+    for(size_t d=0; d<nDir; d++)
     {
         Vector3 v(Cx(d),Cy(d),Cz(d));
         vertices.push_back(v);
@@ -81,13 +290,18 @@ void Stencil::InitializeConnectedTriangles()
     // Triangulate vertices:
     ConvexHull convexHull(vertices);
     convexHull.OriginalOrdering(vertices);
-
-    // Extract connectedTriangles:
-    std::vector<Vector3Int> allTriangles = convexHull.GetTriangles();
-    for(int i=0; i<nDir; i++)
+    mesh = convexHull.GetMesh();
+}
+void Stencil::InitializeConnectedTriangles()
+{
+    // At most 10 natural neighbours (very generous estimate):
+    connectedTriangles.reserve(10 * nDir);
+    std::vector<Vector3Int> allTriangles = mesh.GetTriangles();
+    for(size_t i=0; i<nDir; i++)
     {
         std::vector<Vector3Int> triangles;
-        for(int j=0; j<allTriangles.size(); j++)
+        triangles.reserve(10); // no need for shirnk_to_fit.
+        for(size_t j=0; j<allTriangles.size(); j++)
         {
             Vector3Int triangle = allTriangles[j];
             if(triangle[0] == i
@@ -97,77 +311,62 @@ void Stencil::InitializeConnectedTriangles()
         }
         connectedTriangles.AddRow(triangles);
     }
+    connectedTriangles.shrink_to_fit();
 }
-void Stencil::InitializeConnectedVertices()
+void Stencil::InitializeVoronoiCells()
 {
-    // First order of connected vertices:
-    for(int d=0; d<nDir; d++)
+    // At most 10 natural neighbours (very generous estimate):
+    voronoiCells.reserve(10 * nDir);
+    for (size_t d = 0; d < nDir; d++)
     {
-        // Get unique indices of connected triangles:
-        std::set<size_t> indices;
-        for(int k=connectedTriangles.Start(d); k<connectedTriangles.End(d); k++)
+        // Get circum center of all triangles connected to a vertex:
+        std::span<const Vector3Int> triangles = TrianglesConnectedTo(d);
+        std::vector<Vector3> voronoiCell;
+        voronoiCell.reserve(triangles.size()); // no need for shirnk_to_fit.
+        for (const Vector3Int& triangle : triangles)
         {
-            Vector3Int triangle = connectedTriangles[k];
-            indices.insert(triangle[0]);
-            indices.insert(triangle[1]);
-            indices.insert(triangle[2]);
+            Vector3 a = Cv3(triangle[0]);
+            Vector3 b = Cv3(triangle[1]);
+            Vector3 c = Cv3(triangle[2]);
+            Vector3 center = CircumCenter(a, b, c).Normalized();
+            if(!Contains(voronoiCell, center))
+                voronoiCell.push_back(center);
         }
-
-        // Extract corresponding vertices:
-        std::vector<size_t> vertices;
-        for(auto it : indices)
-            vertices.push_back(it);
-
-        // Add list of vertices to connected vertices:
-        connectedVerticesOrder1.AddRow(vertices);
+        voronoiCell.shrink_to_fit();
+        voronoiCell = SortPointsOnSphereAroundCenter(voronoiCell);
+        voronoiCells.AddRow(voronoiCell);
     }
-
-    // Second order of connected vertices:
-    for(int d=0; d<nDir; d++)
+    voronoiCells.shrink_to_fit();
+}
+void Stencil::InitializeVoronoiNeighbours()
+{
+    voronoiNeighbours.reserve(10 * nDir);
+    for (size_t d = 0; d < nDir; d++)
     {
-        // Get unique indices of connected triangles:
-        std::set<size_t> indices;
-        for(int k=connectedVerticesOrder1.Start(d); k<connectedVerticesOrder1.End(d); k++)
+        std::span<const Vector3> cell = VoronoiCellOf(d);
+        std::vector<size_t> neighbours;
+        neighbours.reserve(cell.size());
+        for (size_t i = 0; i < cell.size(); i++)
         {
-            size_t index = connectedVerticesOrder1[k];
-            for(int p=connectedTriangles.Start(index); p<connectedTriangles.End(index); p++)
+            Vector3 p0 = cell[i];
+            Vector3 p1 = cell[(i + 1) % cell.size()];
+            for (size_t k = 0; k < nDir; k++)
             {
-                Vector3Int triangle = connectedTriangles[p];
-                indices.insert(triangle[0]);
-                indices.insert(triangle[1]);
-                indices.insert(triangle[2]);
+                if (d == k)
+                    continue;
+                std::span<const Vector3> otherCell = VoronoiCellOf(k);
+                if (Contains(otherCell, p0) && Contains(otherCell, p1))
+                    neighbours.push_back(k);
             }
         }
-
-        // Extract corresponding vertices:
-        std::vector<size_t> vertices;
-        for(auto it : indices)
-            vertices.push_back(it);
-
-        // Add list of vertices to connected vertices:
-        connectedVerticesOrder2.AddRow(vertices);
+        voronoiNeighbours.AddRow(neighbours);
     }
+    voronoiNeighbours.shrink_to_fit();
 }
-
-double Stencil::W(size_t d) const
-{ return w[d]; }
-double Stencil::Theta(size_t d) const
-{ return theta[d]; }
-double Stencil::Phi(size_t d) const
-{ return phi[d]; }
-double Stencil::Cx(size_t d) const
-{ return cx[d]; }
-double Stencil::Cy(size_t d) const
-{ return cy[d]; }
-double Stencil::Cz(size_t d) const
-{ return cz[d]; }
-Tensor3 Stencil::C(size_t d) const
-{ return Tensor3(Cx(d), Cy(d), Cz(d)); }
-
-void Stencil::InitializeNearestNeighbourGrid()
+void Stencil::InitializeNearestNeighbourOnGrid()
 {
-    sphereGrid = SphereGrid(nDir, 2*nDir);
-
+    sphereGrid = SphereGrid(sphereGridRes, 2 * sphereGridRes);
+    PARALLEL_FOR(2)
     for(size_t j=0; j<sphereGrid.nPh; j++)
     for(size_t i=0; i<sphereGrid.nTh; i++)
     {
@@ -175,12 +374,12 @@ void Stencil::InitializeNearestNeighbourGrid()
         double dot0 = -1;
         double dot1 = -1;
         double dot2 = -1;
-        int index0 = -1;
-        int index1 = -1;
-        int index2 = -1;
+        size_t index0 = -1;
+        size_t index1 = -1;
+        size_t index2 = -1;
         for(size_t d=0; d<nDir; d++)
         {
-            double dot = Tensor3::Dot(c,C(d));
+            double dot = Tensor3::Dot(c,Ct3(d));
             if(dot > dot0)
             {
                 dot2 = dot1;
@@ -203,55 +402,30 @@ void Stencil::InitializeNearestNeighbourGrid()
                 index2 = d;
             }
         }
-        neighbour0[sphereGrid.Index(i,j)] = index0;
-        neighbour1[sphereGrid.Index(i,j)] = index1;
-        neighbour2[sphereGrid.Index(i,j)] = index2;
+        neighbour0OnGrid[sphereGrid.Index(i,j)] = index0;
+        neighbour1OnGrid[sphereGrid.Index(i,j)] = index1;
+        neighbour2OnGrid[sphereGrid.Index(i,j)] = index2;
     }
 }
-size_t Stencil::GetNeighbourIndex0(const Tensor3& p)
+void Stencil::InitializeVoronoiInterpolationOnGrid()
 {
-    size_t i = std::round(sphereGrid.i(p.Theta()));
-    size_t j = ((int)std::round(sphereGrid.j(p.Phi())) + sphereGrid.nPh) % sphereGrid.nPh;
-    return neighbour0[sphereGrid.Index(i,j)];
+    for(size_t j=0; j<sphereGrid.nPh; j++)
+    for(size_t i=0; i<sphereGrid.nTh; i++)
+    {
+        Tensor3 c = sphereGrid.C(i,j);
+        std::vector<size_t> neighbours;
+        std::vector<double> weights = VoronoiWeights(c,neighbours);
+        voronoiNeighboursOnGrid.AddRow(neighbours);
+        voronoiWeightsOnGrid.AddRow(weights);
+    }
 }
-size_t Stencil::GetNeighbourIndex1(const Tensor3& p)
-{
-    size_t i = std::round(sphereGrid.i(p.Theta()));
-    size_t j = ((int)std::round(sphereGrid.j(p.Phi())) + sphereGrid.nPh) % sphereGrid.nPh;
-    return neighbour1[sphereGrid.Index(i,j)];
-}
-size_t Stencil::GetNeighbourIndex2(const Tensor3& p)
-{
-    size_t i = std::round(sphereGrid.i(p.Theta()));
-    size_t j = ((int)std::round(sphereGrid.j(p.Phi())) + sphereGrid.nPh) % sphereGrid.nPh;
-    return neighbour2[sphereGrid.Index(i,j)];
-}
-Tensor3 Stencil::GetNeighbour0(const Tensor3& p)
-{
-    size_t i = std::round(sphereGrid.i(p.Theta()));
-    size_t j = ((int)std::round(sphereGrid.j(p.Phi())) + sphereGrid.nPh) % sphereGrid.nPh;
-    size_t d = neighbour0[sphereGrid.Index(i,j)];
-    return C(d);
-}
-Tensor3 Stencil::GetNeighbour1(const Tensor3& p)
-{
-    size_t i = std::round(sphereGrid.i(p.Theta()));
-    size_t j = ((int)std::round(sphereGrid.j(p.Phi())) + sphereGrid.nPh) % sphereGrid.nPh;
-    size_t d = neighbour1[sphereGrid.Index(i,j)];
-    return C(d);
-}
-Tensor3 Stencil::GetNeighbour2(const Tensor3& p)
-{
-    size_t i = std::round(sphereGrid.i(p.Theta()));
-    size_t j = ((int)std::round(sphereGrid.j(p.Phi())) + sphereGrid.nPh) % sphereGrid.nPh;
-    size_t d = neighbour2[sphereGrid.Index(i,j)];
-    return C(d);
-}
+
+
 
 void Stencil::Print() const
 {
     std::cout << "        d,\t        w,\t    theta,\t      phi,\t       cx,\t       cy,\t       cz\n";
-    for(int d=0; d<nDir; d++)
+    for(size_t d=0; d<nDir; d++)
     {
         std::cout << Format(d) << ",\t" << Format(W(d)) << ",\t" << Format(Theta(d)) << ",\t" << Format(Phi(d)) << ",\t";
         std::cout << Format(Cx(d)) << ",\t" << Format(Cy(d)) << ",\t" << Format(Cz(d)) << "\n";
@@ -331,9 +505,12 @@ LebedevStencil::LebedevStencil(size_t nOrder)
     }
     
     SortDirections();
+    InitializeMesh();
     InitializeConnectedTriangles();
-    InitializeConnectedVertices();
-    InitializeNearestNeighbourGrid();
+    InitializeVoronoiCells();
+    InitializeVoronoiNeighbours();
+    InitializeNearestNeighbourOnGrid();
+    InitializeVoronoiInterpolationOnGrid();
 }
 // ---------------------------------------------------------------------
 
@@ -405,8 +582,11 @@ GaussLegendreStencil::GaussLegendreStencil(size_t nOrder)
     }
     
     SortDirections();
+    InitializeMesh();
     InitializeConnectedTriangles();
-    InitializeConnectedVertices();
-    InitializeNearestNeighbourGrid();
+    InitializeVoronoiCells();
+    InitializeVoronoiNeighbours();
+    InitializeNearestNeighbourOnGrid();
+    InitializeVoronoiInterpolationOnGrid();
 }
 // ---------------------------------------------------------------------

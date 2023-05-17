@@ -101,6 +101,16 @@ void Grid::WriteFrametoCsv
     
     name = (name == "") ? "data" :  name;
     std::ofstream fileOut(directory + "/" + name + "_" + FrameNumber(frameNumber) + "_" + std::to_string(nx) + "x" + std::to_string(ny) + "y" + std::to_string(nz) + "z" + ".csv");
+    
+    fileOut << "#nx=" << nx << "\n";
+    fileOut << "#ny=" << ny << "\n";
+    fileOut << "#nz=" << nz << "\n";
+    fileOut << "#startx=" << startx << "\n";
+    fileOut << "#starty=" << starty << "\n";
+    fileOut << "#startz=" << startz << "\n";
+    fileOut << "#endx=" << endx << "\n";
+    fileOut << "#endy=" << endy << "\n";
+    fileOut << "#endz=" << endz << "\n";
     fileOut << "#x,y,z,r,g,b,a\n";
 
     for(size_t k=0; k<nz; k++)

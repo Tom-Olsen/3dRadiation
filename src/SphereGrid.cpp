@@ -19,10 +19,10 @@ double SphereGrid::i(double theta) const
 double SphereGrid::j(double phi) const
 { return nPh * phi / (2.0 * M_PI); }
 
-size_t SphereGrid::Index(size_t i, size_t j)
+size_t SphereGrid::Index(size_t i, size_t j) const
 { return i + j * nTh; }
 
-Tensor3 SphereGrid::C(size_t i, size_t j)
+Tensor3 SphereGrid::C(size_t i, size_t j) const
 {
     double theta = Theta(i);
     double phi = Phi(j);

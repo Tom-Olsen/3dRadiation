@@ -1,6 +1,6 @@
 #include <iostream>
 #include "../src/GeodesicEquationSolver.h"
-#include "../src/TensorOperations.h"
+#include "../src/AdvancedMath.h"
 using namespace std;
 
 

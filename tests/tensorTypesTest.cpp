@@ -119,11 +119,10 @@ void TestUnstructuredMatrix()
 
     for(int d=0; d<4; d++)
     {
-        size_t start = unstMat.Start(d);
-        size_t end = unstMat.End(d);
+        std::span row = unstMat.Row(d);
         cout << d << ": ";
-        for(int p=start; p<end; p++)
-            cout << unstMat[p] << ",";
+        for(auto it = begin(row); it != end(row); it++)
+            cout << *it << ",";
         cout << endl;
     }
 }

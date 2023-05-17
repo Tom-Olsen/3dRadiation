@@ -52,10 +52,11 @@ Vector3 Vector3::operator-(const Vector3& other) const
 bool Vector3::operator==(const Vector3& other) const
 {
     constexpr double epsilon = 1e-10;
-    bool x = abs(data[0] - other[0]) < epsilon;
-    bool y = abs(data[1] - other[1]) < epsilon;
-    bool z = abs(data[2] - other[2]) < epsilon;
-    return x && y && z;
+    double diffX = data[0] - other[0];
+    double diffY = data[1] - other[1];
+    double diffZ = data[2] - other[2];
+    double sqrmag = diffX * diffX + diffY * diffY + diffZ * diffZ;
+    return sqrmag < epsilon * epsilon;
 }
 bool Vector3::operator!=(const Vector3& other) const
 { return !((*this) == other); }
@@ -71,9 +72,7 @@ Vector3 Vector3::Cross(const Vector3& a, const Vector3& b)
      a[0] * b[1] - b[0] * a[1]);
 }
 double Vector3::Norm() const
-{
-    return sqrt(Dot((*this),(*this)));
-}
+{ return sqrt(Dot((*this),(*this))); }
 void Vector3::Normalize()
 {
     double norm = Norm();
@@ -85,6 +84,13 @@ Vector3 Vector3::Normalized() const
 {
     double norm = Norm();
     return Vector3(data[0]/norm, data[1]/norm, data[2]/norm);
+}
+double Vector3::Theta() const
+{ return MyAtan2(sqrt(data[0] * data[0] + data[1] * data[1]), data[2]); }
+double Vector3::Phi() const
+{
+    double phi = MyAtan2(data[1], data[0]);
+    return (phi < 0) ? phi + 2 * M_PI : phi;
 }
 Vector3 Vector3::GetCenter(const std::vector<Vector3>& vertices)
 {
@@ -112,6 +118,17 @@ std::ostream& operator<<(std::ostream& os, const Vector3& v)
 
 // Operators that can only be defined outside of class:
 Vector3 operator*(const Vector3& v, double s)
-{ return Vector3(s*v[0],s*v[1],s*v[2]); }
+{ return Vector3(s*v[0], s*v[1], s*v[2]); }
 Vector3 operator*(double s, const Vector3& v)
-{ return Vector3(s*v[0],s*v[1],s*v[2]); }
+{ return Vector3(s*v[0], s*v[1], s*v[2]); }
+Vector3 operator/(const Vector3& v, double s)
+{ return Vector3(v[0]/s, v[1]/s, v[2]/s); }
+
+// Quaternion rotation:
+Vector3 operator*(const glm::quat& q, const Vector3& p)
+{
+    Vector3 u(q.x, q.y, q.z);
+    Vector3 up  = Vector3::Cross(u, p);
+    Vector3 uup = Vector3::Cross(u, up);
+	return p + 2.0 * ((up * q.w) + uup);
+}

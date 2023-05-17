@@ -1,6 +1,7 @@
 #ifndef __INCLUDE_GUARD_TesorTypes_hh__
 #define __INCLUDE_GUARD_TesorTypes_hh__
 #include <iostream>                     // Output to terminal.
+#include <span>                         // span = sub vector
 #include "glm/glm/gtc/quaternion.hpp"   // Quaternions.
 #include "ControlFlow.hh"               // Template arguments and profiling macros.
 #include "Utility.hh"                   // Utility functions.
@@ -665,62 +666,62 @@ template<typename T>
 struct UnstructuredMatrix
 {
 private:
-    std::vector<T,AlignedArrayAllocator<T>> entries;
-    std::vector<size_t,AlignedArrayAllocator<size_t>> indexes;
+    std::vector<T,AlignedArrayAllocator<T>> m_data;
+    std::vector<size_t,AlignedArrayAllocator<size_t>> m_indexes;
 
 public:
     UnstructuredMatrix()
-    { indexes.push_back(0); }
+    { m_indexes.push_back(0); }
+
+    void reserve(size_t newCap)
+    { m_data.reserve(newCap); }
+
+    void shrink_to_fit()
+    { m_data.shrink_to_fit(); }
 
     void AddRow(T* data, size_t count)
     {
         for(size_t i=0; i<count; i++)
-            entries.push_back(data[i]);
-        indexes.push_back(indexes[indexes.size() - 1] + count);
+            m_data.push_back(data[i]);
+        m_indexes.push_back(m_indexes[m_indexes.size() - 1] + count);
     }
     void AddRow(std::vector<T> data)
     {
-        for(size_t i=0; i<data.size(); i++)
-            entries.push_back(data[i]);
-        indexes.push_back(indexes[indexes.size() - 1] + data.size());
+        for (const auto& element : data)
+            m_data.push_back(element);
+        m_indexes.push_back(m_indexes[m_indexes.size() - 1] + data.size());
     }
 
-    size_t Start(size_t row)
-    { return indexes[row]; }
-    size_t End(size_t row)
-    { return indexes[row+1]; }
-
-    T& operator[](const size_t index)
-    { return entries[index]; }
-    const T& operator[](const size_t index) const
-    { return entries[index]; }
-    T& operator[](const rank2Indices& index)
-    { return entries[indexes[index.i] + index.j]; }
-    const T& operator[](const rank2Indices& index) const
-    { return entries[indexes[index.i] + index.j]; }
-
-    void Print()
+    std::span<const T> Row(size_t row) const
     {
-        std::cout << "index: [entries]\n";
-        for(size_t i=0; i<indexes.size()-1; i++)   // last entry outside for loop
+        size_t start = m_indexes[row];
+        size_t end = m_indexes[row + 1];
+        return std::span<const T>(&m_data[start], end - start);
+    }
+
+    void Print() const
+    {
+        std::cout << "index: [data]\n";
+        for(size_t i=0; i<m_indexes.size()-1; i++)   // last entry outside for loop
         {
+            std::span<const T> row = Row(i);
             std::cout << i << ": [";
-            for(size_t j=indexes[i]; j<indexes[i+1] - 1; j++)  // last entry outside for loop
-                std::cout << entries[j] << ", ";
-            std::cout << entries[indexes[i+1] - 1];
+            for(auto it=begin(row); it!=end(row) - 1; it++)  // last entry outside for loop
+                std::cout << *it << ", ";
+            std::cout << row.back();
             std::cout << "]\n";
         }
     }
 
-    void PrintFlat()
+    void PrintFlat() const
     {
-        std::cout << "entries: ";
-        for(size_t i=0; i<entries.size(); i++)
-            std::cout << entries[i] << ", ";
+        std::cout << "data: ";
+        for(size_t i=0; i<m_data.size(); i++)
+            std::cout << m_data[i] << ", ";
         std::cout << std::endl;
         std::cout << "indexes: ";
-        for(size_t i=0; i<indexes.size(); i++)
-            std::cout << indexes[i] << ", ";
+        for(size_t i=0; i<m_indexes.size(); i++)
+            std::cout << m_indexes[i] << ", ";
         std::cout << std::endl;
     }
 };

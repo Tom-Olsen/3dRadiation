@@ -59,6 +59,19 @@ void Camera::WriteImagetoCsv
     
     name = (name == "") ? "image" :  name;
     std::ofstream fileOut(directory + "/" + name + FrameNumber(frameNumber) + "_" + std::to_string(resX) + "x" + std::to_string(resY) + "y" + ".csv");
+    
+    fileOut << "#nx=" << resX << "\n";
+    fileOut << "#ny=" << resY << "\n";
+    fileOut << "#nz=" << 1 << "\n";
+    fileOut << "#startx=" << position[0] - width  / 2.0 << "\n";
+    fileOut << "#starty=" << position[1] - height / 2.0 << "\n";
+    fileOut << "#startz=" << -0.001 << "\n";
+    fileOut << "#endx=" << position[0] + width  / 2.0 << "\n";
+    fileOut << "#endy=" << position[1] + height / 2.0 << "\n";
+    fileOut << "#endz=" << 0.001 << "\n";
+    fileOut << "#eulerx=" << eulerAngles[0] << "\n";
+    fileOut << "#eulery=" << eulerAngles[1] << "\n";
+    fileOut << "#eulerz=" << eulerAngles[2] << "\n";
     fileOut << "#x,y,z,value\n";
 
     for(int j=0; j<resY; j++)

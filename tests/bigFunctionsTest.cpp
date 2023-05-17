@@ -51,7 +51,7 @@ void SphericalHarmonicsExpansion()
         {
             // Get pos and vel by Spherical Harmonic Expansion:
             {
-                Tensor3 direction = stencil.C(d);
+                Tensor3 direction = stencil.Ct3(d);
                 double s = radiation.GetFrequencyShift(ijk,direction);
                 Coord xyz = radiation.GetTempCoordinate(ijk,direction);
                 Tensor3 vIF = radiation.GetTemp3VelocityIF(ijk,direction);
@@ -66,7 +66,7 @@ void SphericalHarmonicsExpansion()
             {
                 double s = 1;
 			    Coord xyz = center;
-                Tensor3 c = stencil.C(d);
+                Tensor3 c = stencil.Ct3(d);
                 Tensor4 u(alpha, c[1] * alpha, c[2] * alpha, c[3] * alpha);
                 Tensor3 vLF = Vec3ObservedByEulObs<IF,LF>(u, xyz, metric);
     
@@ -91,53 +91,42 @@ void SphericalHarmonicsExpansion()
 
 
 
-size_t GetNearestDirectionIndex(const Tensor3& v, Stencil& stencil)
-{
-    size_t d0 = stencil.GetNeighbourIndex0(v);
-    size_t d1 = stencil.GetNeighbourIndex1(v);
-    size_t d2 = stencil.GetNeighbourIndex2(v);
-    double dot0 = Tensor3::Dot(v,stencil.C(d0));
-    double dot1 = Tensor3::Dot(v,stencil.C(d1));
-    double dot2 = Tensor3::Dot(v,stencil.C(d2));
-
-    if      (dot0 >= dot1 && dot0 >= dot2) return d0;
-    else if (dot1 >= dot0 && dot1 >= dot2) return d1;
-    else    return d2;
-}
 double IntensityAtBarycentric(Tensor3 direction, const glm::quat& qSrc, Stencil& stencil, double* I)
 {
     direction = Invert(qSrc) * direction;
-    size_t d = GetNearestDirectionIndex(direction, stencil);
+    size_t d = stencil.NearestNeighbour(direction);
     Vector3Int triangle;
-    Tensor3 weights;
+    Vector3 weights;
     Tensor3 rayOrigin(0,0,0);
-    for(size_t p=stencil.connectedTriangles.Start(d); p<stencil.connectedTriangles.End(d); p++)
+    std::span triangles = stencil.TrianglesConnectedTo(d);
+    for(auto t = begin(triangles); t != end(triangles); t++)
     {
-        triangle = stencil.connectedTriangles[p];
-        Tensor3 v0 = stencil.C(triangle[0]);
-        Tensor3 v1 = stencil.C(triangle[1]);
-        Tensor3 v2 = stencil.C(triangle[2]);
+        triangle = *t;
+        Tensor3 v0 = stencil.Ct3(triangle[0]);
+        Tensor3 v1 = stencil.Ct3(triangle[1]);
+        Tensor3 v2 = stencil.Ct3(triangle[2]);
         if (BarycentricWeights(rayOrigin, direction, v0, v1, v2, weights))
             break;
     }
     double I0 = I[triangle[0]];
     double I1 = I[triangle[1]];
     double I2 = I[triangle[2]];
-    return std::max(0.0, I0 * weights[1] + I1 * weights[2] + I2 * weights[3]);
+    return std::max(0.0, I0 * weights[0] + I1 * weights[1] + I2 * weights[2]);
 }
 double IntensityAtRayIntersection(Tensor3 direction, const glm::quat& qSrc, Stencil& stencil, double* I)
 {
     direction = Invert(qSrc) * direction;
-    size_t d = GetNearestDirectionIndex(direction, stencil);
+    size_t d = stencil.NearestNeighbour(direction);
     Vector3Int triangle;
     Tensor3 intersectionPoint;
     Tensor3 rayOrigin(0,0,0);
-    for(size_t p=stencil.connectedTriangles.Start(d); p<stencil.connectedTriangles.End(d); p++)
+    std::span triangles = stencil.TrianglesConnectedTo(d);
+    for(auto t = begin(triangles); t != end(triangles); t++)
     {
-        triangle = stencil.connectedTriangles[p];
-        Tensor3 v0 = I[triangle[0]] * stencil.C(triangle[0]);
-        Tensor3 v1 = I[triangle[1]] * stencil.C(triangle[1]);
-        Tensor3 v2 = I[triangle[2]] * stencil.C(triangle[2]);
+        triangle = *t;
+        Tensor3 v0 = I[triangle[0]] * stencil.Ct3(triangle[0]);
+        Tensor3 v1 = I[triangle[1]] * stencil.Ct3(triangle[1]);
+        Tensor3 v2 = I[triangle[2]] * stencil.Ct3(triangle[2]);
         if (RayTriangleIntersection(rayOrigin, direction, v0, v1, v2, intersectionPoint))
             break;
     }
@@ -146,16 +135,17 @@ double IntensityAtRayIntersection(Tensor3 direction, const glm::quat& qSrc, Sten
 double IntensityAtSphereBarycentric(Tensor3 direction, const glm::quat& qSrc, Stencil& stencil, double* I)
 {
     direction = Invert(qSrc) * direction;
-    size_t d = GetNearestDirectionIndex(direction, stencil);
+    size_t d = stencil.NearestNeighbour(direction);
     Vector3Int triangle;
     Tensor3 weights;
     Tensor3 rayOrigin(0,0,0);
-    for(size_t p=stencil.connectedTriangles.Start(d); p<stencil.connectedTriangles.End(d); p++)
+    std::span triangles = stencil.TrianglesConnectedTo(d);
+    for(auto t = begin(triangles); t != end(triangles); t++)
     {
-        triangle = stencil.connectedTriangles[p];
-        Tensor3 v0 = stencil.C(triangle[0]);
-        Tensor3 v1 = stencil.C(triangle[1]);
-        Tensor3 v2 = stencil.C(triangle[2]);
+        triangle = *t;
+        Tensor3 v0 = stencil.Ct3(triangle[0]);
+        Tensor3 v1 = stencil.Ct3(triangle[1]);
+        Tensor3 v2 = stencil.Ct3(triangle[2]);
         if (SphericalBarycentricWeights(direction, v0, v1, v2, weights))
             break;
     }
@@ -164,41 +154,24 @@ double IntensityAtSphereBarycentric(Tensor3 direction, const glm::quat& qSrc, St
     double I2 = I[triangle[2]];
     return std::max(0.0, I0 * weights[1] + I1 * weights[2] + I2 * weights[3]);
 }
-double IntensityAtInvDistOrder1(Tensor3 direction, const glm::quat& qSrc, Stencil& stencil, double* I)
+double IntensityAtInvDist(Tensor3 direction, const glm::quat& qSrc, Stencil& stencil, double* I)
 {
-    direction = Invert(qSrc) * direction;
-    size_t d = GetNearestDirectionIndex(direction, stencil);
-    double value = 0;
-    double invDistSum = 0;
-    for(size_t p=stencil.connectedVerticesOrder1.Start(d); p<stencil.connectedVerticesOrder1.End(d); p++)
-    {
-        size_t index = stencil.connectedVerticesOrder1[p];
-        double dist = Tensor3::UnitSphereNorm(direction,stencil.C(index));
-        if(dist < 1e-16)    // vTempIF == stencil.C(index)
-            return I[index];
-        double invDist = 1.0 / dist;
-        value += I[index] * invDist;
-        invDistSum += invDist;
-    }
-    return std::max(0.0, value/invDistSum);
-}
-double IntensityAtInvDistOrder2(Tensor3 direction, const glm::quat& qSrc, Stencil& stencil, double* I)
-{
-    direction = Invert(qSrc) * direction;
-    size_t d = GetNearestDirectionIndex(direction, stencil);
-    double value = 0;
-    double invDistSum = 0;
-    for(size_t p=stencil.connectedVerticesOrder2.Start(d); p<stencil.connectedVerticesOrder2.End(d); p++)
-    {
-        size_t index = stencil.connectedVerticesOrder2[p];
-        double dist = Tensor3::UnitSphereNorm(direction,stencil.C(index));
-        if(dist < 1e-16)    // vTempIF == stencil.C(index)
-            return I[index];
-        double invDist = 1.0 / dist;
-        value += I[index] * invDist;
-        invDistSum += invDist;
-    }
-    return std::max(0.0, value/invDistSum);
+    return 0;
+    //direction = Invert(qSrc) * direction;
+    //size_t d = stencil.GetNearestNeighbour(direction);
+    //double value = 0;
+    //double invDistSum = 0;
+    //for(size_t p=stencil.connectedVerticesOrder1.Start(d); p<stencil.connectedVerticesOrder1.End(d); p++)
+    //{
+    //    size_t index = stencil.connectedVerticesOrder1[p];
+    //    double dist = Tensor3::UnitSphereNorm(direction,stencil.C(index));
+    //    if(dist < 1e-16)    // vTempIF == stencil.C(index)
+    //        return I[index];
+    //    double invDist = 1.0 / dist;
+    //    value += I[index] * invDist;
+    //    invDistSum += invDist;
+    //}
+    //return std::max(0.0, value/invDistSum);
 }
 void SphereInterpolation(Stencil srcStencil, Stencil dstStencil)
 {
@@ -214,7 +187,7 @@ void SphereInterpolation(Stencil srcStencil, Stencil dstStencil)
     double sigma = 2;
     for(int d=0; d<srcStencil.nDir; d++)
     {
-        Tensor3 c = qSrc * srcStencil.C(d);
+        Tensor3 c = qSrc * srcStencil.Ct3(d);
         I0[d] = exp(sigma * Tensor3::Dot(tSrc, c));
     }
 
@@ -223,7 +196,7 @@ void SphereInterpolation(Stencil srcStencil, Stencil dstStencil)
     file0 << "x,y,z,color\n";
     for(int d=0; d<srcStencil.nDir; d++)
     {
-        Tensor3 c = I0[d] * (qSrc * srcStencil.C(d));
+        Tensor3 c = I0[d] * (qSrc * srcStencil.Ct3(d));
         file0 << c[1] << "," << c[2] << "," << c[3] << "," << 0 << "\n";
     }
     file0.close();
@@ -242,48 +215,41 @@ void SphereInterpolation(Stencil srcStencil, Stencil dstStencil)
     double I2[dstStencil.nDir];
     double I3[dstStencil.nDir];
     double I4[dstStencil.nDir];
-    double I5[dstStencil.nDir];
     for(int d=0; d<dstStencil.nDir; d++)
     {
-        Tensor3 c = qDst * dstStencil.C(d);
+        Tensor3 c = qDst * dstStencil.Ct3(d);
         I1[d] = IntensityAtBarycentric(c, qSrc, srcStencil, I0);
         I2[d] = IntensityAtRayIntersection(c, qSrc, srcStencil, I0);
         I3[d] = IntensityAtSphereBarycentric(c, qSrc, srcStencil, I0);
-        I4[d] = IntensityAtInvDistOrder1(c, qSrc, srcStencil, I0);
-        I5[d] = IntensityAtInvDistOrder2(c, qSrc, srcStencil, I0);
+        I4[d] = IntensityAtInvDist(c, qSrc, srcStencil, I0);
     }
 
     // Write destination stencil to file:
     ofstream file1(OUTPUTDIR + "dstStencilBarycentric.txt");
     ofstream file2(OUTPUTDIR + "dstStencilSphereRayIntersection.txt");
     ofstream file3(OUTPUTDIR + "dstStencilSphereBarycentric.txt");
-    ofstream file4(OUTPUTDIR + "dstStencilInvDistOrder1.txt");
-    ofstream file5(OUTPUTDIR + "dstStencilInvDistOrder2.txt");
+    ofstream file4(OUTPUTDIR + "dstStencilInvDist.txt");
     file1 << "x,y,z,color\n";
     file2 << "x,y,z,color\n";
     file3 << "x,y,z,color\n";
     file4 << "x,y,z,color\n";
-    file5 << "x,y,z,color\n";
     for(int d=0; d<dstStencil.nDir; d++)
     {
-        Tensor3 c1 = I1[d] * (qDst * dstStencil.C(d));
-        Tensor3 c2 = I2[d] * (qDst * dstStencil.C(d));
-        Tensor3 c3 = I3[d] * (qDst * dstStencil.C(d));
-        Tensor3 c4 = I4[d] * (qDst * dstStencil.C(d));
-        Tensor3 c5 = I5[d] * (qDst * dstStencil.C(d));
+        Tensor3 c1 = I1[d] * (qDst * dstStencil.Ct3(d));
+        Tensor3 c2 = I2[d] * (qDst * dstStencil.Ct3(d));
+        Tensor3 c3 = I3[d] * (qDst * dstStencil.Ct3(d));
+        Tensor3 c4 = I4[d] * (qDst * dstStencil.Ct3(d));
         file1 << c1[1] << "," << c1[2] << "," << c1[3] << "," << 0.25 << "\n";
         file2 << c2[1] << "," << c2[2] << "," << c2[3] << "," << 0.50 << "\n";
         file3 << c3[1] << "," << c3[2] << "," << c3[3] << "," << 0.75 << "\n";
         file4 << c4[1] << "," << c4[2] << "," << c4[3] << "," << 1.00 << "\n";
-        file5 << c5[1] << "," << c5[2] << "," << c5[3] << "," << 1.00 << "\n";
     }
     file1.close();
     file2.close();
     file3.close();
     file4.close();
-    file5.close();
 
-    cout << "6 files have been created in '" + OUTPUTDIR + "'. Plot them with ParaView (Filter:Table to Points)." << endl;
+    cout << "5 files have been created in '" + OUTPUTDIR + "'. Plot them with ParaView (Filter:Table to Points)." << endl;
     cout << endl;
 }
 

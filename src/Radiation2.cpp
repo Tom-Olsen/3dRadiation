@@ -137,7 +137,7 @@ void Radiation2::LoadInitialData()
                 double I[intensityStencil.nDir];
 				for(size_t d=0; d<intensityStencil.nDir; d++)
 				{
-					Tensor3 p = intensityStencil.C(d);
+					Tensor3 p = intensityStencil.Ct3(d);
 					I[d] = initialE[ijk] * exp(sigma * Tensor3::Dot(n, p));
 				}
                 SphericalHarmonicsXyz::GetCoefficients(intensityStencil, I, &coefficientsI[IntensityHarmonicIndex(ijk,0)]);
@@ -183,7 +183,7 @@ void Radiation2::UpdateStreamingCoefficients()
 			// Initial data for geodesic equation:
 			double s = 1;
 			Coord xyz = xyz0;
-            Tensor3 c = streamingStencil.C(d);
+            Tensor3 c = streamingStencil.Ct3(d);
             Tensor4 uIF(alpha, c[1] * alpha, c[2] * alpha, c[3] * alpha);
             Tensor3 vLF = Vec3ObservedByEulObs<IF,LF>(uIF, xyz, metric);
 
@@ -236,7 +236,7 @@ void Radiation2::ComputeMomentsIF()
 		Pzz[ijk] = 0.0;
 		for(size_t d=0; d<intensityStencil.nDir; d++)
 		{
-			Tensor3 dir = intensityStencil.C(d);
+			Tensor3 dir = intensityStencil.Ct3(d);
             double I_d = intensityStencil.W(d) * IntensityAt(ijk,dir);
 			E[ijk]   += I_d;
 			Fx[ijk]  += I_d * dir[1];
@@ -337,7 +337,7 @@ void Radiation2::Stream()
 			}
 
 			// Get quantities at emission point:
-			Tensor3 direction = intensityStencil.C(d);
+			Tensor3 direction = intensityStencil.Ct3(d);
 			double s = GetFrequencyShift(ijk, direction);
 			Coord xyzTemp = GetTempCoordinate(ijk, direction);
 			Tensor3 vTempIF = GetTemp3VelocityIF(ijk, direction);

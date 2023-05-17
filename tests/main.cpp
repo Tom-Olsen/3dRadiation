@@ -255,7 +255,7 @@ void Test_Radiation3SphereWave(Stencil stencil, StreamingType streamingType)
         .keepSourceNodesActive = false,
         .writeData = true,
         .printToTerminal = true,
-        .useCamera = false
+        .useCamera = true
     };
     radiation.RunSimulation(config);
 }
@@ -354,6 +354,7 @@ void Test_Radiation3ThinDiskE(size_t nx, size_t ny, size_t nz, Stencil stencil, 
     grid.SetCFL(0.5);
     // Minkowski metric(grid, m, a);
     SchwarzSchild metric(grid, m, a);
+    // KerrSchild metric(grid, m, 0.9);
     LebedevStencil lebedevStencil(5);
 
     // Camera:
@@ -473,6 +474,93 @@ void Test_Radiation3ThinDiskE(size_t nx, size_t ny, size_t nz, Stencil stencil, 
     radiation.RunSimulation(config);
 }
 
+void Test_Radiation3ThinDiskEotherCamera(size_t nx, size_t ny, size_t nz, Stencil stencil, int sigma, int simTime, StreamingType streamingType, string comment)
+{
+    // Black Hole and Thin Disk:
+    double m = 1;
+    double a = 0;
+    double r = 2 * m;
+    double diskInner = 3 * r;   //  6
+    double diskOuter = 6 * r;   // 12
+
+    // Grid, Metric, Stencil:
+    Coord start(-15,-16,-10);
+    Coord   end( 15, 22, 16);
+    Grid grid(nx, ny, nz, start, end);
+    grid.SetCFL(0.5);
+    // Minkowski metric(grid, m, a);
+    SchwarzSchild metric(grid, m, a);
+    // KerrSchild metric(grid, m, 0.9);
+    LebedevStencil lebedevStencil(5);
+
+    // Camera:
+    size_t resX = 400;
+    size_t resY = 400;
+    size_t width = 30;
+    size_t height = 30;
+    Coord position(0,19,1);
+    double degreeToRadians = 2.0 * M_PI / 360.0;
+    double angleX = 95 * degreeToRadians;
+    double angleY = 0 * degreeToRadians;
+    double angleZ = 0 * degreeToRadians;
+    glm::vec3 eulerAngles(angleX,angleY,angleZ);
+    Camera camera(resX, resY, width, height, position, eulerAngles);
+
+    // Radiation:
+    Radiation3 radiation(metric, stencil, lebedevStencil, camera, streamingType);
+    radiation.sigma = sigma;
+
+    // Initial Data:
+    #pragma omp parallel for
+    for(size_t k=0; k<grid.nz; k++)
+    for(size_t j=0; j<grid.ny; j++)
+    for(size_t i=0; i<grid.nx; i++)
+    {
+        size_t ijk = grid.Index(i,j,k);
+        Coord xyz = grid.xyz(i,j,k);
+        double radius = xyz.EuklNorm();
+        double phi = xyz.Phi();
+
+        // Disk:
+        if(diskInner <= radius && radius <= diskOuter && abs(xyz[3]) < 0.9 * grid.dz)
+        {
+            radiation.isInitialGridPoint[ijk] = true;
+            radiation.initialNx[ijk] = 0;
+            radiation.initialNy[ijk] = 0;
+            radiation.initialNz[ijk] = 0;
+            radiation.initialKappa0[ijk] = 0;
+            radiation.initialKappa1[ijk] = 0;
+            radiation.initialKappaA[ijk] = 0;
+            radiation.initialEta[ijk] = 0;
+            radiation.initialE[ijk] = 1;
+        }
+    }
+    
+
+    // Get current time and date:
+    auto t = std::time(nullptr);
+    auto tm = *std::localtime(&t);
+    std::ostringstream oss;
+    oss << std::put_time(&tm, "%H.%M.%S - %d.%m.%Y");
+	string date = oss.str();
+
+    // Start simulation:
+    Config config =
+    {
+        .name = "Test_Radiation3ThinDiskE2_" + metric.Name() + "_" + stencil.name + "_"
+              + std::to_string(nx) + "x" + std::to_string(ny) + "y" + std::to_string(nz) + "z_"
+              + std::to_string(sigma) + "_" + StreamingName(streamingType) + "_" + comment,
+        .simTime = (double)simTime,
+        .writeFrequency = 50,
+        .updateSphericalHarmonics = false,
+        .keepSourceNodesActive = true,
+        .writeData = true,
+        .printToTerminal = false,
+        .useCamera = true
+    };
+    radiation.RunSimulation(config);
+}
+
 
 
 // Note:
@@ -484,38 +572,21 @@ void Test_Radiation3ThinDiskE(size_t nx, size_t ny, size_t nz, Stencil stencil, 
 // -fix bh rendering with dynamic stencil.
 int main(int argc, char *argv[])
 {
-    int n;
+    int n = 1;
     if(argc > 1)
         n = atoi(argv[1]);
         
     // Sphere Wave:
     // Test_Radiation3SphereWave(GaussLegendreStencil( 5), StreamingType::FlatStatic);
-    // Test_Radiation3SphereWave(LebedevStencil(11), StreamingType::FlatStatic);
-    // Test_Radiation3SphereWave(GaussLegendreStencil( 5), StreamingType::FlatDynamic);
-    // Test_Radiation3SphereWave(LebedevStencil(11), StreamingType::FlatDynamic);
-    // Test_Radiation3SphereWave(GaussLegendreStencil(15), StreamingType::FlatDynamic);
-    // Test_Radiation3SphereWave(LebedevStencil(35), StreamingType::FlatDynamic);
-
-    // Tests:
-    // Test_Radiation3SphereWave(GaussLegendreStencil( 5), StreamingType::FlatStatic);
-    // Test_Radiation3SphereWave(GaussLegendreStencil( 7), StreamingType::FlatStatic);
-    // Test_Radiation3SphereWave(GaussLegendreStencil( 9), StreamingType::FlatStatic);
     // Test_Radiation3SphereWave(GaussLegendreStencil(15), StreamingType::FlatStatic);
     // Test_Radiation3SphereWave(GaussLegendreStencil( 5), StreamingType::FlatDynamic);
-    // Test_Radiation3SphereWave(GaussLegendreStencil( 7), StreamingType::FlatDynamic);
-    // Test_Radiation3SphereWave(GaussLegendreStencil( 9), StreamingType::FlatDynamic);
     // Test_Radiation3SphereWave(GaussLegendreStencil(15), StreamingType::FlatDynamic);
     // Test_Radiation3SphereWave(LebedevStencil(11), StreamingType::FlatStatic);
-    // Test_Radiation3SphereWave(LebedevStencil(17), StreamingType::FlatStatic);
-    // Test_Radiation3SphereWave(LebedevStencil(21), StreamingType::FlatStatic);
     // Test_Radiation3SphereWave(LebedevStencil(35), StreamingType::FlatStatic);
     // Test_Radiation3SphereWave(LebedevStencil(11), StreamingType::FlatDynamic);
-    // Test_Radiation3SphereWave(LebedevStencil(17), StreamingType::FlatDynamic);
-    // Test_Radiation3SphereWave(LebedevStencil(21), StreamingType::FlatDynamic);
     // Test_Radiation3SphereWave(LebedevStencil(35), StreamingType::FlatDynamic);
 
-    // Test_Radiation3CurvedBeam(15*n+1,35*n+1,45*n+1, GaussLegendreStencil( 5), 100, 10, StreamingType::CurvedStatic, "");
-
+    // Thin Disk:
     // Test_Radiation3ThinDiskE(n*21+1,n*27+1,n*12+1,GaussLegendreStencil( 5),1,80, StreamingType::CurvedStatic, IntensityProfile::Uniform, "");
     // Test_Radiation3ThinDiskE(n*21+1,n*27+1,n*12+1,GaussLegendreStencil( 7),1,80, StreamingType::CurvedStatic, IntensityProfile::Uniform, "");
     // Test_Radiation3ThinDiskE(n*21+1,n*27+1,n*12+1,GaussLegendreStencil( 9),1,80, StreamingType::CurvedStatic, IntensityProfile::Uniform, "");
@@ -524,36 +595,36 @@ int main(int argc, char *argv[])
     // Test_Radiation3ThinDiskE(n*21+1,n*27+1,n*12+1,GaussLegendreStencil( 7),1,80, StreamingType::CurvedDynamic, IntensityProfile::Uniform, "");
     // Test_Radiation3ThinDiskE(n*21+1,n*27+1,n*12+1,GaussLegendreStencil( 9),1,80, StreamingType::CurvedDynamic, IntensityProfile::Uniform, "");
     // Test_Radiation3ThinDiskE(n*21+1,n*27+1,n*12+1,GaussLegendreStencil(15),1,80, StreamingType::CurvedDynamic, IntensityProfile::Uniform, "");
-    Test_Radiation3ThinDiskE(n*21+1,n*27+1,n*12+1,LebedevStencil(11),1,80, StreamingType::CurvedStatic, IntensityProfile::Uniform, "");
-    Test_Radiation3ThinDiskE(n*21+1,n*27+1,n*12+1,LebedevStencil(17),1,80, StreamingType::CurvedStatic, IntensityProfile::Uniform, "");
-    Test_Radiation3ThinDiskE(n*21+1,n*27+1,n*12+1,LebedevStencil(21),1,80, StreamingType::CurvedStatic, IntensityProfile::Uniform, "");
-    Test_Radiation3ThinDiskE(n*21+1,n*27+1,n*12+1,LebedevStencil(35),1,80, StreamingType::CurvedStatic, IntensityProfile::Uniform, "");
-    Test_Radiation3ThinDiskE(n*21+1,n*27+1,n*12+1,LebedevStencil(11),1,80, StreamingType::CurvedDynamic, IntensityProfile::Uniform, "");
-    Test_Radiation3ThinDiskE(n*21+1,n*27+1,n*12+1,LebedevStencil(17),1,80, StreamingType::CurvedDynamic, IntensityProfile::Uniform, "");
-    Test_Radiation3ThinDiskE(n*21+1,n*27+1,n*12+1,LebedevStencil(21),1,80, StreamingType::CurvedDynamic, IntensityProfile::Uniform, "");
-    Test_Radiation3ThinDiskE(n*21+1,n*27+1,n*12+1,LebedevStencil(35),1,80, StreamingType::CurvedDynamic, IntensityProfile::Uniform, "");
+    // Test_Radiation3ThinDiskE(n*21+1,n*27+1,n*12+1,LebedevStencil(11),1,80, StreamingType::CurvedStatic, IntensityProfile::Uniform, "");
+    // Test_Radiation3ThinDiskE(n*21+1,n*27+1,n*12+1,LebedevStencil(17),1,80, StreamingType::CurvedStatic, IntensityProfile::Uniform, "");
+    // Test_Radiation3ThinDiskE(n*21+1,n*27+1,n*12+1,LebedevStencil(21),1,80, StreamingType::CurvedStatic, IntensityProfile::Uniform, "");
+    // Test_Radiation3ThinDiskE(n*21+1,n*27+1,n*12+1,LebedevStencil(35),1,80, StreamingType::CurvedStatic, IntensityProfile::Uniform, "");
+    // Test_Radiation3ThinDiskE(n*21+1,n*27+1,n*12+1,LebedevStencil(11),1,80, StreamingType::CurvedDynamic, IntensityProfile::Uniform, "");
+    // Test_Radiation3ThinDiskE(n*21+1,n*27+1,n*12+1,LebedevStencil(17),1,80, StreamingType::CurvedDynamic, IntensityProfile::Uniform, "");
+    // Test_Radiation3ThinDiskE(n*21+1,n*27+1,n*12+1,LebedevStencil(21),1,80, StreamingType::CurvedDynamic, IntensityProfile::Uniform, "");
+    // Test_Radiation3ThinDiskE(n*21+1,n*27+1,n*12+1,LebedevStencil(35),1,80, StreamingType::CurvedDynamic, IntensityProfile::Uniform, "");
 
+    // Tests:
+    // Test_Radiation3ThinDiskE(n*21+1,n*27+1,n*12+1,LebedevStencil(35),1,80, StreamingType::FlatStatic, IntensityProfile::Uniform, "flat");
+    // Test_Radiation3ThinDiskE(n*21+1,n*27+1,n*12+1,LebedevStencil(35),1,80, StreamingType::FlatDynamic, IntensityProfile::Uniform, "");
+    // Test_Radiation3ThinDiskEotherCamera(n*15+1,n*19+1,n*13+1,LebedevStencil(35),1,80, StreamingType::CurvedStatic, "");
+
+    // Curved Beam:
+    // Test_Radiation3CurvedBeam(15*n+1,35*n+1,45*n+1,  LebedevStencil(35),  50, 10, StreamingType::CurvedStatic, "");
+    // Test_Radiation3CurvedBeam(15*n+1,35*n+1,45*n+1,  LebedevStencil(35), 100, 10, StreamingType::CurvedStatic, "");
+    // Test_Radiation3CurvedBeam(15*n+1,35*n+1,45*n+1,  LebedevStencil(35), 200, 10, StreamingType::CurvedStatic, "");
+    
+    Test_Radiation3CurvedBeam(15*n+1,35*n+1,45*n+1,  LebedevStencil(35),  50, 10, StreamingType::CurvedDynamic, "");
+    // Test_Radiation3CurvedBeam(15*n+1,35*n+1,45*n+1,  LebedevStencil(35), 100, 10, StreamingType::CurvedDynamic, "");
+    // Test_Radiation3CurvedBeam(15*n+1,35*n+1,45*n+1,  LebedevStencil(35), 200, 10, StreamingType::CurvedDynamic, "");
+
+
+    // High Res Runs:
+    // Test_Radiation3ThinDiskE(n*21+1,n*27+1,n*12+1,LebedevStencil(31),1,80, StreamingType::CurvedStatic, IntensityProfile::Uniform, "");
+    // Test_Radiation3ThinDiskE(n*21+1,n*27+1,n*12+1,LebedevStencil(35),1,80, StreamingType::CurvedStatic, IntensityProfile::Uniform, "");
 
     // Test_Radiation3SphereWave(GaussLegendreStencil(5), StreamingType::FlatDynamic);
     // Test_Radiation3SphereWave(LebedevStencil(15), StreamingType::FlatDynamic);
     // Test_Radiation3CurvedBeam(15*n+1,35*n+1,45*n+1,  35, 200, 10, StreamingType::CurvedDynamic, "lebedevStreaming");
     // Test_Radiation3ThinDiskE(n*21+1,n*27+1,n*12+1,  9, 1,80, StreamingType::CurvedDynamic  ,IntensityProfile::Uniform, "");
-    
-    // Test_Radiation3ThinDiskE(n*21+1,n*27+1,n*12+1,  17, 1,80, StreamingType::CurvedStatic  ,IntensityProfile::Uniform, "Ground0");
-    // Test_Radiation3ThinDiskE(n*21+1,n*27+1,n*12+1,  17, 1,80, StreamingType::CurvedDynamic  ,IntensityProfile::Uniform, "BruteForce");
-    // Test_Radiation3ThinDiskE(n*21+1,n*27+1,n*12+1,  17, 1,80, StreamingType::CurvedDynamic  ,IntensityProfile::Uniform, "minMaxDot");
-
-    
-    // Test_Radiation3ThinDiskE(n*21+1,n*27+1,n*12+1,  35, 1,80, StreamingType::CurvedDynamic  ,IntensityProfile::Uniform, "NearestDirection");
-
-    // Test_Radiation3ThinDiskE(n*21+1,n*27+1,n*12+1,  29, 1,80, StreamingType::CurvedStatic  ,IntensityProfile::Uniform, "BenchMarkStatic");
-    // Test_Radiation3ThinDiskE(n*21+1,n*27+1,n*12+1,  7, 1,80, StreamingType::CurvedDynamic  ,IntensityProfile::Uniform, "BenchMarkDynamic");
-    // Test_Radiation3ThinDiskE(n*21+1,n*27+1,n*12+1,  35, 1,80, StreamingType::CurvedStatic  ,IntensityProfile::Uniform, "BenchMarkStatic");
-    // Test_Radiation3ThinDiskE(n*21+1,n*27+1,n*12+1,  35, 1,80, StreamingType::CurvedDynamic  ,IntensityProfile::Uniform, "BenchMarkDynamic");
-
-
-    
-    // Test_Radiation3ThinDiskE(n*21+1,n*27+1,n*12+1,  35, 1,80, StreamingType::CurvedDynamic  ,IntensityProfile::Uniform, "");
-    // Visualization data:
-    // BlackHoleCsv();
 }

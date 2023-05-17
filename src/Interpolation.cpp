@@ -1,6 +1,6 @@
 #include "Interpolation.h"
 
-constexpr double epsilon = 1e-4;
+constexpr double epsilon = 1e-8;
 
 
 // x€[0,1], f0=f(x=0), f1=f(x=1).
@@ -211,14 +211,14 @@ const Vector3& v0, const Vector3& v1, const Vector3& v2, Vector3& weights)
 
     // Determine Barycentric Weights:
     double V = Vector3::Dot(normal, normal);
-    weights[0] = V0 / V;
-    weights[1] = V1 / V;
-    weights[2] = V2 / V;
+    weights[0] = std::max(0.0, V0/V);
+    weights[1] = std::max(0.0, V1/V);
+    weights[2] = std::max(0.0, V2/V);
 
     return true;
 }
 bool BarycentricWeights(const Tensor3& rayOrigin, const Tensor3& rayDirection,
-const Tensor3& v0, const Tensor3& v1, const Tensor3& v2, Tensor3& weights)
+const Tensor3& v0, const Tensor3& v1, const Tensor3& v2, Vector3& weights)
 {
     Tensor3 v01 = v1 - v0;
     Tensor3 v02 = v2 - v0;
@@ -259,9 +259,9 @@ const Tensor3& v0, const Tensor3& v1, const Tensor3& v2, Tensor3& weights)
 
     // Determine Barycentric Weights:
     double V = Tensor3::Dot(normal, normal);
-    weights[1] = V0 / V;
-    weights[2] = V1 / V;
-    weights[3] = V2 / V;
+    weights[0] = std::max(0.0, V0/V);
+    weights[1] = std::max(0.0, V1/V);
+    weights[2] = std::max(0.0, V2/V);
 
     return true;
 }

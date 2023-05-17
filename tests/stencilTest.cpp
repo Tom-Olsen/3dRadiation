@@ -8,17 +8,55 @@ using namespace std;
 
 void PrintStencilData(Stencil stencil)
 {
+    // Test Point:
+    double theta = 1.37;
+    double phi = 0.86;
+    Tensor3 p(MySin(theta)*MyCos(phi), MySin(theta)*MySin(phi), MyCos(theta));
+    // Tensor3 p(1,0,0);
+
     cout << "Stencil Data:" << endl;
     stencil.Print();
     cout << endl;
+
     cout << "Connected Triangles:" << endl;
-    stencil.connectedTriangles.Print();
+    for(int d=0; d<stencil.nDir; d++)
+        PrintList(stencil.TrianglesConnectedTo(d), to_string(d));
     cout << endl;
-    cout << "Connected Vertices Order 1:" << endl;
-    stencil.connectedVerticesOrder1.Print();
+
+    cout << "Voronoi Cells:" << endl;
+    for(int d=0; d<stencil.nDir; d++)
+        PrintList(stencil.VoronoiCellOf(d), to_string(d));
     cout << endl;
-    cout << "Connected Vertices Order 2:" << endl;
-    stencil.connectedVerticesOrder2.Print();
+
+    cout << "Voronoi Neighbours:" << endl;
+    for(int d=0; d<stencil.nDir; d++)
+        PrintList(stencil.VoronoiNeighbourOf(d), to_string(d));
+    cout << endl;
+    
+    // Change access modifier of Stencil::VirtualVoronoiCellOf to test this!
+    // double theta = 1.37;
+    // double phi = 0.86;
+    // Tensor3 p(MySin(theta)*MyCos(phi), MySin(theta)*MySin(phi), MyCos(theta));
+    // std::vector<size_t> naturalNeighbours;
+    // std::vector<Vector3> pointsInsideCell;
+    // cout << "Virtual Voronoi Cell:" << endl;
+    // cout << "p = " << p << endl;
+    // std::vector<Vector3> virtualCell = stencil.VirtualVoronoiCellOf(p, naturalNeighbours, pointsInsideCell);
+    // PrintList(virtualCell, "Virtual Cell");
+    // cout << endl;
+
+    cout << "Voronoi Weights and Supports:" << endl;
+    std::vector<size_t> naturalNeighbours;
+    std::vector<double> voronoiWeights = stencil.VoronoiWeights(p, naturalNeighbours);
+    PrintList(voronoiWeights, "weights");
+    PrintList(naturalNeighbours, "naturalNeighbours");
+    cout << endl;
+
+    cout << "Barycentric Weights and Support:" << endl;
+    Vector3Int triangle;
+    Vector3 BaryWeights = stencil.BarycentricWeights(p,triangle);
+    cout << "weights: " << BaryWeights << endl;
+    cout << "triangle: " << triangle << endl;
     cout << endl;
 }
 
@@ -33,7 +71,7 @@ void Quadrature(const Stencil& stencil)
     double* data = new double[stencil.nDir]();
     for(size_t d=0; d<stencil.nDir; d++)
     {
-        Tensor3 dir = stencil.C(d);
+        Tensor3 dir = stencil.Ct3(d);
         data[d] = 0;
         for(int k=0; k<stencil.nCoefficients; k++)
             data[d] += (k+1) * SphericalHarmonicsXyz::Y(k,dir);
@@ -49,7 +87,7 @@ void Quadrature(const Stencil& stencil)
 
     cout << "Real Value, Compressed Value:" << endl;
     size_t d = stencil.nDir/2;
-    cout << data[d] << ", " << SphericalHarmonicsXyz::GetValue(stencil.C(d),coefficients,stencil.nCoefficients) << endl << endl;
+    cout << data[d] << ", " << SphericalHarmonicsXyz::GetValue(stencil.Ct3(d),coefficients,stencil.nCoefficients) << endl << endl;
 }
 
 
@@ -84,7 +122,7 @@ void QuadratureRotated(const Stencil& stencil)
     double data[stencil.nDir];
     for(size_t d=0; d<stencil.nDir; d++)
     {
-        Tensor3 dir = q * stencil.C(d);
+        Tensor3 dir = q * stencil.Ct3(d);
         data[d] = 0;
         for(int k=0; k<stencil.nCoefficients; k++)
             data[d] += (k+1) * SphericalHarmonicsXyz::Y(k,dir);
@@ -97,7 +135,7 @@ void QuadratureRotated(const Stencil& stencil)
         coefficients[i] = 0;
     for(size_t d=0; d<stencil.nDir; d++)
     {
-        Tensor3 dir = q * stencil.C(d);
+        Tensor3 dir = q * stencil.Ct3(d);
         double x = dir[1];
         double y = dir[2];
         double z = dir[3];
@@ -113,61 +151,7 @@ void QuadratureRotated(const Stencil& stencil)
 
     cout << "Real Value, Compressed Value:" << endl;
     size_t d = stencil.nDir/2;
-    cout << data[d] << ", " << SphericalHarmonicsXyz::GetValue(q*stencil.C(d),coefficients,stencil.nCoefficients) << endl << endl;
-}
-
-
-
-void QuaternionRotation()
-{
-    using namespace glm;
-    {
-        vec3 from(0,0,1);
-        Tensor3 n = Tensor3(1,1,1).EuklNormalized();
-        vec3 to(n[1],n[2],n[3]);
-        quat q = quat(from, to);
-        quat qInv = quat(to, from);
-
-        GaussLegendreStencil stencil(15);
-
-        ofstream file0(OUTPUTDIR + "QuaternionRotationNormal.txt");
-        ofstream file1(OUTPUTDIR + "QuaternionRotationRotated.txt");
-        file0 << "x, y, z, color" << endl;
-        file1 << "x, y, z, color" << endl;
-        for(size_t d=0; d<stencil.nDir; d++)
-        {
-            Tensor3 p = stencil.C(d);
-            file0 << p[1] << ", " << p[2] << ", " << p[3] << ", " << 0 << endl;
-            p = q * p;
-            file1 << p[1] << ", " << p[2] << ", " << p[3] << ", " << 0 << endl;
-        }
-        file0.close();
-        file1.close();
-    }
-
-    {
-        vec3 from0(0,0,1);
-        Tensor3 n0 = Tensor3(-1,0,1).EuklNormalized();
-        vec3 to0(n0[1],n0[2],n0[3]);
-        quat q0 = quat(from0, to0);
-        
-        vec3 from1(0,0,1);
-        Tensor3 n1 = Tensor3(1,0,1).EuklNormalized();
-        vec3 to1(n1[1],n1[2],n1[3]);
-        quat q1 = quat(from1, to1);
-
-        Tensor3 vL0(0.70710678,0,0.70710678);
-        Tensor3 vW = q0 * vL0;
-        Tensor3 vL1 = Invert(q1) * vW;
-
-        vL0.Print("vL0");
-        vW.Print("vW");
-        vL1.Print("vL1");
-        cout << endl;
-    }
-    
-    cout << "2 files have been created in '" + OUTPUTDIR + "'. Plot them with ParaView (Filter:Table to Points)." << endl;
-    cout << endl;
+    cout << data[d] << ", " << SphericalHarmonicsXyz::GetValue(q*stencil.Ct3(d),coefficients,stencil.nCoefficients) << endl << endl;
 }
 
 
@@ -288,7 +272,7 @@ void ConvertStencilToUnityMesh(Stencil stencil, string name)
     vertices.reserve(stencil.nDir);
     for(int d=0; d<stencil.nDir; d++)
     {
-        Tensor3 c = stencil.C(d);
+        Tensor3 c = stencil.Ct3(d);
         Vector3 v(c[1],c[2],c[3]);
         vertices.push_back(v);
     }
@@ -301,114 +285,16 @@ void ConvertStencilToUnityMesh(Stencil stencil, string name)
 }
 
 
-void NearestNeighbourGrid(Stencil stencil)
-{
-    ofstream file0(OUTPUTDIR + "nearestNeighbourGrid0.txt");
-    ofstream file1(OUTPUTDIR + "nearestNeighbourGrid1.txt");
-    ofstream file2(OUTPUTDIR + "nearestNeighbourGrid2.txt");
-    file0 << "x, y, z, index\n";
-    file1 << "x, y, z, index\n";
-    file2 << "x, y, z, index\n";
-    for(int j=0; j<stencil.sphereGrid.nPh; j++)
-    for(int i=0; i<stencil.sphereGrid.nTh; i++)
-    {
-        Tensor3 c = stencil.sphereGrid.C(i,j);
-        file0 << c[1] << ", " << c[2] << ", " << c[3] << ", " << stencil.GetNeighbourIndex0(c) << "\n";
-        file1 << c[1] << ", " << c[2] << ", " << c[3] << ", " << stencil.GetNeighbourIndex1(c) << "\n";
-        file2 << c[1] << ", " << c[2] << ", " << c[3] << ", " << stencil.GetNeighbourIndex2(c) << "\n";
-    }
-    file0.close();
-    file1.close();
-    file2.close();
-    
-    cout << "3 files have been created in '" + OUTPUTDIR + "'. Plot them with ParaView (Filter:Table to Points)." << endl;
-}
-
-
-void NearestNeighbourGridLoop(Stencil stencil)
-{
-    cout << "Startint infinite loop and testing random directions. Stop on fail. Cancel yourself." << endl;
-    while(true)
-    {
-        // Random direction Vector:
-        Tensor3 n;
-        double norm = 2;
-        while(norm > 1)
-        {
-            n[1] = 2.0 * ((double) rand() / RAND_MAX) - 1.0;
-            n[2] = 2.0 * ((double) rand() / RAND_MAX) - 1.0;
-            n[3] = 2.0 * ((double) rand() / RAND_MAX) - 1.0;
-            norm = n.EuklNorm();
-        }
-        n = n.EuklNormalized();
-        n.Print("n");
-
-        // Nearest Vector via lookup:
-        size_t d0 = stencil.GetNeighbourIndex0(n);
-        size_t d1 = stencil.GetNeighbourIndex1(n);
-        size_t d2 = stencil.GetNeighbourIndex2(n);
-        cout << "d0: " << d0 << endl;
-        cout << "d1: " << d1 << endl;
-        cout << "d2: " << d2 << endl;
-        double dot0 = Tensor3::Dot(n,stencil.C(d0));
-        double dot1 = Tensor3::Dot(n,stencil.C(d1));
-        double dot2 = Tensor3::Dot(n,stencil.C(d2));
-        size_t d = -1;
-        if      (dot0 >= dot1 && dot0 >= dot2) d = d0;
-        else if (dot1 >= dot0 && dot1 >= dot2) d = d1;
-        else    d = d2;
-        cout << "d: " << d << endl;
-
-        // Nearest Vector via brute force:
-        size_t D;
-        double maxDot = -1;
-        for(size_t p=0; p<stencil.nDir; p++)
-        {
-            Tensor3 c = stencil.C(p);
-            double dot = Tensor3::Dot(n,c);
-            if(dot > maxDot)
-            {
-                maxDot = dot;
-                D = p;
-            }
-        }
-        cout << "D: " << D << endl;
-
-        // Comparison:
-        if(d != D)
-        {
-            size_t d0 = stencil.GetNeighbourIndex0(n);
-            size_t d1 = stencil.GetNeighbourIndex1(n);
-            size_t d2 = stencil.GetNeighbourIndex2(n);
-
-            std::cout << " D: " << D  << std::endl;
-            std::cout << " d: " << d  << std::endl;
-            std::cout << "d0: " << d0 << std::endl;
-            std::cout << "d1: " << d1 << std::endl;
-            std::cout << "d2: " << d2 << std::endl;
-            n.Print("n");
-            stencil.C(D) .Print("c(D)");
-            stencil.C(d) .Print("c(d)");
-            stencil.C(d0).Print("c(d0)");
-            stencil.C(d1).Print("c(d1)");
-            stencil.C(d2).Print("c(d2)");
-            std::cin.get();
-        }
-    }
-}
-
-
 
 int main()
 {
     // PrintStencilData(GaussLegendreStencil(5));
-    // PrintStencilData(LebedevStencil(9));
+    // PrintStencilData(LebedevStencil(3));
     // Quadrature(GaussLegendreStencil(7));
     // Quadrature(LebedevStencil(7));
     // Quadrature(GaussLegendreStencil(35));
     // Quadrature(LebedevStencil(47));
     // QuadratureRotated(LebedevStencil(7));
-    // QuaternionRotation();
     // HarmonicsBenchmark();
 
     // for(int i=3; i<32; i+=2)
@@ -418,7 +304,4 @@ int main()
     // ConvertStencilToUnityMesh(LebedevStencil(47),"LebedevStencil");
     // for(int i=3; i<36; i+=2)
         // ConvertStencilToUnityMesh(GaussLegendreStencil(i),"GaussLegendreStencil");
-
-    // NearestNeighbourGrid(LebedevStencil(5));
-    // NearestNeighbourGridLoop(LebedevStencil(11));
 }

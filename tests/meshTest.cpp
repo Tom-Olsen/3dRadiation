@@ -30,11 +30,7 @@ void ConvexHullStencil()
         vertices.reserve(stencil.nDir);
 
         for(int d=0; d<stencil.nDir; d++)
-        {
-            Tensor3 c = stencil.C(d);
-            Vector3 v(c[1],c[2],c[3]);
-            vertices.push_back(v);
-        }
+            vertices.push_back(stencil.Cv3(d));
         
         ConvexHull convexHull(vertices);
         Mesh mesh = convexHull.GetMesh();

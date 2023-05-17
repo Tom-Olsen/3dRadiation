@@ -1,7 +1,7 @@
 #ifndef __INCLUDE_GUARD_Radiation3_h__
 #define __INCLUDE_GUARD_Radiation3_h__
 #include "GeodesicEquationSolver.h" // Solves geodesic equation, given xyz coordinates, LF 3 velocity, and metric.
-#include "TensorOperations.h"       // More specific tensor operations, nullNormalize etc.
+#include "AdvancedMath.h"           // More specific tensor operations, nullNormalize etc.
 #include "SphereGrid.h"             // Helps interpolation on sphere.
 #include "SphericalHarmonics.h"     // Real spherical harmonic functions and expansion.
 #include "Log.hh"                   // log final results.
@@ -80,9 +80,9 @@ public:
 
 	size_t HarmonicIndex(size_t f, size_t ijk);
 
-	Coord GetTempCoordinate(size_t ijk, Tensor3 direction);
-	Tensor3 GetTemp3VelocityIF(size_t ijk, Tensor3 direction);
-	double GetFrequencyShift(size_t ijk, Tensor3 direction);
+	Coord GetTempCoordinate(size_t ijk, const Tensor3& direction);
+	Tensor3 GetTemp3VelocityIF(size_t ijk, const Tensor3& direction);
+	double GetFrequencyShift(size_t ijk, const Tensor3& direction);
 	size_t GetNearestDirectionIndex(const Tensor3& v);
 	double IntensityAt(size_t ijk, Tensor3 vTempIF);
 	Tensor3 AverageF(size_t i, size_t j, size_t k);

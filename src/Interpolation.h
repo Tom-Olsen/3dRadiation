@@ -60,7 +60,7 @@ const Tensor3& v0, const Tensor3& v1, const Tensor3& v2, Tensor3& intersectionPo
 bool BarycentricWeights(const Vector3& rayOrigin, const Vector3& rayDirection,
 const Vector3& v0, const Vector3& v1, const Vector3& v2, Vector3& weights);
 bool BarycentricWeights(const Tensor3& rayOrigin, const Tensor3& rayDirection,
-const Tensor3& v0, const Tensor3& v1, const Tensor3& v2, Tensor3& weights);
+const Tensor3& v0, const Tensor3& v1, const Tensor3& v2, Vector3& weights);
 
 
 

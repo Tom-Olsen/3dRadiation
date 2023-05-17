@@ -2,10 +2,13 @@
 #define __INCLUDE_GUARD_Stencil_h__
 #include <vector>
 #include <set>
+#include <span>
 #include "Utility.hh"
 #include "TensorTypes.hh"
 #include "ConvexHull.h"
+#include "Interpolation.h"
 #include "SphereGrid.h"
+#include "AdvancedMath.h"
 
 
 
@@ -16,7 +19,7 @@
 // theta = pi => South Pole
 // (th,phi) = (pi/2,    0) => (x,y,z) = ( 1, 0, 0)
 // (th,phi) = (pi/2, pi/2) => (x,y,z) = ( 0, 1, 0)
-// (th,phi) = (pi/2,   pi) => (x,y,z) = (-1, 1, 0)
+// (th,phi) = (pi/2,   pi) => (x,y,z) = (-1, 0, 0)
 // (th,phi) = (pi/2,3pi/2) => (x,y,z) = ( 0,-1, 0)
 // (th,phi) = (pi/2,  2pi) => (x,y,z) = ( 1, 0, 0)
 
@@ -25,49 +28,72 @@
 // Base Stencil class. This functionality is supported by all stencils.
 struct Stencil
 {
-public:
-    std::string name;
-    size_t nDir;                        // Number of directions in stencil.
-    size_t nOrder;                      // Quadrature integration.
-    size_t nCoefficients;               // Number of exact Spherical Harmonics, counted with flat index i = l * (l + 1) + m.
-    // List of lists of all triangles that are connected to one direction vector c.
-    UnstructuredMatrix<Vector3Int> connectedTriangles;
-    UnstructuredMatrix<size_t> connectedVerticesOrder1;
-    UnstructuredMatrix<size_t> connectedVerticesOrder2;
+public: // Public Properties:
+    std::string name;       // Name of the stencel, e.g. "Lebedev9"
+    size_t nDir;            // Number of directions in stencil.
+    size_t nOrder;          // Quadrature integration.
+    size_t nCoefficients;   // Number of exact Spherical Harmonics, counted with flat index i = l * (l + 1) + m.
+    Mesh mesh;
     SphereGrid sphereGrid;
-protected:
+private:
+    int sphereGridRes = 1000;
+
+protected: // Internal Buffers on directions:
     RealBuffer w;
     RealBuffer cx;
     RealBuffer cy;
     RealBuffer cz;
     RealBuffer theta;
     RealBuffer phi;
-    SizeTBuffer neighbour0;
-    SizeTBuffer neighbour1;
-    SizeTBuffer neighbour2;
+    
+    UnstructuredMatrix<Vector3Int> connectedTriangles;
+    UnstructuredMatrix<Vector3> voronoiCells;
+    UnstructuredMatrix<size_t> voronoiNeighbours;
+
+protected: // Internal Buffers on sphereGrid:
+    SizeTBuffer neighbour0OnGrid;
+    SizeTBuffer neighbour1OnGrid;
+    SizeTBuffer neighbour2OnGrid;
+public: // Internal Buffers on sphereGrid:
+    UnstructuredMatrix<size_t> voronoiNeighboursOnGrid;
+    UnstructuredMatrix<double> voronoiWeightsOnGrid;
+
+public: // Getters:
+    double W(size_t d) const;
+    double Cx(size_t d) const;
+    double Cy(size_t d) const;
+    double Cz(size_t d) const;
+    double Theta(size_t d) const;
+    double Phi(size_t d) const;
+    Tensor3 Ct3(size_t d) const;
+    Vector3 Cv3(size_t d) const;
+
+    size_t NearestNeighbour(const Tensor3& p) const;
+    std::span<const Vector3Int> TrianglesConnectedTo(size_t d) const;
+    std::span<const Vector3> VoronoiCellOf(size_t d) const;
+    std::span<const size_t> VoronoiNeighbourOf(size_t d) const;
+
+    Vector3 BarycentricWeights(const Tensor3& p, Vector3Int& triangle) const;
+    std::vector<double> VoronoiWeights(const Tensor3& p, std::vector<size_t>& naturalNeighbours) const;
+
 protected:
+    std::vector<Vector3> VirtualVoronoiCellOf
+    (const Tensor3& p, std::vector<size_t>& naturalNeighbours, std::vector<Vector3>& pointsInsideCell) const;
+    std::vector<double> VoronoiWeights
+    (const std::vector<Vector3>& virtualCell, const std::vector<size_t>& naturalNeighbours, const std::vector<Vector3>& pointsInsideCell) const;
+
+protected: // Initialization:
     void SetCoefficientCount();
     void AllocateBuffers();
     void SortDirections();
+    void InitializeMesh();
     void InitializeConnectedTriangles();
-    void InitializeConnectedVertices();
-    void InitializeNearestNeighbourGrid();
-public:
-    virtual double W(size_t d) const;
-    virtual double Theta(size_t d) const;
-    virtual double Phi(size_t d) const;
-    virtual double Cx(size_t d) const;
-    virtual double Cy(size_t d) const;
-    virtual double Cz(size_t d) const;
-    virtual Tensor3 C(size_t d) const;
+    void InitializeVoronoiCells();
+    void InitializeVoronoiNeighbours();
+    void InitializeNearestNeighbourOnGrid();
+    void InitializeVoronoiInterpolationOnGrid();
 
-    size_t GetNeighbourIndex0(const Tensor3& p);
-    size_t GetNeighbourIndex1(const Tensor3& p);
-    size_t GetNeighbourIndex2(const Tensor3& p);
-    Tensor3 GetNeighbour0(const Tensor3& p);
-    Tensor3 GetNeighbour1(const Tensor3& p);
-    Tensor3 GetNeighbour2(const Tensor3& p);
-
+public: // Debugging:
     void Print() const;
 };
 

@@ -19,7 +19,8 @@ public:
     int vertexCount;
 
     // Constructors:
-    Mesh(Vector3* m_vertices, int vertexCount, Vector3Int* m_triangles, int triangleCount);
+    Mesh();
+    Mesh(Vector3* vertices, int vertexCount, Vector3Int* triangles, int triangleCount);
     Mesh(std::vector<Vector3> vertices, std::vector<Vector3Int> triangles);
 
     // Getters:
