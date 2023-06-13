@@ -13,14 +13,15 @@ double Dnu(const double nu, const Coord& x, const Tensor3& v, Metric& metric)
     {
         dnu -= v[i] * dl_alpha[i];
         for(int j=1; j<4; j++)
-            dnu += alpha * K_ll[{i,j}] * v[i]*v[j];
+            dnu += alpha * K_ll[{i,j}] * v[i] * v[j];
     }
     dnu *= nu;
     return dnu;
 }
 Tensor3 Dx(const Coord& x, const Tensor3& v, Metric& metric)
 {
-    // Vincent, Gourgoulhon, Novak 2012     evolves 3 velocity measured by eulerian observer v^mu, p^mu = nu(n^mu+v^mu)
+    // Vincent, Gourgoulhon, Novak 2012
+    // evolves 3 velocity measured by eulerian observer v^mu, p^mu = nu(n^mu+v^mu)
     double alpha = metric.GetAlpha(x);
     Tensor3 beta_u = metric.GetBeta_u(x);
     Tensor3 dx(0.0);
@@ -30,7 +31,8 @@ Tensor3 Dx(const Coord& x, const Tensor3& v, Metric& metric)
 }
 Tensor3 Dv(const Coord& x, const Tensor3& v, Metric& metric)
 {
-    // Vincent, Gourgoulhon, Novak 2012     evolves 3 velocity measured by eulerian observer v^mu, p^mu = nu(n^mu+v^mu)
+    // Vincent, Gourgoulhon, Novak 2012
+    // evolves 3 velocity measured by eulerian observer v^mu, p^mu = nu(n^mu+v^mu)
     double alpha = metric.GetAlpha(x);
     Tensor3 dl_Alpha = metric.GetDerivAlpha_l(x);
     Tensor3x3 dl_Beta_u = metric.GetDerivBeta_lu(x);
@@ -189,5 +191,5 @@ double RK45_GeodesicEquation(double dt, Coord& x, Tensor3& v, Metric& metric)
 
 template double Euler_GeodesicEquation< 1>(double dt, Coord& x, Tensor3& v, Metric& metric);
 template double Euler_GeodesicEquation<-1>(double dt, Coord& x, Tensor3& v, Metric& metric);
-template double RK45_GeodesicEquation< 1>(double dt, Coord& x, Tensor3& v, Metric& metric);
-template double RK45_GeodesicEquation<-1>(double dt, Coord& x, Tensor3& v, Metric& metric);
+template double RK45_GeodesicEquation < 1>(double dt, Coord& x, Tensor3& v, Metric& metric);
+template double RK45_GeodesicEquation <-1>(double dt, Coord& x, Tensor3& v, Metric& metric);

@@ -4,7 +4,7 @@
 #include <vector>           // Basic vector.
 #include "Utility.hh"       // Utility functions.
 #include "Stencil.h"        // Velocity stencil.
-#include "TensorTypes.hh"   // General relativity tensors.
+#include "DataTypes.hh"     // General relativity tensors.
 
 
 
@@ -59,9 +59,9 @@ public:
     // Spherical Harmonics Expansion:
     static std::vector<double> GetCoefficients(const Stencil& stencil, const double* data);
     static void GetCoefficients(const Stencil& stencil, const double* data, double* coefficients);
-    static double GetValue(double x, double y, double z, const std::vector<double>& coefficients, size_t nCoefficients);
+    static double GetValue(double x, double y, double z, const std::vector<double>& coefficients);
     static double GetValue(double x, double y, double z, double* coefficients, size_t nCoefficients);
-    static double GetValue(const Tensor3& direction, const std::vector<double>& coefficients, size_t nCoefficients);
+    static double GetValue(const Tensor3& direction, const std::vector<double>& coefficients);
     static double GetValue(const Tensor3& direction, double* coefficients, size_t nCoefficients);
 };
 #endif //__INCLUDE_GUARD_SphericalHarmonics_h__

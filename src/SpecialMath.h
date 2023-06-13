@@ -1,9 +1,9 @@
-#ifndef __INCLUDE_GUARD_AdvancedMath_h__
-#define __INCLUDE_GUARD_AdvancedMath_h__
+#ifndef __INCLUDE_GUARD_SpecialMath_h__
+#define __INCLUDE_GUARD_SpecialMath_h__
 #include <vector>                       // std::vector<T>
 #include <algorithm>                    // sort
 #include "glm/glm/gtc/quaternion.hpp"   // Quaternions.
-#include "TensorTypes.hh"               // General relativity tensors.
+#include "DataTypes.hh"                 // General relativity tensors.
 #include "Spacetimes.h"                 // Metric data.
 #include "Vector2.h"                    // double Vector2 type.
 #include "Vector3.h"                    // double Vector3 type.
@@ -32,4 +32,4 @@ bool RayPlaneIntersection(const Vector3& p0, const Vector3& d, const Vector3& p1
 std::vector<Vector3> SortPointsOnSphereAroundCenter(const std::vector<Vector3>& points);
 
 double SphericalTriangleArea(const Vector3& a,const Vector3& b,const Vector3& c, double radius = 1.0);
-#endif //__INCLUDE_GUARD_AdvancedMath_h__
+#endif //__INCLUDE_GUARD_SpecialMath_h__

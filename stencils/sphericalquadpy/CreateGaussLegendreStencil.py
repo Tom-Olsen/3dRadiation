@@ -52,7 +52,7 @@ def WriteGaussLegendreStencilToFile(order):
         phi.append(ph)
         
     with open("../GaussLegendreStencil/GaussLegendreStencil" + str(order), "w") as f:
-        f.write(f"nDir = {len(weights)};\n")
+        f.write(f"this->nDir = {len(weights)} + this->nGhost;\n")
         f.write(f"AllocateBuffers();\n")
         for i in range(len(weights)):
             f.write(f"w[{i:>3}] = {weights[i]: .60f}; ")

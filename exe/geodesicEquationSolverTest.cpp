@@ -1,6 +1,6 @@
 #include <iostream>
 #include "../src/GeodesicEquationSolver.h"
-#include "../src/AdvancedMath.h"
+#include "../src/SpecialMath.h"
 using namespace std;
 
 
@@ -28,7 +28,7 @@ int main()
         Coord x(start[1] + (i+0.5) * (end[1] - start[1]) / n, start[2] + (j+0.5) * (end[2] - start[2]) / n, start[3]);
         Tensor4x4 g_ll = metric.GetMetric_ll(x);
         Tensor3x3 gamma_ll = metric.GetGamma_ll(x);
-        Tensor3x3 delta_ll(1,0,0, 0,1,0, 0,0,1);
+        Tensor3x3 delta_ll = metric.GetMinkowskiGamma_ll(x);
 
         Tensor4 uLF(1,0,0,1);
         uLF = NullNormalize(uLF, g_ll);

@@ -1,6 +1,6 @@
 #include <iostream>
 #include "Utility.hh"
-#include "TensorTypes.hh"
+#include "DataTypes.hh"
 #include "glm/glm/gtc/quaternion.hpp"
 
 

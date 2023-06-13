@@ -2,6 +2,36 @@
 
 
 
+// -------------------------- InterpolationGrid --------------------------
+InterpolationGrid::InterpolationGrid(size_t nTh, size_t nPh) : nTh(nTh), nPh(nPh), nDir(nTh*nPh) {}
+
+double InterpolationGrid::Theta(size_t i) const
+// { return M_PI * (i + 0.5) / (double)nTh; }
+{ return M_PI * i / (nTh - 1.0); }
+
+double InterpolationGrid::Phi(size_t j) const
+{ return 2.0 * M_PI * j / (double)nPh; }
+
+double InterpolationGrid::i(double theta) const
+// { return nTh * theta / M_PI - 0.5; }
+{ return (nTh - 1.0) * theta / M_PI; }
+
+double InterpolationGrid::j(double phi) const
+{ return nPh * phi / (2.0 * M_PI); }
+
+size_t InterpolationGrid::Index(size_t i, size_t j) const
+{ return i + j * nTh; }
+
+Tensor3 InterpolationGrid::C(size_t i, size_t j) const
+{
+    double theta = Theta(i);
+    double phi = Phi(j);
+    return Tensor3(MySin(theta) * MyCos(phi), MySin(theta) * MySin(phi), MyCos(theta));
+}
+// -----------------------------------------------------------------------
+
+
+
 // ------------------------------- Stencil -------------------------------
 double Stencil::W(size_t d) const
 { return w[d]; }
@@ -22,12 +52,12 @@ Vector3 Stencil::Cv3(size_t d) const
 
 size_t Stencil::NearestNeighbour(const Tensor3& p) const
 {
-    size_t i = std::round(sphereGrid.i(p.Theta()));
-    size_t j = ((int)std::round(sphereGrid.j(p.Phi())) + sphereGrid.nPh) % sphereGrid.nPh;
+    size_t i = std::round(interpolationGrid.i(p.Theta()));
+    size_t j = ((int)std::round(interpolationGrid.j(p.Phi())) + interpolationGrid.nPh) % interpolationGrid.nPh;
 
-    size_t d0 = neighbour0OnGrid[sphereGrid.Index(i,j)];
-    size_t d1 = neighbour1OnGrid[sphereGrid.Index(i,j)];
-    size_t d2 = neighbour2OnGrid[sphereGrid.Index(i,j)];
+    size_t d0 = neighbour0OnGrid[interpolationGrid.Index(i,j)];
+    size_t d1 = neighbour1OnGrid[interpolationGrid.Index(i,j)];
+    size_t d2 = neighbour2OnGrid[interpolationGrid.Index(i,j)];
     double dot0 = Tensor3::Dot(p,Ct3(d0));
     double dot1 = Tensor3::Dot(p,Ct3(d1));
     double dot2 = Tensor3::Dot(p,Ct3(d2));
@@ -217,8 +247,6 @@ std::vector<Vector3> Stencil::VirtualVoronoiCellOf
 
 
 
-void Stencil::SetCoefficientCount()
-{ nCoefficients = IntegerPow<2>((nOrder + 1) / 2); }
 void Stencil::AllocateBuffers()
 {
     w.resize(nDir);
@@ -227,9 +255,27 @@ void Stencil::AllocateBuffers()
     cz.resize(nDir);
     theta.resize(nDir);
     phi.resize(nDir);
-    neighbour0OnGrid.resize(sphereGridRes * 2 * sphereGridRes);
-    neighbour1OnGrid.resize(sphereGridRes * 2 * sphereGridRes);
-    neighbour2OnGrid.resize(sphereGridRes * 2 * sphereGridRes);
+    neighbour0OnGrid.resize(interpolationGridRes * 2 * interpolationGridRes);
+    neighbour1OnGrid.resize(interpolationGridRes * 2 * interpolationGridRes);
+    neighbour2OnGrid.resize(interpolationGridRes * 2 * interpolationGridRes);
+}
+void Stencil::AddGhostDirections()
+{
+    size_t index = nDir - nGhost;
+    for (size_t i = 0; i < nRings; i++)
+    {
+        double ringTheta = thetaGhost * (i + 0.5) / nRings;
+        for (size_t j = 0; j < nRing0 * (i + 1); j++)
+        {
+            w[index] = 0.0;
+            theta[index] = ringTheta;
+            phi[index] = 2.0 * M_PI * j / (nRing0 * (i + 1.0));
+            cx[index] = MySin(theta[index]) * MyCos(phi[index]);
+            cy[index] = MySin(theta[index]) * MySin(phi[index]);
+            cz[index] = MyCos(theta[index]);
+            index++;
+        }
+    }
 }
 void Stencil::SortDirections()
 {
@@ -237,7 +283,7 @@ void Stencil::SortDirections()
     for(size_t i = 0; i < nDir; i++)
         index[i] = i;
 
-    // sort index array based on custom compare function
+    // Sort index array based on custom compare function:
     std::sort(index, index + nDir, [this](size_t i, size_t j)
     {
         if(theta[i] != theta[j])
@@ -246,7 +292,7 @@ void Stencil::SortDirections()
             return phi[i] < phi[j];
     });
 
-    // create temporary arrays to hold sorted values
+    // Create temporary arrays to hold sorted values:
     double sorted_w[nDir];
     double sorted_cx[nDir];
     double sorted_cy[nDir];
@@ -254,7 +300,7 @@ void Stencil::SortDirections()
     double sorted_theta[nDir];
     double sorted_phi[nDir];
 
-    // copy values from original arrays to temporary arrays
+    // Copy values from original arrays to temporary arrays:
     for(size_t i = 0; i < nDir; i++)
     {
         sorted_w[i] = w[index[i]];
@@ -265,7 +311,7 @@ void Stencil::SortDirections()
         sorted_phi[i] = phi[index[i]];
     }
 
-    // overwrite original arrays with sorted values
+    // Overwrite original arrays with sorted values:
     for(size_t i = 0; i < nDir; i++)
     {
         w[i] = sorted_w[i];
@@ -365,12 +411,12 @@ void Stencil::InitializeVoronoiNeighbours()
 }
 void Stencil::InitializeNearestNeighbourOnGrid()
 {
-    sphereGrid = SphereGrid(sphereGridRes, 2 * sphereGridRes);
+    interpolationGrid = InterpolationGrid(interpolationGridRes, 2 * interpolationGridRes);
     PARALLEL_FOR(2)
-    for(size_t j=0; j<sphereGrid.nPh; j++)
-    for(size_t i=0; i<sphereGrid.nTh; i++)
+    for(size_t j=0; j<interpolationGrid.nPh; j++)
+    for(size_t i=0; i<interpolationGrid.nTh; i++)
     {
-        Tensor3 c = sphereGrid.C(i,j);
+        Tensor3 c = interpolationGrid.C(i,j);
         double dot0 = -1;
         double dot1 = -1;
         double dot2 = -1;
@@ -402,17 +448,17 @@ void Stencil::InitializeNearestNeighbourOnGrid()
                 index2 = d;
             }
         }
-        neighbour0OnGrid[sphereGrid.Index(i,j)] = index0;
-        neighbour1OnGrid[sphereGrid.Index(i,j)] = index1;
-        neighbour2OnGrid[sphereGrid.Index(i,j)] = index2;
+        neighbour0OnGrid[interpolationGrid.Index(i,j)] = index0;
+        neighbour1OnGrid[interpolationGrid.Index(i,j)] = index1;
+        neighbour2OnGrid[interpolationGrid.Index(i,j)] = index2;
     }
 }
 void Stencil::InitializeVoronoiInterpolationOnGrid()
 {
-    for(size_t j=0; j<sphereGrid.nPh; j++)
-    for(size_t i=0; i<sphereGrid.nTh; i++)
+    for(size_t j=0; j<interpolationGrid.nPh; j++)
+    for(size_t i=0; i<interpolationGrid.nTh; i++)
     {
-        Tensor3 c = sphereGrid.C(i,j);
+        Tensor3 c = interpolationGrid.C(i,j);
         std::vector<size_t> neighbours;
         std::vector<double> weights = VoronoiWeights(c,neighbours);
         voronoiNeighboursOnGrid.AddRow(neighbours);
@@ -424,6 +470,7 @@ void Stencil::InitializeVoronoiInterpolationOnGrid()
 
 void Stencil::Print() const
 {
+    std::cout << name << ":\n";
     std::cout << "        d,\t        w,\t    theta,\t      phi,\t       cx,\t       cy,\t       cz\n";
     for(size_t d=0; d<nDir; d++)
     {
@@ -437,73 +484,79 @@ void Stencil::Print() const
 
 
 // -------------------------- LebedevStencil ---------------------------
-LebedevStencil::LebedevStencil(size_t nOrder)
+LebedevStencil::LebedevStencil(size_t nOrder, size_t nRings, size_t nRing0, double thetaGhost)
 {
-    name = "Lebedev" + std::to_string(nOrder);
+    this->name = "Lebedev" + std::to_string(nOrder) + "." + std::to_string(nRings) + "." + std::to_string(nRing0) + "_" + FormatNoSignSpace(thetaGhost / M_PI, 3) + "pi";
     this->nOrder = nOrder;
-    SetCoefficientCount();
+    this->nCoefficients = IntegerPow<2>((nOrder + 1) / 2);
+    this->nRings = nRings;
+    this->nRing0 = nRing0;
+    this->nGhost = nRing0 * nRings * (nRings + 1) / 2;
+    this->thetaGhost = thetaGhost;
+
 
     switch (nOrder)
     {
         case  3:
-                 #include "../stencils/LebedevStencil/LebedevStencil3" 
-                 break;
+            #include "../stencils/LebedevStencil/LebedevStencil3" 
+            break;
         case  5:
-                 #include "../stencils/LebedevStencil/LebedevStencil5" 
-                 break;
+            #include "../stencils/LebedevStencil/LebedevStencil5" 
+            break;
         case  7:
-                 #include "../stencils/LebedevStencil/LebedevStencil7" 
-                 break;
+            #include "../stencils/LebedevStencil/LebedevStencil7" 
+            break;
         case  9:
-                 #include "../stencils/LebedevStencil/LebedevStencil9" 
-                 break;
+            #include "../stencils/LebedevStencil/LebedevStencil9" 
+            break;
         case 11:
-                 #include "../stencils/LebedevStencil/LebedevStencil11"
-                 break;
+            #include "../stencils/LebedevStencil/LebedevStencil11"
+            break;
         case 13:
-                 #include "../stencils/LebedevStencil/LebedevStencil13"
-                 break;
+            #include "../stencils/LebedevStencil/LebedevStencil13"
+            break;
         case 15:
-                 #include "../stencils/LebedevStencil/LebedevStencil15"
-                 break;
+            #include "../stencils/LebedevStencil/LebedevStencil15"
+            break;
         case 17:
-                 #include "../stencils/LebedevStencil/LebedevStencil17"
-                 break;
+            #include "../stencils/LebedevStencil/LebedevStencil17"
+            break;
         case 19:
-                 #include "../stencils/LebedevStencil/LebedevStencil19"
-                 break;
+            #include "../stencils/LebedevStencil/LebedevStencil19"
+            break;
         case 21:
-                 #include "../stencils/LebedevStencil/LebedevStencil21"
-                 break;
+            #include "../stencils/LebedevStencil/LebedevStencil21"
+            break;
         case 23:
-                 #include "../stencils/LebedevStencil/LebedevStencil23"
-                 break;
+            #include "../stencils/LebedevStencil/LebedevStencil23"
+            break;
         case 25:
-                 #include "../stencils/LebedevStencil/LebedevStencil25"
-                 break;
+            #include "../stencils/LebedevStencil/LebedevStencil25"
+            break;
         case 27:
-                 #include "../stencils/LebedevStencil/LebedevStencil27"
-                 break;
+            #include "../stencils/LebedevStencil/LebedevStencil27"
+            break;
         case 29:
-                 #include "../stencils/LebedevStencil/LebedevStencil29"
-                 break;
+            #include "../stencils/LebedevStencil/LebedevStencil29"
+            break;
         case 31:
-                 #include "../stencils/LebedevStencil/LebedevStencil31"
-                 break;
+            #include "../stencils/LebedevStencil/LebedevStencil31"
+            break;
         case 35:
-                 #include "../stencils/LebedevStencil/LebedevStencil35"
-                 break;
+            #include "../stencils/LebedevStencil/LebedevStencil35"
+            break;
         case 41:
-                 #include "../stencils/LebedevStencil/LebedevStencil41"
-                 break;
+            #include "../stencils/LebedevStencil/LebedevStencil41"
+            break;
         case 47:
-                 #include "../stencils/LebedevStencil/LebedevStencil47"
-                 break;
+            #include "../stencils/LebedevStencil/LebedevStencil47"
+            break;
         default:
-            ExitOnError("Invalid LebedevStencil nOrder. See stencil/LebedevStencil for valid orders.");
+            ExitOnError("LebedevStencil nOrder=" + std::to_string(nOrder) + " invalid. See stencil/LebedevStencil for valid orders.");
             break;
     }
     
+    AddGhostDirections();
     SortDirections();
     InitializeMesh();
     InitializeConnectedTriangles();
@@ -519,65 +572,69 @@ LebedevStencil::LebedevStencil(size_t nOrder)
 // ----------------------- GaussLegendreStencil ------------------------
 GaussLegendreStencil::GaussLegendreStencil(size_t nOrder)
 {
-    name = "GaussLegendre" + std::to_string(nOrder);
+    this->name = "GaussLegendre" + std::to_string(nOrder);
     this->nOrder = nOrder;
-    SetCoefficientCount();
+    this->nCoefficients = IntegerPow<2>((nOrder + 1) / 2);
+    this->nRings = 0;
+    this->nRing0 = 0;
+    this->nGhost = 0;
+    this->thetaGhost = 0;
 
     switch (nOrder)
     {
         case  3:
-                 #include "../stencils/GaussLegendreStencil/GaussLegendreStencil3" 
-                 break;
+            #include "../stencils/GaussLegendreStencil/GaussLegendreStencil3" 
+            break;
         case  5:
-                 #include "../stencils/GaussLegendreStencil/GaussLegendreStencil5" 
-                 break;
+            #include "../stencils/GaussLegendreStencil/GaussLegendreStencil5" 
+            break;
         case  7:
-                 #include "../stencils/GaussLegendreStencil/GaussLegendreStencil7" 
-                 break;
+            #include "../stencils/GaussLegendreStencil/GaussLegendreStencil7" 
+            break;
         case  9:
-                 #include "../stencils/GaussLegendreStencil/GaussLegendreStencil9" 
-                 break;
+            #include "../stencils/GaussLegendreStencil/GaussLegendreStencil9" 
+            break;
         case 11:
-                 #include "../stencils/GaussLegendreStencil/GaussLegendreStencil11"
-                 break;
+            #include "../stencils/GaussLegendreStencil/GaussLegendreStencil11"
+            break;
         case 13:
-                 #include "../stencils/GaussLegendreStencil/GaussLegendreStencil13"
-                 break;
+            #include "../stencils/GaussLegendreStencil/GaussLegendreStencil13"
+            break;
         case 15:
-                 #include "../stencils/GaussLegendreStencil/GaussLegendreStencil15"
-                 break;
+            #include "../stencils/GaussLegendreStencil/GaussLegendreStencil15"
+            break;
         case 17:
-                 #include "../stencils/GaussLegendreStencil/GaussLegendreStencil17"
-                 break;
+            #include "../stencils/GaussLegendreStencil/GaussLegendreStencil17"
+            break;
         case 19:
-                 #include "../stencils/GaussLegendreStencil/GaussLegendreStencil19"
-                 break;
+            #include "../stencils/GaussLegendreStencil/GaussLegendreStencil19"
+            break;
         case 21:
-                 #include "../stencils/GaussLegendreStencil/GaussLegendreStencil21"
-                 break;
+            #include "../stencils/GaussLegendreStencil/GaussLegendreStencil21"
+            break;
         case 23:
-                 #include "../stencils/GaussLegendreStencil/GaussLegendreStencil23"
-                 break;
+            #include "../stencils/GaussLegendreStencil/GaussLegendreStencil23"
+            break;
         case 25:
-                 #include "../stencils/GaussLegendreStencil/GaussLegendreStencil25"
-                 break;
+            #include "../stencils/GaussLegendreStencil/GaussLegendreStencil25"
+            break;
         case 27:
-                 #include "../stencils/GaussLegendreStencil/GaussLegendreStencil27"
-                 break;
+            #include "../stencils/GaussLegendreStencil/GaussLegendreStencil27"
+            break;
         case 29:
-                 #include "../stencils/GaussLegendreStencil/GaussLegendreStencil29"
-                 break;
+            #include "../stencils/GaussLegendreStencil/GaussLegendreStencil29"
+            break;
         case 31:
-                 #include "../stencils/GaussLegendreStencil/GaussLegendreStencil31"
-                 break;
+            #include "../stencils/GaussLegendreStencil/GaussLegendreStencil31"
+            break;
         case 33:
-                 #include "../stencils/GaussLegendreStencil/GaussLegendreStencil33"
-                 break;
+            #include "../stencils/GaussLegendreStencil/GaussLegendreStencil33"
+            break;
         case 35:
-                 #include "../stencils/GaussLegendreStencil/GaussLegendreStencil35"
-                 break;
+            #include "../stencils/GaussLegendreStencil/GaussLegendreStencil35"
+            break;
         default:
-            ExitOnError("Invalid GaussLegendreStencil nOrder. Must be odd and smaller 36.");
+            ExitOnError("GaussLegendreStencil nOrder=" + std::to_string(nOrder) + " invalid. See stencil/GaussLegendreStencil for valid orders.");
             break;
     }
     

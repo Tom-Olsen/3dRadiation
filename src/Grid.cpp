@@ -100,8 +100,8 @@ void Grid::WriteFrametoCsv
     CreateDirectory(directory);
     
     name = (name == "") ? "data" :  name;
-    std::ofstream fileOut(directory + "/" + name + "_" + FrameNumber(frameNumber) + "_" + std::to_string(nx) + "x" + std::to_string(ny) + "y" + std::to_string(nz) + "z" + ".csv");
-    
+    std::ofstream fileOut(directory + name + "_" + FrameNumber(frameNumber) + "_" + std::to_string(nx) + "x" + std::to_string(ny) + "y" + std::to_string(nz) + "z" + ".csv");
+
     fileOut << "#nx=" << nx << "\n";
     fileOut << "#ny=" << ny << "\n";
     fileOut << "#nz=" << nz << "\n";

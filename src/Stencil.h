@@ -4,11 +4,36 @@
 #include <set>
 #include <span>
 #include "Utility.hh"
-#include "TensorTypes.hh"
+#include "DataTypes.hh"
 #include "ConvexHull.h"
 #include "Interpolation.h"
-#include "SphereGrid.h"
-#include "AdvancedMath.h"
+#include "SpecialMath.h"
+
+
+
+struct Stencil;
+
+
+
+struct InterpolationGrid
+{
+    // Public Properties:
+    size_t nTh;
+    size_t nPh;
+    size_t nDir;
+
+    // Constructor:
+    InterpolationGrid() = default;
+    InterpolationGrid(size_t nTh, size_t nPh);
+    
+    // Grid operations:
+    double Theta(size_t i) const;
+    double Phi(size_t j) const;
+    double i(double theta) const;
+    double j(double phi) const;
+    size_t Index(size_t i, size_t j) const;
+    Tensor3 C(size_t i, size_t j) const;
+};
 
 
 
@@ -29,16 +54,20 @@
 struct Stencil
 {
 public: // Public Properties:
-    std::string name;       // Name of the stencel, e.g. "Lebedev9"
+    std::string name;       // Name of the stencel, e.g. "Lebedev9.1.4"
     size_t nDir;            // Number of directions in stencil.
-    size_t nOrder;          // Quadrature integration.
-    size_t nCoefficients;   // Number of exact Spherical Harmonics, counted with flat index i = l * (l + 1) + m.
+    size_t nOrder;          // Quadrature integration order.
+    size_t nCoefficients;   // Number of exactly integrated Spherical Harmonics, counted with flat index i = l * (l + 1) + m.
+    size_t nRings;          // Number of ghost rings to be added.
+    size_t nRing0;          // Number of ghost directions in smallest ring.
+    size_t nGhost;          // Total amount of ghost directions.
+    double thetaGhost;      // Ghost rings are evenly spread from in (0,thetaGhost), excluding boundaries.
     Mesh mesh;
-    SphereGrid sphereGrid;
+    InterpolationGrid interpolationGrid;
 private:
-    int sphereGridRes = 1000;
+    int interpolationGridRes = 1000;
 
-protected: // Internal Buffers on directions:
+protected: // Internal Buffers:
     RealBuffer w;
     RealBuffer cx;
     RealBuffer cy;
@@ -50,11 +79,11 @@ protected: // Internal Buffers on directions:
     UnstructuredMatrix<Vector3> voronoiCells;
     UnstructuredMatrix<size_t> voronoiNeighbours;
 
-protected: // Internal Buffers on sphereGrid:
+protected: // Internal Buffers on interpolationGrid:
     SizeTBuffer neighbour0OnGrid;
     SizeTBuffer neighbour1OnGrid;
     SizeTBuffer neighbour2OnGrid;
-public: // Internal Buffers on sphereGrid:
+public: // Internal Buffers on interpolationGrid:
     UnstructuredMatrix<size_t> voronoiNeighboursOnGrid;
     UnstructuredMatrix<double> voronoiWeightsOnGrid;
 
@@ -83,8 +112,8 @@ protected:
     (const std::vector<Vector3>& virtualCell, const std::vector<size_t>& naturalNeighbours, const std::vector<Vector3>& pointsInsideCell) const;
 
 protected: // Initialization:
-    void SetCoefficientCount();
     void AllocateBuffers();
+    void AddGhostDirections();
     void SortDirections();
     void InitializeMesh();
     void InitializeConnectedTriangles();
@@ -110,7 +139,7 @@ public: // Debugging:
 // when flattenign the sphercal harmonics: i = l * (l + 1) + m
 struct LebedevStencil : public Stencil
 {
-    LebedevStencil(size_t nOrder);
+    LebedevStencil(size_t nOrder, size_t nRings=0, size_t nRing0=0, double thetaGhost=0);
 };
 
 

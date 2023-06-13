@@ -1,5 +1,5 @@
-#ifndef __INCLUDE_GUARD_TesorTypes_hh__
-#define __INCLUDE_GUARD_TesorTypes_hh__
+#ifndef __INCLUDE_GUARD_DataTypes_hh__
+#define __INCLUDE_GUARD_DataTypes_hh__
 #include <iostream>                     // Output to terminal.
 #include <span>                         // span = sub vector
 #include "glm/glm/gtc/quaternion.hpp"   // Quaternions.
@@ -71,7 +71,7 @@ public:
     double Phi()
     {
         double phi = MyAtan2(data[1], data[0]);
-        return (phi < 0) ? phi + 2 * M_PI : phi;
+        return (phi < 0) ? phi + 2.0 * M_PI : phi;
     }
 
     // Basic Math:
@@ -120,7 +120,7 @@ inline Coord operator*(const glm::quat& q, const Coord& p)
 // Output:
 inline std::ostream& operator<<(std::ostream& os, const Coord& x) 
 {
-    os << x[1] << "," << x[2] << "," << x[3];
+    os << "(" << x[1] << "," << x[2] << "," << x[3] << ")";
     return os;
 }
 
@@ -157,7 +157,7 @@ public:
 };
 inline std::ostream& operator<<(std::ostream& os, const Tensor2& x) 
 {
-    os << x[2] << "," << x[3];
+    os << "(" << x[2] << "," << x[3] << ")";
     return os;
 }
 
@@ -183,8 +183,10 @@ public:
     { return data[index - 1]; }
 
     // Lengths and Angles:
+    double EuklNormSquared() const
+    { return Dot((*this), (*this)); }
     double EuklNorm() const
-    { return sqrt(Dot((*this), (*this))); }
+    { return sqrt(EuklNormSquared()); }
     Tensor3 EuklNormalized() const
     {
         double norm = EuklNorm();
@@ -202,7 +204,7 @@ public:
     double Phi() const
     {
         double phi = MyAtan2(data[1], data[0]);
-        return (phi < 0) ? phi + 2 * M_PI : phi;
+        return (phi < 0) ? phi + 2.0 * M_PI : phi;
     }
 
     // Basic Math:
@@ -253,7 +255,7 @@ inline Tensor3 operator*(const glm::quat& q, const Tensor3& p)
 // Output
 inline std::ostream& operator<<(std::ostream& os, const Tensor3& v) 
 {
-    os << v[1] << "," << v[2] << "," << v[3];
+    os << "(" << v[1] << "," << v[2] << "," << v[3] << ")";
     return os;
 }
 
@@ -292,7 +294,7 @@ public:
 };
 inline std::ostream& operator<<(std::ostream& os, const Tensor4& v) 
 {
-    os << v[0] << "," << v[1] << "," << v[2] << "," << v[3];
+    os << "(" << v[0] << "," << v[1] << "," << v[2] << "," << v[3] << ")";
     return os;
 }
 
@@ -542,10 +544,10 @@ inline std::ostream& operator<<(std::ostream& os, const Tensor3x3x3& v)
 {
     os << "(" << v[{1,1,1}] << "," << v[{1,1,2}] << "," << v[{1,1,3}]
        << "|" << v[{1,2,1}] << "," << v[{1,2,2}] << "," << v[{1,2,3}]
-       << "|" << v[{1,3,1}] << "," << v[{1,3,2}] << "," << v[{1,3,3}] << ")\n";
+       << "|" << v[{1,3,1}] << "," << v[{1,3,2}] << "," << v[{1,3,3}] << ")";
     os << "(" << v[{2,1,1}] << "," << v[{2,1,2}] << "," << v[{2,1,3}]
        << "|" << v[{2,2,1}] << "," << v[{2,2,2}] << "," << v[{2,2,3}]
-       << "|" << v[{2,3,1}] << "," << v[{2,3,2}] << "," << v[{2,3,3}] << ")\n";
+       << "|" << v[{2,3,1}] << "," << v[{2,3,2}] << "," << v[{2,3,3}] << ")";
     os << "(" << v[{3,1,1}] << "," << v[{3,1,2}] << "," << v[{3,1,3}]
        << "|" << v[{3,2,1}] << "," << v[{3,2,2}] << "," << v[{3,2,3}]
        << "|" << v[{3,3,1}] << "," << v[{3,3,2}] << "," << v[{3,3,3}] << ")";
@@ -605,9 +607,9 @@ public:
     
     // Accessors:
     double& operator[](const rank3Indices& index)
-    { return data[index.i*16 + index.j*4 + index.k]; }
+    { return data[index.i * 16 + index.j * 4 + index.k]; }
     const double& operator[](const rank3Indices& index) const
-    { return data[index.i*16 + index.j*4 + index.k]; }
+    { return data[index.i * 16 + index.j * 4 + index.k]; }
     
     // Output
     void Print(std::string name, bool newline = false, int precision = 6) const
@@ -642,15 +644,15 @@ inline std::ostream& operator<<(std::ostream& os, const Tensor4x4x4& v)
     os << "(" << v[{0,0,0}] << "," << v[{0,0,1}] << "," << v[{0,0,2}] << "," << v[{0,0,3}]
        << "|" << v[{0,1,0}] << "," << v[{0,1,1}] << "," << v[{0,1,2}] << "," << v[{0,1,3}]
        << "|" << v[{0,2,0}] << "," << v[{0,2,1}] << "," << v[{0,2,2}] << "," << v[{0,2,3}]
-       << "|" << v[{0,3,0}] << "," << v[{0,3,1}] << "," << v[{0,3,2}] << "," << v[{0,3,3}] << ")\n";
+       << "|" << v[{0,3,0}] << "," << v[{0,3,1}] << "," << v[{0,3,2}] << "," << v[{0,3,3}] << ")";
     os << "(" << v[{1,0,0}] << "," << v[{1,0,1}] << "," << v[{1,0,2}] << "," << v[{1,0,3}]
        << "|" << v[{1,1,0}] << "," << v[{1,1,1}] << "," << v[{1,1,2}] << "," << v[{1,1,3}]
        << "|" << v[{1,2,0}] << "," << v[{1,2,1}] << "," << v[{1,2,2}] << "," << v[{1,2,3}]
-       << "|" << v[{1,3,0}] << "," << v[{1,3,1}] << "," << v[{1,3,2}] << "," << v[{1,3,3}] << ")\n";
+       << "|" << v[{1,3,0}] << "," << v[{1,3,1}] << "," << v[{1,3,2}] << "," << v[{1,3,3}] << ")";
     os << "(" << v[{2,0,0}] << "," << v[{2,0,1}] << "," << v[{2,0,2}] << "," << v[{2,0,3}]
        << "|" << v[{2,1,0}] << "," << v[{2,1,1}] << "," << v[{2,1,2}] << "," << v[{2,1,3}]
        << "|" << v[{2,2,0}] << "," << v[{2,2,1}] << "," << v[{2,2,2}] << "," << v[{2,2,3}]
-       << "|" << v[{2,3,0}] << "," << v[{2,3,1}] << "," << v[{2,3,2}] << "," << v[{2,3,3}] << ")\n";
+       << "|" << v[{2,3,0}] << "," << v[{2,3,1}] << "," << v[{2,3,2}] << "," << v[{2,3,3}] << ")";
     os << "(" << v[{3,0,0}] << "," << v[{3,0,1}] << "," << v[{3,0,2}] << "," << v[{3,0,3}]
        << "|" << v[{3,1,0}] << "," << v[{3,1,1}] << "," << v[{3,1,2}] << "," << v[{3,1,3}]
        << "|" << v[{3,2,0}] << "," << v[{3,2,1}] << "," << v[{3,2,2}] << "," << v[{3,2,3}]
@@ -699,6 +701,9 @@ public:
         return std::span<const T>(&m_data[start], end - start);
     }
 
+    int RowCount()
+    { return m_indexes.size() - 1; }
+
     void Print() const
     {
         std::cout << "index: [data]\n";
@@ -725,4 +730,4 @@ public:
         std::cout << std::endl;
     }
 };
-#endif //__INCLUDE_GUARD_TesorTypes_hh__
+#endif //__INCLUDE_GUARD_DataTypes_hh__

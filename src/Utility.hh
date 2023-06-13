@@ -88,10 +88,10 @@ inline T Clamp(T value, T min, T max)
 
 
 // Fast integer exponentiation:
-/// @brief a^N with double a and integer N.
+/// @brief a^N with double a and int N.
 /// @tparam N integer power.
 /// @param a number to exponentiate.
-/// @return a*a*a...*a, N times.
+/// @return a*a*a*...*a, N times.
 template<int N>
 inline double IntegerPow(double a)
 { return a * IntegerPow<N-1>(a); }
@@ -100,12 +100,17 @@ inline double IntegerPow<0>(double a)
 { return 1; }
 
 
+
+// Compile time factorial:
+/// @brief N!
+/// @return 1*2*3*...*N.
 template<int N>
 inline double Factorial()
 { return N * Factorial<N-1>(); }
 template<>
 inline double Factorial<0>()
 { return 1; }
+
 
 
 /// @brief Polynomial approximation of atan(z). Much faster then std libraries.
@@ -364,14 +369,14 @@ inline glm::quat Normalized(const glm::quat& q)
 
 
 
-// Get sign of T
+// Get sign of T.
 template <typename T>
 inline int sgn(T val)
 { return (T(0) < val) - (val < T(0)); }
 
 
 
-// Marker for debugging
+// Marker for debugging.
 inline void Marker(std::string name="", bool newline=true)
 {
     static size_t i = 0;
@@ -423,6 +428,23 @@ inline std::string Format(const double n, const int precision=6)
     else if(n == 0 and std::signbit(n) == 1){output = "";}
 	else if(n >= 0){output = " ";}
 	else   {output = "";}
+
+    // Leading space if 2 digit number:
+    //if(abs(n)<100){output += " ";}
+    // Leading space if 1 digit number:
+    //if(abs(n)<10){output += " ";}
+
+    // Number of decimal digits:
+    std::ostringstream ss;
+    ss.precision(precision);
+    ss << std::fixed << n; 
+    output += ss.str();
+
+    return output;    
+}
+inline std::string FormatNoSignSpace(const double n, const int precision=6)
+{
+    std::string output = "";
 
     // Leading space if 2 digit number:
     //if(abs(n)<100){output += " ";}

@@ -22,15 +22,8 @@ class LF {};
 
 
 
-// StaticOrDynamic:
-class Static {};
-class Dynamic {};
-
-
-
 // Output Directory:
 #define OUTPUTDIR (std::string)"/mnt/ceph/tolsen/3dRadiation/output/"
-// #define OUTPUTDIR "/mnt/ceph/tolsen/output/"
 
 
 

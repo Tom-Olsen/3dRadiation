@@ -1,25 +1,26 @@
 #ifndef __INCLUDE_GUARD_Radiation_h__
 #define __INCLUDE_GUARD_Radiation_h__
 #include "GeodesicEquationSolver.h" // Solves geodesic equation, given xyz coordinates, LF 3 velocity, and metric.
-#include "AdvancedMath.h"       // More specific tensor operations, nullNormalize etc.
-#include "SphereGrid.h"             // Helps interpolation on sphere.
+#include "SpecialMath.h"            // More specific tensor operations, nullNormalize etc.
 #include "SphericalHarmonics.h"     // Real spherical harmonic functions and expansion.
 #include "Log.hh"                   // log final results.
 #include "Camera.h"                 // orthographic camera to take images of radiation field.
 #include "Config.hh"                // Config for simulation parameters.
 
-/*
+
+
 class Radiation
 {
 public:
 	StreamingType streamingType;
 	Grid& grid;
 	Metric& metric;
-	MyStencil& stencil;
-	LebedevStencil& lebedevStencil;
+	Stencil& stencil;
+	LebedevStencil& streamingStencil;
 	Camera& camera;
-	double sigma = 1.0;
 
+	double sigma = 1.0;
+    glm::vec3 from = glm::vec3(0,0,1);
 
 	bool* isInitialGridPoint;
 	RealBuffer initialE;
@@ -59,8 +60,6 @@ public:
     RealBuffer eta;
 	RealBuffer I;
 	RealBuffer Inew;
-    RealBuffer Inorth;
-    RealBuffer Isouth;
 	RealBuffer coefficientsS;
 	RealBuffer coefficientsX;
 	RealBuffer coefficientsY;
@@ -70,19 +69,17 @@ public:
 	RealBuffer coefficientsCz;
 
 	Radiation() = delete;
-	Radiation(Metric& metric, MyStencil& stencil, LebedevStencil& lebedevStencil, Camera& camera, StreamingType streamingType);
+	Radiation(Metric& metric, Stencil& stencil, LebedevStencil& streamingStencil, Camera& camera, StreamingType streamingType);
 	~Radiation();
 
 	size_t Index(size_t ijk, size_t d);
-	size_t Index(size_t ijk, size_t d0, size_t d1);
 	size_t Index(size_t i, size_t j, size_t k, size_t d);
-	size_t Index(size_t i, size_t j, size_t k, size_t d0, size_t d1);
 
 	size_t HarmonicIndex(size_t f, size_t ijk);
 
-	Coord GetTempCoordinate(size_t ijk, Tensor3 direction);
-	Tensor3 GetTemp3VelocityIF(size_t ijk, Tensor3 direction);
-	double GetFrequencyShift(size_t ijk, Tensor3 direction);
+	Coord GetTempCoordinate(size_t ijk, const Tensor3& direction);
+	Tensor3 GetTemp3VelocityIF(size_t ijk, const Tensor3& direction);
+	double GetFrequencyShift(size_t ijk, const Tensor3& direction);
 	double IntensityAt(size_t ijk, Tensor3 vTempIF);
 	Tensor3 AverageF(size_t i, size_t j, size_t k);
 
@@ -92,23 +89,17 @@ public:
 	void UpdateSphericalHarmonicsCoefficients();
 	void ComputeMomentsIF();
 	void ComputeMomentsLF();
-    void SetPoleIntensities();
 	void UpdateQuaternions();
 
-	template<class StaticOrDynamic>
-	void StreamFlatKernal(size_t i, size_t j, size_t k, size_t d0, size_t d1);
-	template<class StaticOrDynamic>
-	void StreamCurvedKernal(size_t i, size_t j, size_t k, size_t d0, size_t d1);
-
-	void StreamFlatStatic();
-	void StreamFlatDynamic();
-	void StreamCurvedStatic();
-	void StreamCurvedDynamic();
+	void StreamFlatFixed();
+	void StreamFlatAdaptive();
+	void StreamCurvedFixed();
+	void StreamCurvedAdaptive();
 	void Collide();
+
 	void TakePicture();
 	void WriteIntensitiesToCsv(double time, const int frameNumber, std::string directory, std::string name);
 
 	void RunSimulation(Config config);
 };
-*/
 #endif //__INCLUDE_GUARD_Radiation_h__

@@ -1,10 +1,9 @@
 #ifndef __INCLUDE_GUARD_Grid_h__
 #define __INCLUDE_GUARD_Grid_h__
-// #include <iomanip>              // std::setprecision.
 #include <fstream>              // File input/output.
 #include "ControlFlow.hh"       // Template arguments and profiling macros.
 #include "Utility.hh"           // Utility functions.
-#include "TensorTypes.hh"       // General relativity tensors.
+#include "DataTypes.hh"         // General relativity tensors.
 #include "Profiler.hh"          // Time measurement profiler.
 
 
@@ -12,7 +11,7 @@
 class Grid
 {
 private:
-    double m_cfl=1;
+    double m_cfl = 1;
 public:
     // Members:
     size_t nx;

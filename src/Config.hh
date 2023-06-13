@@ -4,16 +4,16 @@
 
 
 // Input system:
-enum StreamingType { FlatStatic, FlatDynamic, CurvedStatic, CurvedDynamic };
+enum StreamingType { FlatFixed, FlatAdaptive, CurvedFixed, CurvedAdaptive };
 inline std::string StreamingName(int n)
 {
 	std::string name("unknown");
 	switch (n)
 	{
-   		case 0: { name = "FlatStatic";		} break;
-   		case 1: { name = "FlatDynamic";		} break;
-   		case 2: { name = "CurvedStatic";	} break;
-   		case 3: { name = "CurvedDynamic";	} break;
+   		case 0: { name = "FlatFixed";       } break;
+   		case 1: { name = "FlatAdaptive";    } break;
+   		case 2: { name = "CurvedFixed";     } break;
+   		case 3: { name = "CurvedAdaptive";  } break;
 		default: { ExitOnError("Invalid StreamingType"); }
 	}
 	return name;

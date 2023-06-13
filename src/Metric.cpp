@@ -133,7 +133,6 @@ void Metric::InitializeBoostedTetradOnGrid()
     for(size_t i=0; i<grid.nx; i++)
     {
         size_t ijk = grid.Index(i,j,k);
-        
 
         // Sub matrizes and inverses:
         Tensor3x3 A_ll = GetGamma_ll(ijk);

@@ -1,10 +1,10 @@
 #ifndef __INCLUDE_GUARD_Interpolation_h__
 #define __INCLUDE_GUARD_Interpolation_h__
-#include <math.h>           // Basic maths.
-#include "TensorTypes.hh"   // General relativity tensors.
+#include <math.h>
+#include "DataTypes.hh"
 #include "Vector3.h"
 #include "Vector3Int.h"
-#include "Profiler.hh"      // Time measurement profiler.
+#include "Profiler.hh"
 
 
 

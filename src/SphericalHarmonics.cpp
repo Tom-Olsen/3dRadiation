@@ -1459,6 +1459,8 @@ double SphericalHarmonicsXyz::Y(int l, int m, const Tensor3& dir)
 std::vector<double> SphericalHarmonicsXyz::GetCoefficients(const Stencil& stencil, const double* data)
 {
     std::vector<double> coefficients(stencil.nCoefficients);
+    for(size_t i=0; i<stencil.nCoefficients; i++)
+        coefficients[i] = 0;
     for(size_t d=0; d<stencil.nDir; d++)
     {
         double x = stencil.Cx(d);
@@ -1486,12 +1488,11 @@ void SphericalHarmonicsXyz::GetCoefficients(const Stencil& stencil, const double
             coefficients[i] += c * Y(i,x,y,z);
     }
 }
-double SphericalHarmonicsXyz::GetValue(double x, double y, double z, const std::vector<double>& coefficients, size_t nCoefficients)
+double SphericalHarmonicsXyz::GetValue(double x, double y, double z, const std::vector<double>& coefficients)
 {
     double result = 0;
-    for(size_t i=0; i<nCoefficients; i++)
+    for(size_t i=0; i<coefficients.size(); i++)
         result += coefficients[i] * Y(i,x,y,z);
-
     return result;
 }
 double SphericalHarmonicsXyz::GetValue(double x, double y, double z, double* coefficients, size_t nCoefficients)
@@ -1499,15 +1500,13 @@ double SphericalHarmonicsXyz::GetValue(double x, double y, double z, double* coe
     double result = 0;
     for(size_t i=0; i<nCoefficients; i++)
         result += coefficients[i] * Y(i,x,y,z);
-
     return result;
 }
-double SphericalHarmonicsXyz::GetValue(const Tensor3& direction, const std::vector<double>& coefficients, size_t nCoefficients)
+double SphericalHarmonicsXyz::GetValue(const Tensor3& direction, const std::vector<double>& coefficients)
 {
     double result = 0;
-    for(size_t i=0; i<nCoefficients; i++)
+    for(size_t i=0; i<coefficients.size(); i++)
         result += coefficients[i] * Y(i,direction[1],direction[2],direction[3]);
-
     return result;
 }
 double SphericalHarmonicsXyz::GetValue(const Tensor3& direction, double* coefficients, size_t nCoefficients)
@@ -1515,7 +1514,6 @@ double SphericalHarmonicsXyz::GetValue(const Tensor3& direction, double* coeffic
     double result = 0;
     for(size_t i=0; i<nCoefficients; i++)
         result += coefficients[i] * Y(i,direction[1],direction[2],direction[3]);
-
     return result;
 }
 // ---------------------------------------------------------------------------------------------

@@ -77,10 +77,9 @@ void TestRayTriangleIntersection()
 
 
 
-void TestStencilInterpolations(int nOrder)
+void TestStencilInterpolations(Stencil stencilSrc)
 {
-    LebedevStencil stencilSrc(nOrder);
-    GaussLegendreStencil stencilDst(31);
+    GaussLegendreStencil stencilDst(35);
     double* valueSrc = new double[stencilSrc.nDir]();
     double* valueDst1 = new double[stencilDst.nDir]();
     double* valueDst2 = new double[stencilDst.nDir]();
@@ -113,19 +112,19 @@ void TestStencilInterpolations(int nOrder)
     for(size_t d=0; d<stencilDst.nDir; d++)
     {
         Tensor3 c = stencilDst.Ct3(d);
-        double i = stencilSrc.sphereGrid.i(c.Theta());
-        double j = std::fmod((stencilSrc.sphereGrid.j(c.Phi()) + stencilSrc.sphereGrid.nPh), stencilSrc.sphereGrid.nPh);
+        double i = stencilSrc.interpolationGrid.i(c.Theta());
+        double j = std::fmod((stencilSrc.interpolationGrid.j(c.Phi()) + stencilSrc.interpolationGrid.nPh), stencilSrc.interpolationGrid.nPh);
         size_t i0 = std::floor(i); size_t i1 = i0 + 1;
-        size_t j0 = std::floor(j); size_t j1 = (j0 + 1) % stencilSrc.sphereGrid.nPh;
+        size_t j0 = std::floor(j); size_t j1 = (j0 + 1) % stencilSrc.interpolationGrid.nPh;
 
-        std::span<const size_t> neighbours00 = stencilSrc.voronoiNeighboursOnGrid.Row(stencilSrc.sphereGrid.Index(i0,j0));
-        std::span<const size_t> neighbours01 = stencilSrc.voronoiNeighboursOnGrid.Row(stencilSrc.sphereGrid.Index(i0,j1));
-        std::span<const size_t> neighbours10 = stencilSrc.voronoiNeighboursOnGrid.Row(stencilSrc.sphereGrid.Index(i1,j0));
-        std::span<const size_t> neighbours11 = stencilSrc.voronoiNeighboursOnGrid.Row(stencilSrc.sphereGrid.Index(i1,j1));
-        std::span<const double> weights00 = stencilSrc.voronoiWeightsOnGrid.Row(stencilSrc.sphereGrid.Index(i0,j0));
-        std::span<const double> weights01 = stencilSrc.voronoiWeightsOnGrid.Row(stencilSrc.sphereGrid.Index(i0,j1));
-        std::span<const double> weights10 = stencilSrc.voronoiWeightsOnGrid.Row(stencilSrc.sphereGrid.Index(i1,j0));
-        std::span<const double> weights11 = stencilSrc.voronoiWeightsOnGrid.Row(stencilSrc.sphereGrid.Index(i1,j1));
+        std::span<const size_t> neighbours00 = stencilSrc.voronoiNeighboursOnGrid.Row(stencilSrc.interpolationGrid.Index(i0,j0));
+        std::span<const size_t> neighbours01 = stencilSrc.voronoiNeighboursOnGrid.Row(stencilSrc.interpolationGrid.Index(i0,j1));
+        std::span<const size_t> neighbours10 = stencilSrc.voronoiNeighboursOnGrid.Row(stencilSrc.interpolationGrid.Index(i1,j0));
+        std::span<const size_t> neighbours11 = stencilSrc.voronoiNeighboursOnGrid.Row(stencilSrc.interpolationGrid.Index(i1,j1));
+        std::span<const double> weights00 = stencilSrc.voronoiWeightsOnGrid.Row(stencilSrc.interpolationGrid.Index(i0,j0));
+        std::span<const double> weights01 = stencilSrc.voronoiWeightsOnGrid.Row(stencilSrc.interpolationGrid.Index(i0,j1));
+        std::span<const double> weights10 = stencilSrc.voronoiWeightsOnGrid.Row(stencilSrc.interpolationGrid.Index(i1,j0));
+        std::span<const double> weights11 = stencilSrc.voronoiWeightsOnGrid.Row(stencilSrc.interpolationGrid.Index(i1,j1));
         double value00 = 0;
         double value01 = 0;
         double value10 = 0;
@@ -179,5 +178,6 @@ int main()
 {
     // TestTrilinearInterpolation();
     // TestRayTriangleIntersection();
-    TestStencilInterpolations(35);
+    // TestStencilInterpolations(LebedevStencil(21));
+    TestStencilInterpolations(LebedevStencil(21,3,8,M_PI/8.0));
 }

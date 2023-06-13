@@ -1,5 +1,5 @@
 #include <iostream>
-#include "../src/Radiation3.h"
+#include "../src/Radiation.h"
 using namespace std;
 
 
@@ -18,7 +18,7 @@ void SphericalHarmonicsExpansion()
     LebedevStencil lebedevStencil(5);
     Camera camera;
 
-    Radiation3 radiation(metric, stencil, lebedevStencil, camera, StreamingType::CurvedDynamic);
+    Radiation radiation(metric, stencil, lebedevStencil, camera, StreamingType::CurvedAdaptive);
     radiation.UpdateSphericalHarmonicsCoefficients();
     
     ofstream file0(OUTPUTDIR + "SphericalHarmonicsExpansionCoord.txt");

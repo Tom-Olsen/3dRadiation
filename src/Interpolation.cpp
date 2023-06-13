@@ -181,7 +181,7 @@ const Vector3& v0, const Vector3& v1, const Vector3& v2, Vector3& weights)
     if(abs(normalDotDirection) < epsilon)
         return false;
 
-    // Check if triangle is behind the ray
+    // Check if triangle is behind the ray:
     double d = -Vector3::Dot(normal, v0);
     double t = -(d + Vector3::Dot(normal, rayOrigin)) / normalDotDirection;
     if (t < 0)
@@ -211,9 +211,9 @@ const Vector3& v0, const Vector3& v1, const Vector3& v2, Vector3& weights)
 
     // Determine Barycentric Weights:
     double V = Vector3::Dot(normal, normal);
-    weights[0] = std::max(0.0, V0/V);
-    weights[1] = std::max(0.0, V1/V);
-    weights[2] = std::max(0.0, V2/V);
+    weights[0] = std::clamp(V0/V, 0.0, 1.0);
+    weights[1] = std::clamp(V1/V, 0.0, 1.0);
+    weights[2] = std::clamp(V2/V, 0.0, 1.0);
 
     return true;
 }
@@ -229,7 +229,7 @@ const Tensor3& v0, const Tensor3& v1, const Tensor3& v2, Vector3& weights)
     if(abs(normalDotDirection) < epsilon)
         return false;
 
-    // Check if triangle is behind the ray
+    // Check if triangle is behind the ray:
     double d = -Tensor3::Dot(normal, v0);
     double t = -(d + Tensor3::Dot(normal, rayOrigin)) / normalDotDirection;
     if (t < 0)
@@ -259,9 +259,9 @@ const Tensor3& v0, const Tensor3& v1, const Tensor3& v2, Vector3& weights)
 
     // Determine Barycentric Weights:
     double V = Tensor3::Dot(normal, normal);
-    weights[0] = std::max(0.0, V0/V);
-    weights[1] = std::max(0.0, V1/V);
-    weights[2] = std::max(0.0, V2/V);
+    weights[0] = std::clamp(V0/V, 0.0, 1.0);
+    weights[1] = std::clamp(V1/V, 0.0, 1.0);
+    weights[2] = std::clamp(V2/V, 0.0, 1.0);
 
     return true;
 }

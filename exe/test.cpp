@@ -1,7 +1,7 @@
 #include <iostream>
 #include <span>
 #include <vector>
-#include "../src/TensorTypes.hh"
+#include "../src/DataTypes.hh"
 
 using namespace std;
 

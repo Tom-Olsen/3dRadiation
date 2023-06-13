@@ -265,7 +265,7 @@ void HarmonicsBenchmark()
 
 
 
-void ConvertStencilToUnityMesh(Stencil stencil, string name)
+void ConvertStencilToUnityMesh(Stencil stencil)
 {
     // Setup vertices vector for convex hull triangulation:
     std::vector<Vector3> vertices;
@@ -281,7 +281,7 @@ void ConvertStencilToUnityMesh(Stencil stencil, string name)
     ConvexHull convexHull(vertices);
     convexHull.OriginalOrdering(vertices);
 
-    convexHull.GetMesh().WriteToCsv(OUTPUTDIR, name + to_string(stencil.nOrder));
+    convexHull.GetMesh().WriteToCsv(OUTPUTDIR, stencil.name);
 }
 
 
@@ -290,6 +290,7 @@ int main()
 {
     // PrintStencilData(GaussLegendreStencil(5));
     // PrintStencilData(LebedevStencil(3));
+    PrintStencilData(LebedevStencil(3,2,4,M_PI/8.0));
     // Quadrature(GaussLegendreStencil(7));
     // Quadrature(LebedevStencil(7));
     // Quadrature(GaussLegendreStencil(35));
@@ -298,10 +299,10 @@ int main()
     // HarmonicsBenchmark();
 
     // for(int i=3; i<32; i+=2)
-        // ConvertStencilToUnityMesh(LebedevStencil(i),"LebedevStencil");
-    // ConvertStencilToUnityMesh(LebedevStencil(35),"LebedevStencil");
-    // ConvertStencilToUnityMesh(LebedevStencil(41),"LebedevStencil");
-    // ConvertStencilToUnityMesh(LebedevStencil(47),"LebedevStencil");
+        // ConvertStencilToUnityMesh(LebedevStencil(i));
+    // ConvertStencilToUnityMesh(LebedevStencil(35));
+    // ConvertStencilToUnityMesh(LebedevStencil(41));
+    // ConvertStencilToUnityMesh(LebedevStencil(47));
     // for(int i=3; i<36; i+=2)
-        // ConvertStencilToUnityMesh(GaussLegendreStencil(i),"GaussLegendreStencil");
+        // ConvertStencilToUnityMesh(GaussLegendreStencil(i));
 }
