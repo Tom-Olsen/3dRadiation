@@ -204,13 +204,6 @@ void Radiation::InitSigmaAndNormalization()
             }
             currentF = Tensor3(currentFx, currentFy, currentFz).EuklNorm();
 
-            // Debugging:
-            int i = grid.i(ijk);
-            int j = grid.j(ijk);
-            int k = grid.k(ijk);
-            if ((i == grid.nx / 2) && (j == grid.ny / 2) && (k == grid.nz / 2))
-                std::cout << Format(currentE) << ", " << Format(currentFx) << ", " << Format(currentFy) << ", " << Format(currentFz) << ", " << Format(sigma[ijk]) << std::endl;
-
             // Check if interpolation error is acceptable:
             double averageError = 0;
             int count = 0;
@@ -219,7 +212,7 @@ void Radiation::InitSigmaAndNormalization()
                 {
                     int d = testGrid.Index(d0, d1);
                     // Skip angles outside the +-deltaPhi/2 range in which most of the ghost directions are arranged:
-                    if (acos(Tensor3::Dot(dirInitialF, testGrid.Ct3(d0, d1))) > M_PI / 8.0)
+                    if (MyAcos(Tensor3::Dot(dirInitialF, testGrid.Ct3(d0, d1))) > M_PI / 8.0)
                         continue;
 
                     // Analytic intensity:
@@ -1180,7 +1173,7 @@ void Radiation::RunSimulation()
     session.Start(config.name, "output/" + config.name + "/profileResults.json");
 
     // -------------------- Initialization --------------------
-    InitSigmaAndNormalization();
+    // InitSigmaAndNormalization();
     LoadInitialData();
     UpdateSphericalHarmonicsCoefficients();
 

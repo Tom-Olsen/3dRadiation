@@ -2,6 +2,8 @@ Do not forget to download submodules aswell:
 -git submodule init
 -git submodule update
 
+Dont forget to create the output dir and change the global output path in ControlFlow.hh
+
 The following libraries are necessary to compile the code:
 openmp:     -sudo apt-get install libomp-dev
 
@@ -24,3 +26,7 @@ The src folder contains all the source code, including the two submodules eigen 
 The exe folder contains all .cpp files that get compiled into executable .out files.
 Here you can find simple programs that contain tests for the individual modules of the code.
 Have a look at these to understand the general code structure.
+
+How to perf (sudo needed if system not properly set up):
+-env OMP_PLACES=threads env OMP_PROC_BIND=true perf record  ./executable.out 3
+-perf report -i perf.data > report.txt

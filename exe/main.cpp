@@ -76,7 +76,7 @@ void Diffusion(Stencil stencil, StreamingType streamingType, double cfl)
 {
     // Create Radiation object:
     size_t nx, ny, nz;
-    nx = ny = nz = 101;
+    nx = ny = nz = 51;
     Coord start(-0.5, -0.5, -0.5);
     Coord end(0.5, 0.5, 0.5);
     Grid grid(nx, ny, nz, start, end);

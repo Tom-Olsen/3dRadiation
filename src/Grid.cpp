@@ -17,6 +17,9 @@ Grid::Grid(size_t nx, size_t ny, size_t nz, Coord start, Coord end) : nx(nx), ny
     dx = (endx - startx) / (nx - 1.0);
     dy = (endy - starty) / (ny - 1.0);
     dz = (endz - startz) / (nz - 1.0);
+    dxInv = 1.0 / dx;
+    dyInv = 1.0 / dy;
+    dzInv = 1.0 / dz;
     dt = m_cfl * std::min({dx, dy, dz});
     nxy = nx * ny;
     nxyz = nx * ny * nz;
@@ -59,15 +62,15 @@ Coord Grid::xyz(double i, double j, double k)
 }
 double Grid::i(double x)
 {
-    return (x - startx) / dx;
+    return (x - startx) * dxInv;
 }
 double Grid::j(double y)
 {
-    return (y - starty) / dy;
+    return (y - starty) * dyInv;
 }
 double Grid::k(double z)
 {
-    return (z - startz) / dz;
+    return (z - startz) * dzInv;
 }
 size_t Grid::i(size_t ijk)
 {

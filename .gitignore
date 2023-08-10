@@ -14,6 +14,8 @@ perf.data
 perf.data.old
 report.txt
 slurm*
+report*
+perf.data*
 
 # Build files:
 build/.cmake
