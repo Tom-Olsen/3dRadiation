@@ -6,9 +6,10 @@
 #SBATCH --mem=250G          # Memory per node
 #SBATCH --time=024:00:00    # maximum run time
 
-srun -n 1 env OMP_PLACES=threads env OMP_PROC_BIND=true ./main.out 4 #> output.txt
+srun -n 1 env OMP_PLACES=threads env OMP_PROC_BIND=true ./main.out 0 #> output.txt
 
 # usefull commands:
-# sinfo                 shows all available nodes and their usage
-# squeue -u tolsen      shows all your running jobs
-# scancel <number>      cancels given job
+# sbatch -p <Partition> job.sh
+# sinfo                             shows all available nodes and their usage
+# squeue -u tolsen                  shows all your running jobs
+# scancel <number>                  cancels given job

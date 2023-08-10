@@ -24,8 +24,10 @@ public:
     Mesh(std::vector<Vector3> vertices, std::vector<Vector3Int> triangles);
 
     // Getters:
-    std::vector<Vector3> GetVertices();
-    std::vector<Vector3Int> GetTriangles();
+    //std::vector<Vector3> GetVertices();
+    //std::vector<Vector3Int> GetTriangles() ;
+    const std::vector<Vector3>& GetVertices() const;
+    const std::vector<Vector3Int>& GetTriangles() const;
 
     // Output:
     void WriteToCsv(std::string directory, std::string name);

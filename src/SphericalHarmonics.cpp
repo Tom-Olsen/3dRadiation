@@ -1466,7 +1466,7 @@ std::vector<double> SphericalHarmonicsXyz::GetCoefficients(const Stencil& stenci
         double x = stencil.Cx(d);
         double y = stencil.Cy(d);
         double z = stencil.Cz(d);
-        double c = data[d] * stencil.W(d);
+        double c = 4.0 * M_PI * data[d] * stencil.W(d);
 
         for(size_t i=0; i<stencil.nCoefficients; i++)
             coefficients[i] += c * Y(i,x,y,z);
@@ -1482,7 +1482,7 @@ void SphericalHarmonicsXyz::GetCoefficients(const Stencil& stencil, const double
         double x = stencil.Cx(d);
         double y = stencil.Cy(d);
         double z = stencil.Cz(d);
-        double c = data[d] * stencil.W(d);
+        double c = 4.0 * M_PI * data[d] * stencil.W(d);
 
         for(size_t i=0; i<stencil.nCoefficients; i++)
             coefficients[i] += c * Y(i,x,y,z);

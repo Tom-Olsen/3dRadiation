@@ -58,7 +58,7 @@ void Camera::WriteImagetoCsv
     CreateDirectory(directory);
     
     name = (name == "") ? "image" :  name;
-    std::ofstream fileOut(directory + "/" + name + FrameNumber(frameNumber) + "_" + std::to_string(resX) + "x" + std::to_string(resY) + "y" + ".csv");
+    std::ofstream fileOut(directory + name + FrameNumber(frameNumber) + "_" + std::to_string(resX) + "x" + std::to_string(resY) + "y" + ".csv");
     
     fileOut << "#nx=" << resX << "\n";
     fileOut << "#ny=" << resY << "\n";

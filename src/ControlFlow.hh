@@ -9,12 +9,6 @@ class LF {};
 
 
 
-// Datastructure:
-// #define ijkd
-#define dijk // is faster on CPU
-
-
-
 // If defined std::sin etc are used. Otherwise the Mysin etc. optimisations are used.
 // #define USE_STD_MATH
 // Order of polynomial approximation for MySin, MyCos, MyAtan, MyAtan2:

@@ -32,7 +32,7 @@ add_executable(quaternionTest.out exe/quaternionTest.cpp ${srcs})
 add_executable(blackHoleImage.out exe/blackHoleImage.cpp ${srcs})
 
 # c++ flags:
-# target_compile_options(main PUBLIC)
+# target_compile_options(main.out PUBLIC)
 target_compile_options(main.out PUBLIC -O3 -ffast-math)
 target_compile_options(test.out PUBLIC -O3 -ffast-math)
 target_compile_options(dataTypesTest.out PUBLIC -O3 -ffast-math)

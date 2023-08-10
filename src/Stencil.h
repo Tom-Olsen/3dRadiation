@@ -3,37 +3,12 @@
 #include <vector>
 #include <set>
 #include <span>
+#include <tuple>
 #include "Utility.hh"
 #include "DataTypes.hh"
 #include "ConvexHull.h"
 #include "Interpolation.h"
 #include "SpecialMath.h"
-
-
-
-struct Stencil;
-
-
-
-struct InterpolationGrid
-{
-    // Public Properties:
-    size_t nTh;
-    size_t nPh;
-    size_t nDir;
-
-    // Constructor:
-    InterpolationGrid() = default;
-    InterpolationGrid(size_t nTh, size_t nPh);
-    
-    // Grid operations:
-    double Theta(size_t i) const;
-    double Phi(size_t j) const;
-    double i(double theta) const;
-    double j(double phi) const;
-    size_t Index(size_t i, size_t j) const;
-    Tensor3 C(size_t i, size_t j) const;
-};
 
 
 
@@ -53,7 +28,8 @@ struct InterpolationGrid
 // Base Stencil class. This functionality is supported by all stencils.
 struct Stencil
 {
-public: // Public Properties:
+public:
+    // Public Properties:
     std::string name;       // Name of the stencel, e.g. "Lebedev9.1.4"
     size_t nDir;            // Number of directions in stencil.
     size_t nOrder;          // Quadrature integration order.
@@ -63,31 +39,21 @@ public: // Public Properties:
     size_t nGhost;          // Total amount of ghost directions.
     double thetaGhost;      // Ghost rings are evenly spread from in (0,thetaGhost), excluding boundaries.
     Mesh mesh;
-    InterpolationGrid interpolationGrid;
-private:
-    int interpolationGridRes = 1000;
 
-protected: // Internal Buffers:
+protected:
+    // Internal Buffers (data for each vertex):
     RealBuffer w;
     RealBuffer cx;
     RealBuffer cy;
     RealBuffer cz;
     RealBuffer theta;
     RealBuffer phi;
-    
     UnstructuredMatrix<Vector3Int> connectedTriangles;
     UnstructuredMatrix<Vector3> voronoiCells;
     UnstructuredMatrix<size_t> voronoiNeighbours;
 
-protected: // Internal Buffers on interpolationGrid:
-    SizeTBuffer neighbour0OnGrid;
-    SizeTBuffer neighbour1OnGrid;
-    SizeTBuffer neighbour2OnGrid;
-public: // Internal Buffers on interpolationGrid:
-    UnstructuredMatrix<size_t> voronoiNeighboursOnGrid;
-    UnstructuredMatrix<double> voronoiWeightsOnGrid;
-
-public: // Getters:
+public:
+    // Getters:
     double W(size_t d) const;
     double Cx(size_t d) const;
     double Cy(size_t d) const;
@@ -96,22 +62,29 @@ public: // Getters:
     double Phi(size_t d) const;
     Tensor3 Ct3(size_t d) const;
     Vector3 Cv3(size_t d) const;
+    std::span<const Vector3Int> ConnectedTriangles(size_t d) const;
+    std::span<const Vector3> VoronoiCell(size_t d) const;
+    std::span<const size_t> VoronoiNeighbours(size_t d) const;
 
-    size_t NearestNeighbour(const Tensor3& p) const;
-    std::span<const Vector3Int> TrianglesConnectedTo(size_t d) const;
-    std::span<const Vector3> VoronoiCellOf(size_t d) const;
-    std::span<const size_t> VoronoiNeighbourOf(size_t d) const;
+    // Expensive Getters:
+    // Get voronoi neighbours and weights of an abitrary point p.
+    std::tuple<std::vector<size_t>, std::vector<double>> VoronoiNeighboursAndWeights(const Vector3& p) const;
+    // Get barycentric neighbours and weights of an abitrary point p.
+    std::tuple<Vector3Int,Vector3> BarycentricNeighboursAndWeights(const Vector3& p) const;
 
-    Vector3 BarycentricWeights(const Tensor3& p, Vector3Int& triangle) const;
-    std::vector<double> VoronoiWeights(const Tensor3& p, std::vector<size_t>& naturalNeighbours) const;
-
-protected:
+private:
+    // Internal helper methods:
+    // Index of nearest stencil.C(?) for arbitrary point p.
+    size_t NearestNeighbour(const Vector3& p) const;
+    // Creates virtual voronoi cell of arbitrary point p. This includes the natural neighbours and voronoi points that are inside the virual cell.
     std::vector<Vector3> VirtualVoronoiCellOf
-    (const Tensor3& p, std::vector<size_t>& naturalNeighbours, std::vector<Vector3>& pointsInsideCell) const;
+    (const Vector3& p, std::vector<size_t>& naturalNeighbours, std::vector<Vector3>& pointsInsideCell) const;
+    // Get voronoi weights of virtual voronoi cell.
     std::vector<double> VoronoiWeights
     (const std::vector<Vector3>& virtualCell, const std::vector<size_t>& naturalNeighbours, const std::vector<Vector3>& pointsInsideCell) const;
 
-protected: // Initialization:
+protected:
+    // Initialization:
     void AllocateBuffers();
     void AddGhostDirections();
     void SortDirections();
@@ -122,7 +95,8 @@ protected: // Initialization:
     void InitializeNearestNeighbourOnGrid();
     void InitializeVoronoiInterpolationOnGrid();
 
-public: // Debugging:
+public:
+    // Debugging:
     void Print() const;
 };
 

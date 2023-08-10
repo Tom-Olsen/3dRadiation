@@ -4,10 +4,9 @@
 using namespace std;
 
 
-
-int main()
+void TestManyPhotons()
 {
-    std::ofstream fileOut((std::string)OUTPUTDIR + (std::string)"Test_GeodesicEquationSolver.txt");
+    ofstream fileOut((string)OUTPUTDIR + (string)"Test_GeodesicEquationSolver.txt");
     fileOut << "#x, y, z, s \n";
 
     size_t nx, ny, nz;
@@ -46,4 +45,80 @@ int main()
     }
 
     fileOut.close();
+}
+
+
+
+void BoundingGeodesics()
+{
+    ofstream fileOut0(OUTPUTDIR + (string)"ExactGeodesic0.txt");
+    ofstream fileOut1(OUTPUTDIR + (string)"ExactGeodesic1.txt");
+    fileOut0 << "#x, y, z, s \n";
+    fileOut1 << "#x, y, z, s \n";
+
+    size_t nx, ny, nz;
+    nx = ny = nz = 100;
+    Coord start(-0.0001,0,-0.5);
+    Coord end(5,4,0.5);
+    Grid grid(nx, ny, nz, start, end);
+    // Minkowski metric(grid, 1.0, 0.0);
+    KerrSchild metric(grid, 1.0, 0.0);
+    // SchwarzSchild metric(grid, 1.0, 0.0);
+    cout << "Initialization complete." << endl;
+
+    // First Photon:
+    {
+        double s = 1.0;
+        Coord x(0.0, 3.0, 0.0);
+        Tensor4x4 g_ll = metric.GetMetric_ll(x);
+        Tensor3x3 gamma_ll = metric.GetGamma_ll(x);
+        Tensor3x3 delta_ll = metric.GetMinkowskiGamma_ll(x);
+
+        Tensor4 uLF(1,1,0,0);
+        uLF = NullNormalize(uLF, g_ll);
+        Tensor3 vLF = Vec3ObservedByEulObs<LF,LF>(uLF,x,metric);
+
+        fileOut0 << x[1] << ", " << x[2] << ", " << x[3] << ", " << s << "\n";
+        while(true)
+        {
+            if (grid.OutsideDomain(x) || metric.InsideBH(x))
+                break;
+            s *= RK45_GeodesicEquation<1>(5 * grid.dt, x, vLF, metric);
+            fileOut0 << x[1] << ", " << x[2] << ", " << x[3] << ", " << s << "\n";
+        }
+        cout << "Photon1 complete." << endl;
+        fileOut0.close();
+    }
+    // Second Photon:
+    {
+        double s = 1.0;
+        Coord x(0.0, 3.5, 0.0);
+        Tensor4x4 g_ll = metric.GetMetric_ll(x);
+        Tensor3x3 gamma_ll = metric.GetGamma_ll(x);
+        Tensor3x3 delta_ll = metric.GetMinkowskiGamma_ll(x);
+
+        Tensor4 uLF(1,1,0,0);
+        uLF = NullNormalize(uLF, g_ll);
+        Tensor3 vLF = Vec3ObservedByEulObs<LF,LF>(uLF,x,metric);
+
+        fileOut1 << x[1] << ", " << x[2] << ", " << x[3] << ", " << s << "\n";
+        while(true)
+        {
+            if (grid.OutsideDomain(x) || metric.InsideBH(x))
+                break;
+            s *= RK45_GeodesicEquation<1>(5 * grid.dt, x, vLF, metric);
+            fileOut1 << x[1] << ", " << x[2] << ", " << x[3] << ", " << s << "\n";
+        }
+        cout << "Photon2 complete." << endl;
+        fileOut1.close();
+    }
+
+}
+
+
+
+int main()
+{
+    // TestManyPhotons();
+    BoundingGeodesics();
 }

@@ -1,3 +1,5 @@
+# THIS MAKEFILE IS DEBRECATED!
+# Only here for personal reference, just in case, maybe i will need some of this later.
 # shortcuts to build cmake stuff from parent directory, because I'm lazy.
 
 all: paper test

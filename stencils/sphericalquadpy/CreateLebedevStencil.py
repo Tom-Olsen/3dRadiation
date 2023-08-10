@@ -32,12 +32,15 @@ def WriteLebedevStencilToFile(order):
         r,th,ph = CartesianToSpherical(x,y,z)
         theta.append(th)
         phi.append(ph)
+        if (weights[i] < 0):
+            print(order)
+            return
 
     with open("../LebedevStencil/LebedevStencil" + str(order), "w") as f:
         f.write(f"this->nDir = {len(weights)} + this->nGhost;\n")
         f.write(f"AllocateBuffers();\n")
         for i in range(len(weights)):
-            f.write(f"w[{i:>3}] = {weights[i]: .60f}; ")
+            f.write(f"w[{i:>3}] = {weights[i] / (4 * math.pi): .60f}; ")    # note: quadrature is normed to 4pi and not 1, thus divide by 4pi.
             f.write(f"cx[{i:>3}] = {xyz[i][0]: .60f}; ")
             f.write(f"cy[{i:>3}] = {xyz[i][1]: .60f}; ")
             f.write(f"cz[{i:>3}] = {xyz[i][2]: .60f}; ")
@@ -52,3 +55,5 @@ for i in range(3,32,2):
 WriteLebedevStencilToFile(35)
 WriteLebedevStencilToFile(41)
 WriteLebedevStencilToFile(47)
+WriteLebedevStencilToFile(53)
+WriteLebedevStencilToFile(59)

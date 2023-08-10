@@ -40,7 +40,7 @@ int main()
         data2[ijk] = dist(bOrb,xyz);
         data3[ijk] = dist(aOrb,xyz);
     }
-    grid.WriteFrametoCsv (0,data0,data1,data2,data3,0,OUTPUTDIR,"GridTest");
+    grid.WriteFrametoCsv(0,data0,data1,data2,data3,OUTPUTDIR,"GridTest");
 
     cout << "output/GridTest... has been created. Plot it with ParaView (Filter:Table to Points)." << endl;
 }

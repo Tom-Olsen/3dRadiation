@@ -4,15 +4,24 @@
 # Obj files:
 *.o
 
+# Binaries:
+*.out
+
 # Output:
 output/
-Benchmarking/
 output.txt
-build/*
 perf.data
 perf.data.old
 report.txt
-slurm-*.out
+slurm*
+
+# Build files:
+build/.cmake
+build/CMakeFiles
+build/cmake_install.cmake
+build/CMakeCache.txt
+build/compile_commands.json
+build/Makefile
 
 # Binaries:
 test

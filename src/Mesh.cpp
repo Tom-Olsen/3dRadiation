@@ -26,9 +26,9 @@ Mesh::Mesh(std::vector<Vector3> vertices, std::vector<Vector3Int> triangles)
 }
 
 // Getters:
-std::vector<Vector3> Mesh::GetVertices()
+const std::vector<Vector3>& Mesh::GetVertices() const
 { return m_vertices; }
-std::vector<Vector3Int> Mesh::GetTriangles()
+const std::vector<Vector3Int>& Mesh::GetTriangles() const
 { return m_triangles; }
 
 // Output:

@@ -55,7 +55,7 @@ def WriteGaussLegendreStencilToFile(order):
         f.write(f"this->nDir = {len(weights)} + this->nGhost;\n")
         f.write(f"AllocateBuffers();\n")
         for i in range(len(weights)):
-            f.write(f"w[{i:>3}] = {weights[i]: .60f}; ")
+            f.write(f"w[{i:>3}] = {weights[i] / (4 * math.pi): .60f}; ")    # note: quadrature is normed to 4pi and not 1, thus divide by 4pi.
             f.write(f"cx[{i:>3}] = {xyz[i][0]: .60f}; ")
             f.write(f"cy[{i:>3}] = {xyz[i][1]: .60f}; ")
             f.write(f"cz[{i:>3}] = {xyz[i][2]: .60f}; ")
@@ -97,5 +97,5 @@ def GaußLegendreQuadratureToGrid(order):
     # GaußLegendreQuadratureToGrid(order)
     
 
-for i in range(3,36,2):
+for i in range(3,42,2):
     WriteGaussLegendreStencilToFile(i)
