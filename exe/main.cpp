@@ -157,134 +157,87 @@ void Diffusion(Stencil stencil, StreamingType streamingType, double cfl)
     radiation.RunSimulation();
 }
 
-/*
-void StraightBeam(Stencil stencil, StreamingType streamingType, double cfl)
+void CurvedBeam(Stencil stencil, StreamingType streamingType, double cfl, std::string comment)
 {
-    // Grid, Metric, Stencil:
+    // Create Radiation object:
     size_t nx = 100 + 1 + 2;
-    size_t ny =  50 + 1 + 2;
-    size_t nz =  50 + 1 + 2;
-    double dx = 2.0 / (nx - 1.0 - 2.0);
-    double dy = 1.0 / (ny - 1.0 - 2.0);
+    size_t ny = 80 + 1 + 2;
+    size_t nz = 20 + 1 + 2;
+    double dx = 5.0 / (nx - 1.0 - 2.0);
+    double dy = 4.0 / (ny - 1.0 - 2.0);
     double dz = 1.0 / (nz - 1.0 - 2.0);
-    Coord start(0-dx,-0.5-dy,-0.5-dz);
-    Coord end(2+dx,0.5+dy,0.5+dz);
+    Coord start(0 - dx, 0 - dy, -0.5 - dz);
+    Coord end(5 + dx, 4 + dy, 0.5 + dz);
     Grid grid(nx, ny, nz, start, end);
     grid.SetCFL(cfl);
-    Minkowski metric(grid, 1.0, 0.0);
+    SchwarzSchild metric(grid, 1.0, 0.0); // needs at least LebedevStencil5
+    // KerrSchild metric(grid, 1.0, 0.0);   // initial direction is somehow wrong
     LebedevStencil lebedevStencil(5);
     InterpolationGrid interpGrid(500, 1000, stencil);
-    int sigma = 25;
 
     // Camera:
-    Camera camera;
+    size_t resX = 100;
+    size_t resY = 200;
+    size_t width = 2;
+    size_t height = 4;
+    Coord position(2, 2, 0);
+    double degreeToRadians = 2.0 * M_PI / 360.0;
+    double angleX = 0 * degreeToRadians;
+    double angleY = 0 * degreeToRadians;
+    double angleZ = -135 * degreeToRadians;
+    glm::vec3 eulerAngles(angleX, angleY, angleZ);
+    Camera camera(resX, resY, width, height, position, eulerAngles);
 
     // Config:
     Config config =
-    {
-        .name = "Straight Beam 3d/" + StreamingName(streamingType) + "_" + stencil.name + "_" + std::to_string(sigma) + "s_" + std::to_string(cfl) + "cfl",
-        .simTime = 2*0.75,
-        .writeFrequency = 1000, // write first and last frame only.
-        .updateSphericalHarmonics = false,
-        .keepSourceNodesActive = true,
-        .writeData = true,
-        .printToTerminal = true,
-        .useCamera = false,
-        .streamingType = streamingType,
-        .initialDataType = InitialDataType::EandF,
-        // .initialDataType = InitialDataType::Intensities,
-    };
+        {
+            .name = "Curved Beam 3d/" + metric.Name() + "_" + stencil.name + "_" + std::to_string(nx) + "x" + std::to_string(ny) + "y" + std::to_string(nz) + "z_" + Format(cfl, 2) + "cfl_" + StreamingName(streamingType) + ((comment == "") ? "" : ("_" + comment)),
+            .simTime = 10.0,
+            .writePeriod = 1,
+            .updateSphericalHarmonics = false,
+            .keepSourceNodesActive = true,
+            .writeData = true,
+            .printToTerminal = true,
+            .useCamera = false,
+            .streamingType = streamingType,
+            .initialDataType = InitialDataType::Moments,
+        };
 
+    // Radiation:
     Radiation radiation(metric, stencil, lebedevStencil, interpGrid, camera, config);
-    radiation.sigma = sigma;
 
     // Initial Data:
-    if(streamingType == StreamingType::FlatFixed)
-    {// Single direction Fixed:
-        for(size_t k=0; k<grid.nz; k++)
-        for(size_t j=0; j<grid.ny; j++)
-        for(size_t i=0; i<grid.nx; i++)
-        {
-            size_t ijk = grid.Index(i,j,k);
-            radiation.initialQ[ijk] = glm::quat(glm::vec3(0,0,1),glm::vec3(0,0,1));
-            Coord xyz = grid.xyz(i,j,k);
-            double y = xyz[2];
-            double z = xyz[3];
-            if (-0.25 < y && y < 0.25 && -0.25 < z && z < 0.25 && i <= 1)
+    PARALLEL_FOR(3)
+    for (size_t k = 0; k < grid.nz; k++)
+        for (size_t j = 0; j < grid.ny; j++)
+            for (size_t i = 0; i < grid.nx; i++)
             {
-                radiation.isInitialGridPoint[ijk] = true;
-                radiation.initialE[ijk] = 1;
+                size_t ijk = grid.Index(i, j, k);
+                Coord xyz = grid.xyz(i, j, k);
+                double x = xyz[1];
+                double y = xyz[2];
+                double z = xyz[3];
                 radiation.initialKappa0[ijk] = 0;
                 radiation.initialKappa1[ijk] = 0;
                 radiation.initialKappaA[ijk] = 0;
                 radiation.initialEta[ijk] = 0;
-                for(int d=0; d<stencil.nDir; d++)
+                if (x <= 1.1 * grid.dx && 3.00 <= y && y <= 3.50 && -0.25 <= z && z <= 0.25)
                 {
-                    Tensor3 c = stencil.Ct3(d);
-                    if(c[1] == 1.0)
-                        radiation.initialI[radiation.Index(ijk,d)] = 1;
-                    else
-                        radiation.initialI[radiation.Index(ijk,d)] = 0;
+                    Tensor4 uLF(1, 1, 0, 0);
+                    uLF = NullNormalize(uLF, metric.GetMetric_ll(ijk));
+                    Tensor3 vIF = Vec3ObservedByEulObs<LF, IF>(uLF, xyz, metric);
+
+                    radiation.isInitialGridPoint[ijk] = true;
+                    radiation.initialE_LF[ijk] = 1;
+                    radiation.initialFx_LF[ijk] = 1;
+                    radiation.initialFy_LF[ijk] = 0;
+                    radiation.initialFz_LF[ijk] = 0;
                 }
             }
-        }
-    }
-    //else if(streamingType == StreamingType::FlatAdaptive)
-    //{// Single direction Adaptive:
-    //    for(size_t k=0; k<grid.nz; k++)
-    //    for(size_t j=0; j<grid.ny; j++)
-    //    for(size_t i=0; i<grid.nx; i++)
-    //    {
-    //        size_t ijk = grid.Index(i,j,k);
-    //        radiation.initialQ[ijk] = glm::quat(glm::vec3(0,0,1),glm::vec3(1,0,0));
-    //        Coord xyz = grid.xyz(i,j,k);
-    //        double y = xyz[2];
-    //        double z = xyz[3];
-    //        if (-0.25 < y && y < 0.25 && -0.25 < z && z < 0.25 && i == 1)
-    //        {
-    //            radiation.isInitialGridPoint[ijk] = true;
-    //            radiation.initialE[ijk] = 1;
-    //            radiation.initialKappa0[ijk] = 0;
-    //            radiation.initialKappa1[ijk] = 0;
-    //            radiation.initialKappaA[ijk] = 0;
-    //            radiation.initialEta[ijk] = 0;
-    //        }
-    //        for(int d=0; d<stencil.nDir; d++)
-    //        {
-    //            Tensor3 c = stencil.Ct3(d);
-    //            if(c[3] == 1.0)
-    //                radiation.initialI[radiation.Index(ijk,d)] = 1;
-    //            else
-    //                radiation.initialI[radiation.Index(ijk,d)] = 0;
-    //        }
-    //    }
-    //}
-    else if(streamingType == StreamingType::FlatAdaptive)
-    {// Sigma distribution Adaptive:
-        for(size_t k=0; k<grid.nz; k++)
-        for(size_t j=0; j<grid.ny; j++)
-        for(size_t i=0; i<grid.nx; i++)
-        {
-            size_t ijk = grid.Index(i,j,k);
-            Coord xyz = grid.xyz(i,j,k);
-            double y = xyz[2];
-            double z = xyz[3];
-            if (-0.25 < y && y < 0.25 && -0.25 < z && z < 0.25 && i == 1)
-            {
-                radiation.isInitialGridPoint[ijk] = true;
-                radiation.initialE[ijk] = 1;
-                radiation.initialNx[ijk] = 1;
-                radiation.initialNy[ijk] = 0;
-                radiation.initialNz[ijk] = 0;
-                radiation.initialKappa0[ijk] = 0;
-                radiation.initialKappa1[ijk] = 0;
-                radiation.initialKappaA[ijk] = 0;
-                radiation.initialEta[ijk] = 0;
-            }
-        }
-    }
     radiation.RunSimulation();
 }
+
+/*
 void SphereWave(Stencil stencil, StreamingType streamingType)
 {
     // Grid, Metric, Stencil:
@@ -345,89 +298,7 @@ void SphereWave(Stencil stencil, StreamingType streamingType)
     }
     radiation.RunSimulation();
 }
-void CurvedBeam(double dx, size_t nx, size_t ny, size_t nz, Stencil stencil, int sigma, int simTime, StreamingType streamingType, std::string comment)
-{
-    // Grid, Metric, Stencil:
-    // Coord start(0-dx, 0-dx, -0.5-dx);
-    // Coord end  (5+dx, 4+dx,  0.5+dx);
-    Coord start(0, 0, -0.5);
-    Coord end  (5, 4,  0.5);
-    Grid grid(nx, ny, nz, start, end);
-    grid.SetCFL(0.5);
-    SchwarzSchild metric(grid, 1.0, 0.0);   // needs at least LebedevStencil5
-    // KerrSchild metric(grid, 1.0, 0.0);   // initial direction is somehow wrong
-    LebedevStencil lebedevStencil(5);
-    InterpolationGrid interpGrid(500, 1000, stencil);
 
-    // stencil.connectedTriangles.Print();
-    // return;
-
-    // Camera:
-    size_t resX = 100;
-    size_t resY = 200;
-    size_t width = 2;
-    size_t height = 4;
-    Coord position(2,2,0);
-    double degreeToRadians = 2.0 * M_PI / 360.0;
-    double angleX = 0 * degreeToRadians;
-    double angleY = 0 * degreeToRadians;
-    double angleZ = -135 * degreeToRadians;
-    glm::vec3 eulerAngles(angleX,angleY,angleZ);
-    Camera camera(resX, resY, width, height, position, eulerAngles);
-
-    // Config:
-    Config config =
-    {
-        .name = "Curved Beam 3d/" + metric.Name() + "_" + stencil.name + "_"
-              + std::to_string(nx) + "x" + std::to_string(ny) + "y" + std::to_string(nz) + "z_"
-              + std::to_string(sigma) + "s_" + StreamingName(streamingType) + ((comment=="") ? "" : ("_" + comment)),
-        .simTime = (double)simTime,
-        .writeFrequency = 20,
-        .updateSphericalHarmonics = false,
-        .keepSourceNodesActive = true,
-        .writeData = true,
-        .printToTerminal = true,
-        .useCamera = false,
-        .streamingType = streamingType,
-        .initialDataType = InitialDataType::EandF,
-    };
-
-    // Radiation:
-    Radiation radiation(metric, stencil, lebedevStencil, interpGrid, camera, config);
-    radiation.sigma = sigma;
-
-    // Initial Data:
-    PARALLEL_FOR(3)
-    for(size_t k=0; k<grid.nz; k++)
-    for(size_t j=0; j<grid.ny; j++)
-    for(size_t i=0; i<grid.nx; i++)
-    {
-        size_t ijk = grid.Index(i,j,k);
-        Coord xyz = grid.xyz(i,j,k);
-        double x = xyz[1];
-        double y = xyz[2];
-        double z = xyz[3];
-        if( x <= 1.1 * grid.dx
-        &&  3.00 <= y && y <= 3.50
-        && -0.25 <= z && z <= 0.25)
-        {
-            Tensor4 uLF(1,1,0,0);
-            uLF = NullNormalize(uLF,metric.GetMetric_ll(ijk));
-            Tensor3 vIF = Vec3ObservedByEulObs<LF,IF>(uLF, xyz, metric);
-
-            radiation.isInitialGridPoint[ijk] = true;
-            radiation.initialE[ijk] = 1;
-            radiation.initialNx[ijk] = vIF[1];
-            radiation.initialNy[ijk] = vIF[2];
-            radiation.initialNz[ijk] = vIF[3];
-            radiation.initialKappa0[ijk] = 0;
-            radiation.initialKappa1[ijk] = 0;
-            radiation.initialKappaA[ijk] = 0;
-            radiation.initialEta[ijk] = 0;
-        }
-    }
-    radiation.RunSimulation();
-}
 
 void ThinDisk1(size_t nx, size_t ny, size_t nz, Stencil stencil, int sigma, int simTime, StreamingType streamingType, string comment)
 {
@@ -628,8 +499,15 @@ int main(int argc, char *argv[])
     //    StraightBeamShadow(LebedevStencil(35, 4, 8, M_PI / 8.0), StreamingType::FlatAdaptive, 0.75);
 
     // if (n == 0)
-    Diffusion(LebedevStencil(7), StreamingType::FlatFixed, 0.2);
+    // Diffusion(LebedevStencil(7), StreamingType::FlatFixed, 0.2);
     // Diffusion(LebedevStencil(23), StreamingType::FlatFixed, 0.5);
+
+    if (n == 0)
+        CurvedBeam(LebedevStencil(23, 4, 8, M_PI / 8.0), StreamingType::CurvedFixed, 0.5, "");
+    if (n == 1)
+        CurvedBeam(LebedevStencil(23, 4, 8, M_PI / 8.0), StreamingType::CurvedAdaptive, 0.5, "");
+
+    // OLD:
 
     // Straight Beam:
     // StraightBeam(LebedevStencil(35),StreamingType::FlatFixed);

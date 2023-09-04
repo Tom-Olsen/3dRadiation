@@ -18,6 +18,7 @@ report*
 perf.data*
 
 # Build files:
+build/build.ninja
 build/.cmake
 build/CMakeFiles
 build/cmake_install.cmake
