@@ -519,32 +519,29 @@ inline std::string FrameNumber(int f)
     return frameNumber;
 }
 
-inline std::string Format(const double n, const int precision = 6)
+inline std::string Format(const double n, const int precision = 6, const bool noSpace = false, const int maxDigits = 1)
 {
     std::string output;
 
-    // Leading space for positive numbers:
-    if (n == 0 and std::signbit(n) == 0)
+    // Leading space if positive:
+    if (noSpace == false)
     {
-        output = " ";
-    }
-    else if (n == 0 and std::signbit(n) == 1)
-    {
-        output = "";
-    }
-    else if (n >= 0)
-    {
-        output = " ";
-    }
-    else
-    {
-        output = "";
+        if (n == 0 and std::signbit(n) == 0)
+            output = " ";
+        else if (n == 0 and std::signbit(n) == 1)
+            output = "";
+        else if (n >= 0)
+            output = " ";
+        else
+            output = "";
     }
 
     // Leading space if 2 digit number:
-    // if(abs(n)<100){output += " ";}
+    if (maxDigits > 2 && abs(n) < 100)
+        output += " ";
     // Leading space if 1 digit number:
-    // if(abs(n)<10){output += " ";}
+    if (maxDigits > 1 && abs(n) < 10)
+        output += " ";
 
     // Number of decimal digits:
     std::ostringstream ss;

@@ -13,9 +13,6 @@ public:
     Metric &metric;
     int timeSteps;
     double simTime;
-    double interpolationAccuracy;
-    double sigmaMax;
-    double fluxMax;
 
     // Data management:
     std::string name;
@@ -27,12 +24,9 @@ public:
     Logger(Stencil &intensityStencil, Stencil &streamingStencil, Metric &metric)
         : intensityStencil(intensityStencil), streamingStencil(streamingStencil), metric(metric){};
 
-    void SetValues(std::string name, double simTime, double interpolationAccuracy, double sigmaMax, double fluxMax)
+    void SetValues(std::string name, double simTime)
     {
         this->name = name;
-        this->interpolationAccuracy = interpolationAccuracy;
-        this->sigmaMax = sigmaMax;
-        this->fluxMax = fluxMax;
 
         // Derived from simulation parameters:
         timeSteps = ceil(simTime / metric.grid.dt);
@@ -73,17 +67,16 @@ public:
         file << "dx   = " << metric.grid.dx << std::endl;
         file << "dy   = " << metric.grid.dy << std::endl;
         file << "dz   = " << metric.grid.dz << std::endl;
-        file << "dt   = " << metric.grid.dt << std::endl;
-        file << "cfl        = " << metric.grid.GetCFL() << std::endl;
-        file << "interp acc = " << 100 * interpolationAccuracy << "%" << std::endl;
-        file << "sigma max  = " << sigmaMax << std::endl;
-        file << "flux max   = " << fluxMax << std::endl
+        file << "dt   = " << metric.grid.dt << std::endl
              << std::endl;
 
         file << "Stencil Properties:" << std::endl;
         file << "Intensity Stencil: nDir          = " << intensityStencil.nDir << std::endl;
         file << "Intensity Stencil: nOrder        = " << intensityStencil.nOrder << std::endl;
         file << "Intensity Stencil: nCoefficients = " << intensityStencil.nCoefficients << std::endl;
+        file << "Intensity Stencil: max Interpolation Error = " << 100 * intensityStencil.maxInterpolationError << "%" << std::endl;
+        file << "Intensity Stencil: sigma max               = " << intensityStencil.sigmaMax << std::endl;
+        file << "Intensity Stencil: relative flux max       = " << intensityStencil.relativeFluxMax << std::endl;
         file << "Streaming Stencil: nDir          = " << streamingStencil.nDir << std::endl;
         file << "Streaming Stencil: nOrder        = " << streamingStencil.nOrder << std::endl;
         file << "Streaming Stencil: nCoefficients = " << streamingStencil.nCoefficients << std::endl

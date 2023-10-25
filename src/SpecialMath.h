@@ -25,9 +25,12 @@ Tensor3 Vec3ObservedByEulObs(const Tensor4 &u, const Coord &xyz, Metric &metric)
 
 Vector3 CircumCenter(const Vector3 &a, const Vector3 &b, const Vector3 &c);
 Vector2 CircumCenter(const Vector2 &a, const Vector2 &b, const Vector2 &c);
-Vector2 LineIntersection(const Vector2 &p1, const Vector2 &d1, const Vector2 &p2, const Vector2 &d2);
 
-bool RayPlaneIntersection(const Vector3 &p0, const Vector3 &d, const Vector3 &p1, const Vector3 &n, Vector3 &pIntersect, double &t);
+double PointToPointDistance(const Vector3 &point0, const Vector3 &point1);
+bool IsParallel(const Vector3 &direction0, const Vector3 &direction1);
+Vector2 LineLineIntersection(const Vector2 &lineSupport0, const Vector2 &lineDirection0, const Vector2 &lineSupport1, const Vector2 &lineDirection1);
+Vector3 LinePlaneIntersection(const Vector3 &lineSupport, const Vector3 &lineDirection, const Vector3 &planeSupport, const Vector3 &planeNormal);
+Vector3 LinePlaneIntersection(const Vector3 &lineSupport, const Vector3 &lineDirection, const Vector3 &planeSupport, const Vector3 &planeNormal, double &t);
 
 std::vector<Vector3> SortPointsOnSphereAroundCenter(const std::vector<Vector3> &points);
 

@@ -141,29 +141,33 @@ Vector2 CircumCenter(const Vector2 &a, const Vector2 &b, const Vector2 &c)
     Vector2 midAC = a + dirAC;
     Vector2 perpAB = Vector2(-dirAB[1], dirAB[0]);
     Vector2 perpAC = Vector2(-dirAC[1], dirAC[0]);
-    return LineIntersection(midAB, perpAB, midAC, perpAC);
-}
-Vector2 LineIntersection(const Vector2 &p1, const Vector2 &d1, const Vector2 &p2, const Vector2 &d2)
-{
-    double cross = Vector2::Cross(d1, d2);
-    Vector2 diff = p2 - p1;
-    double t = Vector2::Cross(diff, d2) / cross;
-    return p1 + (t * d1);
+    return LineLineIntersection(midAB, perpAB, midAC, perpAC);
 }
 
-bool RayPlaneIntersection(const Vector3 &p0, const Vector3 &d, const Vector3 &p1, const Vector3 &n, Vector3 &pIntersect, double &t)
+double PointToPointDistance(const Vector3 &point0, const Vector3 &point1)
 {
-    double epsilon = 1e-8f;
-    double dn = Vector3::Dot(d, n);
-    if (abs(dn) <= epsilon)
-        return false;
-
-    t = Vector3::Dot((p1 - p0), n) / dn;
-    if (t <= epsilon)
-        return false;
-
-    pIntersect = p0 + t * d;
-    return true;
+    return (point1 - point0).Norm();
+}
+bool IsParallel(const Vector3 &direction0, const Vector3 &direction1)
+{
+    return 1.0 - abs(Vector3::Dot(direction0.Normalized(), direction1.Normalized())) < 1e-4;
+}
+Vector2 LineLineIntersection(const Vector2 &lineSupport0, const Vector2 &lineDirection0, const Vector2 &lineSupport1, const Vector2 &lineDirection1)
+{
+    double t = Vector2::Cross(lineSupport1 - lineSupport0, lineDirection1) / Vector2::Cross(lineDirection0, lineDirection1);
+    return lineSupport0 + (t * lineDirection0);
+}
+Vector3 LinePlaneIntersection(const Vector3 &lineSupport, const Vector3 &lineDirection, const Vector3 &planeSupport, const Vector3 &planeNormal)
+{
+    double d = Vector3::Dot(planeSupport, planeNormal);
+    double t = (d - Vector3::Dot(lineSupport, planeNormal)) / Vector3::Dot(lineDirection, planeNormal);
+    return lineSupport + t * lineDirection;
+}
+Vector3 LinePlaneIntersection(const Vector3 &lineSupport, const Vector3 &lineDirection, const Vector3 &planeSupport, const Vector3 &planeNormal, double &t)
+{
+    double d = Vector3::Dot(planeSupport, planeNormal);
+    t = (d - Vector3::Dot(lineSupport, planeNormal)) / Vector3::Dot(lineDirection, planeNormal);
+    return lineSupport + t * lineDirection;
 }
 
 std::vector<Vector3> SortPointsOnSphereAroundCenter(const std::vector<Vector3> &points)

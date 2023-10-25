@@ -1,6 +1,7 @@
 #ifndef __INCLUDE_GUARD_DataTypes_hh__
 #define __INCLUDE_GUARD_DataTypes_hh__
 #include <iostream>                   // Output to terminal.
+#include <fstream>                    // File input/output.
 #include <span>                       // span = sub vector
 #include "glm/glm/gtc/quaternion.hpp" // Quaternions.
 #include "ControlFlow.hh"             // Template arguments and profiling macros.
@@ -958,6 +959,101 @@ public:
         for (size_t i = 0; i < m_indexes.size(); i++)
             std::cout << m_indexes[i] << ", ";
         std::cout << std::endl;
+    }
+};
+
+struct LookUpTable
+{
+    int size = 0;
+    std::vector<double> inputs;
+    std::vector<double> outputs;
+
+    void Add(double input, double output)
+    {
+        if (inputs.size() == 0 || input < inputs[0])
+        {
+            inputs.insert(inputs.begin(), input);
+            outputs.insert(outputs.begin(), output);
+        }
+        else if (input > inputs.back())
+        {
+            inputs.push_back(input);
+            outputs.push_back(output);
+        }
+        else
+        {
+            // Find the correct spot where new values must be inserted:
+            auto iterator = std::lower_bound(inputs.begin(), inputs.end(), input);
+
+            // Only add new values if they are not in the vectors yet:
+            if (iterator == inputs.end() || input < *iterator)
+            {
+                int index = std::distance(inputs.begin(), iterator);
+                inputs.insert(inputs.begin() + index, input);
+                outputs.insert(outputs.begin() + index, output);
+            }
+        }
+        size = inputs.size();
+    }
+
+    double Evaluate(double x)
+    {
+        if (size == 0)
+            ExitOnError("Trying to read from empty look up table.");
+        if (x <= inputs[0] || size == 1)
+            return outputs[0];
+        if (x >= inputs[size - 1])
+            return outputs[size - 1];
+
+        auto lowerIterator = std::lower_bound(inputs.begin(), inputs.end(), x) - 1;
+        auto upperIterator = lowerIterator + 1;
+
+        // Handle the case where x is exactly one of the input values
+        if (lowerIterator != inputs.end() && *lowerIterator == x)
+        {
+            int index = std::distance(inputs.begin(), lowerIterator);
+            return outputs[index];
+        }
+
+        int index0 = std::distance(inputs.begin(), lowerIterator);
+        int index1 = std::distance(inputs.begin(), upperIterator);
+
+        double x0 = inputs[index0];
+        double x1 = inputs[index1];
+        double y0 = outputs[index0];
+        double y1 = outputs[index1];
+
+        double t = (x - x0) / (x1 - x0);
+        return y0 + t * (y1 - y0);
+    }
+
+    void WriteToCsv(std::string name, int resolution)
+    {
+        if (inputs.size() == 0)
+            ExitOnError("Trying to read from empty look up table.");
+
+        std::ofstream fileOut(name + ".csv");
+
+        double x0 = inputs[0];
+        double x1 = inputs[inputs.size() - 1];
+
+        fileOut << "#x,y\n";
+        if (resolution < 0)
+        {
+            for (size_t i = 0; i < size; i++)
+                fileOut << Format(inputs[i], 8) << "," << Format(outputs[i], 8) << "\n";
+        }
+        else
+        {
+            for (size_t i = 0; i < resolution; i++)
+            {
+                double t = i / (resolution - 1.0);
+                double x = x0 + t * (x1 - x0);
+                fileOut << Format(x, 8) << "," << Format(Evaluate(x), 8) << "\n";
+            }
+        }
+
+        fileOut.close();
     }
 };
 #endif //__INCLUDE_GUARD_DataTypes_hh__

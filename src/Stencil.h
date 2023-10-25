@@ -4,13 +4,12 @@
 #include <set>
 #include <span>
 #include <tuple>
+#include <fstream>
 #include "Utility.hh"
 #include "DataTypes.hh"
 #include "ConvexHull.h"
 #include "Interpolation.h"
 #include "SpecialMath.h"
-
-
 
 // Spherical Coordinates convention:
 // theta € [0,pi]
@@ -23,22 +22,25 @@
 // (th,phi) = (pi/2,3pi/2) => (x,y,z) = ( 0,-1, 0)
 // (th,phi) = (pi/2,  2pi) => (x,y,z) = ( 1, 0, 0)
 
-
-
 // Base Stencil class. This functionality is supported by all stencils.
 struct Stencil
 {
 public:
     // Public Properties:
-    std::string name;       // Name of the stencel, e.g. "Lebedev9.1.4"
-    size_t nDir;            // Number of directions in stencil.
-    size_t nOrder;          // Quadrature integration order.
-    size_t nCoefficients;   // Number of exactly integrated Spherical Harmonics, counted with flat index i = l * (l + 1) + m.
-    size_t nRings;          // Number of ghost rings to be added.
-    size_t nRing0;          // Number of ghost directions in smallest ring.
-    size_t nGhost;          // Total amount of ghost directions.
-    double thetaGhost;      // Ghost rings are evenly spread from in (0,thetaGhost), excluding boundaries.
+    std::string name;     // Name of the stencel, e.g. "Lebedev9.1.4"
+    size_t nDir;          // Number of directions in stencil.
+    size_t nOrder;        // Quadrature integration order.
+    size_t nCoefficients; // Number of exactly integrated Spherical Harmonics, counted with flat index i = l * (l + 1) + m.
+    size_t nRings;        // Number of ghost rings to be added.
+    size_t nRing0;        // Number of ghost directions in smallest ring.
+    size_t nGhost;        // Total amount of ghost directions.
+    double thetaGhost;    // Ghost rings are evenly spread from in (0,thetaGhost), excluding boundaries.
+    LookUpTable fluxToSigmaTable;
+    LookUpTable fluxToNormalizationTable;
+    double sigmaMax;
+    double relativeFluxMax;
     Mesh mesh;
+    static constexpr double maxInterpolationError = 0.01; // 1%
 
 protected:
     // Internal Buffers (data for each vertex):
@@ -68,20 +70,19 @@ public:
 
     // Expensive Getters:
     // Get voronoi neighbours and weights of an abitrary point p.
-    std::tuple<std::vector<size_t>, std::vector<double>> VoronoiNeighboursAndWeights(const Vector3& p) const;
+    std::tuple<std::vector<size_t>, std::vector<double>> VoronoiNeighboursAndWeights(const Vector3 &p) const;
+    std::tuple<std::vector<size_t>, std::vector<double>> VoronoiNeighboursAndWeights(const Vector3 &p, bool test) const;
     // Get barycentric neighbours and weights of an abitrary point p.
-    std::tuple<Vector3Int,Vector3> BarycentricNeighboursAndWeights(const Vector3& p) const;
+    std::tuple<Vector3Int, Vector3> BarycentricNeighboursAndWeights(const Vector3 &p) const;
 
 private:
     // Internal helper methods:
     // Index of nearest stencil.C(?) for arbitrary point p.
-    size_t NearestNeighbour(const Vector3& p) const;
+    size_t NearestNeighbour(const Vector3 &p) const;
     // Creates virtual voronoi cell of arbitrary point p. This includes the natural neighbours and voronoi points that are inside the virual cell.
-    std::vector<Vector3> VirtualVoronoiCellOf
-    (const Vector3& p, std::vector<size_t>& naturalNeighbours, std::vector<Vector3>& pointsInsideCell) const;
+    std::vector<Vector3> VirtualVoronoiCellOf(const Vector3 &p, std::vector<size_t> &naturalNeighbours, std::vector<Vector3> &pointsInsideCell) const;
     // Get voronoi weights of virtual voronoi cell.
-    std::vector<double> VoronoiWeights
-    (const std::vector<Vector3>& virtualCell, const std::vector<size_t>& naturalNeighbours, const std::vector<Vector3>& pointsInsideCell) const;
+    std::vector<double> VoronoiWeights(const std::vector<Vector3> &virtualCell, const std::vector<size_t> &naturalNeighbours, const std::vector<Vector3> &pointsInsideCell) const;
 
 protected:
     // Initialization:
@@ -92,15 +93,12 @@ protected:
     void InitializeConnectedTriangles();
     void InitializeVoronoiCells();
     void InitializeVoronoiNeighbours();
-    void InitializeNearestNeighbourOnGrid();
-    void InitializeVoronoiInterpolationOnGrid();
+    void PopulateLookUpTable();
 
 public:
     // Debugging:
     void Print() const;
 };
-
-
 
 // This class holds discretized velocities and the corresponding weights.
 // The distribution of the velocity vectors is given by the spherical Lebedev quadarture.
@@ -113,10 +111,8 @@ public:
 // when flattenign the sphercal harmonics: i = l * (l + 1) + m
 struct LebedevStencil : public Stencil
 {
-    LebedevStencil(size_t nOrder, size_t nRings=0, size_t nRing0=0, double thetaGhost=0);
+    LebedevStencil(size_t nOrder, size_t nRings = 0, size_t nRing0 = 0, double thetaGhost = 0);
 };
-
-
 
 // This type of stencil is not used in the 'general relativistic Lattice Boltzmann Method for radiative transport' code.
 // It is only here for reference, if someone might want to test something.

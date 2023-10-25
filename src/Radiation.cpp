@@ -21,8 +21,6 @@ Radiation::Radiation(Metric &metric, Stencil &stencil, LebedevStencil &streaming
     initialI.resize(grid.nxyz * stencil.nDir);
     initialQ.resize(grid.nxyz);
 
-    sigma.resize(grid.nxyz);
-    normalization.resize(grid.nxyz);
     q.resize(grid.nxyz);
     qNew.resize(grid.nxyz);
     E.resize(grid.nxyz);
@@ -114,184 +112,6 @@ Tensor4 Radiation::InitialDataLFtoIF(size_t ijk)
 
     return Tensor4(initialE_IF, initialFx_IF, initialFy_IF, initialFz_IF);
 }
-void Radiation::InitSigmaAndNormalization()
-{
-    PROFILE_FUNCTION();
-    bool isAdaptiveStreaming = (config.streamingType == StreamingType::FlatAdaptive || config.streamingType == StreamingType::CurvedAdaptive);
-
-    InterpolationGrid testGrid(100, 200, stencil);
-
-    PARALLEL_FOR(1)
-    for (size_t ijk = 0; ijk < grid.nxyz; ijk++)
-    {
-        if (!isInitialGridPoint[ijk])
-            continue;
-
-        // Convert given LF initial data to IF:
-        Tensor4 initialDataIF = InitialDataLFtoIF(ijk);
-        double initialE_IF = initialDataIF[0];
-        double initialFx_IF = initialDataIF[1];
-        double initialFy_IF = initialDataIF[2];
-        double initialFz_IF = initialDataIF[3];
-
-        // Flux angle and magnitude in IF:
-        Tensor3 initialFxyz_IF(initialFx_IF, initialFy_IF, initialFz_IF);
-        double initialF_IF = initialFxyz_IF.EuklNorm();
-        glm::vec3 to(initialFx_IF / initialF_IF, initialFy_IF / initialF_IF, initialFz_IF / initialF_IF);
-        initialQ[ijk] = glm::quat(from, to);
-        Tensor3 dirInitialF = (isAdaptiveStreaming) ? Tensor3(0, 0, 1) : Tensor3(initialFx_IF / initialF_IF, initialFy_IF / initialF_IF, initialFz_IF / initialF_IF);
-
-        // Catch uniform distibution:
-        if (initialF_IF < MIN_FLUX_NORM)
-        {
-            initialQ[ijk] = glm::quat(1, 0, 0, 0);
-            sigma[ijk] = 0;
-            normalization[ijk] = 0;
-            for (int d = 0; d < stencil.nDir; d++)
-                normalization[ijk] += stencil.W(d) * 1.0;
-            normalization[ijk] = log(normalization[ijk]);
-            continue;
-        }
-
-        // Prepare normalization factor and sigma search:
-        sigma[ijk] = 0;
-        double currentF = 0;
-        int refinement = 1; // start with 1e1=10 steps in sigma search.
-        double lastGoodSigma = -1;
-        while (abs(currentF - initialF_IF) / initialF_IF > 0.001) // while difference bigger 0.1%
-        {
-            // Adjust sigma:
-            if (currentF < initialF_IF)
-                // Increase sigma:
-                sigma[ijk] += pow(10, refinement);
-            else if (currentF > initialF_IF)
-            {
-                // Go back to previous sigma and make sigma step one magnitude smaller:
-                sigma[ijk] -= pow(10, refinement);
-                refinement--;
-                if (refinement < -5) // 5 digits after decimal point.
-                {
-                    sigma[ijk] = lastGoodSigma;
-                    break;
-                }
-                currentF = 0; // trigger above branch in next iteration.
-                continue;
-            }
-            else
-                // found exact sigma (unlikely).
-                break;
-
-            // Determine normalization for current sigma value:
-            normalization[ijk] = 0;
-            for (int d = 0; d < stencil.nDir; d++)
-                normalization[ijk] += stencil.W(d) * exp(sigma[ijk] * Tensor3::Dot(dirInitialF, stencil.Ct3(d)));
-            normalization[ijk] = log(normalization[ijk]);
-
-            // Calculate moments with current sigma value:
-            double currentE = 0;
-            double currentFx = 0;
-            double currentFy = 0;
-            double currentFz = 0;
-            for (int d = 0; d < stencil.nDir; d++)
-            {
-                I[Index(ijk, d)] = initialE_IF * exp(sigma[ijk] * Tensor3::Dot(dirInitialF, stencil.Ct3(d)) - normalization[ijk]);
-                Tensor3 dir = ((isAdaptiveStreaming) ? initialQ[ijk] : glm::quat(1, 0, 0, 0)) * stencil.Ct3(d);
-                double c = stencil.W(d) * I[Index(ijk, d)];
-                currentE += c;
-                currentFx += c * dir[1];
-                currentFy += c * dir[2];
-                currentFz += c * dir[3];
-            }
-            currentF = Tensor3(currentFx, currentFy, currentFz).EuklNorm();
-
-            // Check if interpolation error is acceptable:
-            double averageError = 0;
-            int count = 0;
-            for (int d1 = 0; d1 < testGrid.nPh; d1++)
-                for (int d0 = 0; d0 < testGrid.nTh; d0++)
-                {
-                    int d = testGrid.Index(d0, d1);
-                    // Skip angles outside the +-deltaPhi/2 range in which most of the ghost directions are arranged:
-                    if (MyAcos(Tensor3::Dot(dirInitialF, testGrid.Ct3(d0, d1))) > M_PI / 8.0)
-                        continue;
-
-                    // Analytic intensity:
-                    double analyticValue = initialE_IF * exp(sigma[ijk] * Tensor3::Dot(dirInitialF, testGrid.Ct3(d0, d1)) - normalization[ijk]);
-
-                    // Voronoi interpolated intensity:
-                    std::span<const size_t> neighbours = testGrid.VoronoiNeighbours(d0, d1);
-                    std::span<const double> weights = testGrid.VoronoiWeights(d0, d1);
-                    double interpolatetValue = 0;
-                    for (size_t p = 0; p < weights.size(); p++)
-                        interpolatetValue += weights[p] * I[Index(ijk, neighbours[p])];
-
-                    // Barycentric interpolated intensity:
-                    // Vector3Int neighbours = testGrid.BarycentricNeighbours(d0, d1);
-                    // Vector3 weights = testGrid.BarycentricWeights(d0, d1);
-                    // double interpolatetValue = 0;
-                    // for (size_t p = 0; p < 3; p++)
-                    //     interpolatetValue += weights[p] * I[Index(ijk, neighbours[p])];
-
-                    // Error:
-                    double error = std::abs((analyticValue - interpolatetValue) / analyticValue);
-                    averageError += error;
-                    count++;
-                }
-            averageError /= count;
-
-            if (averageError > MAX_INTERPOLATION_ERROR)
-                currentF = initialF_IF + 1e100; // trigger search refinement!
-            else
-                lastGoodSigma = sigma[ijk];
-        }
-    }
-}
-
-double Radiation::SigmaMax()
-{
-    double sigmaMax = 0;
-    for (int ijk = 0; ijk < grid.nxyz; ijk++)
-        sigmaMax = std::max(sigmaMax, sigma[ijk]);
-    return sigmaMax;
-}
-double Radiation::FluxMax()
-{
-    double fluxMax = 0;
-    for (int ijk = 0; ijk < grid.nxyz; ijk++)
-    {
-        if (!isInitialGridPoint[ijk])
-            continue;
-
-        Tensor4 initialDataIF = InitialDataLFtoIF(ijk);
-        double initialE_IF = initialDataIF[0];
-        double initialFx_IF = initialDataIF[1];
-        double initialFy_IF = initialDataIF[2];
-        double initialFz_IF = initialDataIF[3];
-
-        // Intendet initial data flux norm:
-        Tensor3 initialFxyz_IF(initialFx_IF, initialFy_IF, initialFz_IF);
-        double initialF_IF = initialFxyz_IF.EuklNorm();
-
-        // Actual initial data flux norm:
-        double currentFx = 0.0;
-        double currentFy = 0.0;
-        double currentFz = 0.0;
-        for (size_t d = 0; d < stencil.nDir; d++)
-        {
-            Tensor3 dir = q[ijk] * stencil.Ct3(d);
-            size_t index = Index(ijk, d);
-            double c = stencil.W(d) * I[index];
-            currentFx += c * dir[1];
-            currentFy += c * dir[2];
-            currentFz += c * dir[3];
-        }
-        double currentF = Tensor3(currentFx, currentFy, currentFz).EuklNorm();
-
-        if (initialF_IF != 0)
-            fluxMax = std::max(fluxMax, currentF / initialF_IF);
-    }
-    return fluxMax;
-}
 
 void Radiation::LoadInitialData()
 {
@@ -314,14 +134,18 @@ void Radiation::LoadInitialData()
         // Flux direction and magnitude in IF:
         Tensor3 initialFxyz_IF(initialFx_IF, initialFy_IF, initialFz_IF);
         double initialF_IF = initialFxyz_IF.EuklNorm();
+        double relativeF_IF = initialF_IF / initialE_IF;
         Tensor3 dirInitialF = (isAdaptiveStreaming) ? Tensor3(0, 0, 1) : Tensor3(initialFx_IF / initialF_IF, initialFy_IF / initialF_IF, initialFz_IF / initialF_IF);
         if (initialF_IF < MIN_FLUX_NORM)
             dirInitialF = Tensor3(0, 0, 1);
 
-        kappa0[ijk] = kappaCGStoCode * initialKappa0[ijk];
-        kappa1[ijk] = kappaCGStoCode * initialKappa1[ijk];
-        kappaA[ijk] = kappaCGStoCode * initialKappaA[ijk];
-        eta[ijk] = etaCGStoCode * initialEta[ijk];
+        kappa0[ijk] = initialKappa0[ijk];
+        kappa1[ijk] = initialKappa1[ijk];
+        kappaA[ijk] = initialKappaA[ijk];
+        eta[ijk] = initialEta[ijk];
+        double sigma = stencil.fluxToSigmaTable.Evaluate(relativeF_IF);
+        double normalization = stencil.fluxToNormalizationTable.Evaluate(relativeF_IF);
+
         if (config.initialDataType == InitialDataType::Moments)
         {
             // Von Mises distribution:
@@ -330,7 +154,7 @@ void Radiation::LoadInitialData()
             {
                 q[ijk] = (isAdaptiveStreaming) ? initialQ[ijk] : glm::quat(1, 0, 0, 0);
                 for (size_t d = 0; d < stencil.nDir; d++)
-                    I[Index(ijk, d)] = initialE_IF * exp(sigma[ijk] * Tensor3::Dot(dirInitialF, stencil.Ct3(d)) - normalization[ijk]);
+                    I[Index(ijk, d)] = initialE_IF * exp(sigma * Tensor3::Dot(dirInitialF, stencil.Ct3(d)) - normalization);
             }
         }
         else if (config.initialDataType == InitialDataType::Intensities)
@@ -507,49 +331,51 @@ double Radiation::IntensityAt(size_t ijk, Tensor3 vTempIF)
     // Interpolation point:
     vTempIF = Invert(q[ijk]) * vTempIF;
 
-    //// Barycentric interpolation:
-    // std::tuple<Vector3Int,Vector3> neighboursAndWeights = stencilSrc.BarycentricNeighboursAndWeights(vTempIF);
+    // Barycentric interpolation (way to slow):
+    // std::tuple<Vector3Int, Vector3> neighboursAndWeights = stencil.BarycentricNeighboursAndWeights(Vector3(vTempIF[1], vTempIF[2], vTempIF[3]));
     // Vector3Int neighbours = std::get<0>(neighboursAndWeights);
     // Vector3 weights = std::get<1>(neighboursAndWeights);
-    // double I0 = weights[0] * I[Index(ijk,neighbours[0])];
-    // double I1 = weights[1] * I[Index(ijk,neighbours[1])];
-    // double I2 = weights[2] * I[Index(ijk,neighbours[2])];
+    // double I0 = weights[0] * I[Index(ijk, neighbours[0])];
+    // double I1 = weights[1] * I[Index(ijk, neighbours[1])];
+    // double I2 = weights[2] * I[Index(ijk, neighbours[2])];
     // return std::max(0.0, I0 + I1 + I2);
 
-    //// Voronoi Interpolation:
-    // std::tuple<std::vector<size_t>, std::vector<double>> neighboursAndWeights = stencilSrc.VoronoiNeighboursAndWeights(vTempIF);
+    // Voronoi Interpolation (way to slow):
+    // std::tuple<std::vector<size_t>, std::vector<double>> neighboursAndWeights = stencil.VoronoiNeighboursAndWeights(Vector3(vTempIF[1], vTempIF[2], vTempIF[3]));
     // std::vector<size_t> neighbours = std::get<0>(neighboursAndWeights);
     // std::vector<double> weights = std::get<1>(neighboursAndWeights);
     // double value = 0.0;
-    // for(int i=0; i<neighbours.size(); i++)
-    //     value += weights[i] * I[Index(ijk,neighbours[i])];
+    // for (int i = 0; i < neighbours.size(); i++)
+    //     value += weights[i] * I[Index(ijk, neighbours[i])];
     // return std::max(0.0, value);
 
-    //// Optimized Barycentric Interpolation:
+    // Optimized Barycentric Interpolation (weirdly slower than optimized voronoi interpolation):
     // double i = interpGrid.i(vTempIF);
     // double j = interpGrid.j(vTempIF);
-    // size_t i0 = std::floor(i); size_t i1 = i0 + 1;
-    // size_t j0 = std::floor(j); size_t j1 = (j0 + 1) % interpGrid.nPh;
-    // Vector3Int neighbours00 = interpGrid.BarycentricNeighbours(i0,j0);
-    // Vector3Int neighbours01 = interpGrid.BarycentricNeighbours(i0,j1);
-    // Vector3Int neighbours10 = interpGrid.BarycentricNeighbours(i1,j0);
-    // Vector3Int neighbours11 = interpGrid.BarycentricNeighbours(i1,j1);
-    // Vector3 weights00 = interpGrid.BarycentricWeights(i0,j0);
-    // Vector3 weights01 = interpGrid.BarycentricWeights(i0,j1);
-    // Vector3 weights10 = interpGrid.BarycentricWeights(i1,j0);
-    // Vector3 weights11 = interpGrid.BarycentricWeights(i1,j1);
+    // size_t i0 = std::floor(i);
+    // size_t i1 = i0 + 1;
+    // size_t j0 = std::floor(j);
+    // size_t j1 = (j0 + 1) % interpGrid.nPh;
+    // Vector3Int neighbours00 = interpGrid.BarycentricNeighbours(i0, j0);
+    // Vector3Int neighbours01 = interpGrid.BarycentricNeighbours(i0, j1);
+    // Vector3Int neighbours10 = interpGrid.BarycentricNeighbours(i1, j0);
+    // Vector3Int neighbours11 = interpGrid.BarycentricNeighbours(i1, j1);
+    // Vector3 weights00 = interpGrid.BarycentricWeights(i0, j0);
+    // Vector3 weights01 = interpGrid.BarycentricWeights(i0, j1);
+    // Vector3 weights10 = interpGrid.BarycentricWeights(i1, j0);
+    // Vector3 weights11 = interpGrid.BarycentricWeights(i1, j1);
     // double value00 = 0;
     // double value01 = 0;
     // double value10 = 0;
     // double value11 = 0;
-    // for(int i=0; i<3; i++)
-    //{
-    //     value00 += weights00[i] * I[Index(ijk,neighbours00[i])];
-    //     value01 += weights01[i] * I[Index(ijk,neighbours01[i])];
-    //     value10 += weights10[i] * I[Index(ijk,neighbours10[i])];
-    //     value11 += weights11[i] * I[Index(ijk,neighbours11[i])];
+    // for (int i = 0; i < 3; i++)
+    // {
+    //     value00 += weights00[i] * I[Index(ijk, neighbours00[i])];
+    //     value01 += weights01[i] * I[Index(ijk, neighbours01[i])];
+    //     value10 += weights10[i] * I[Index(ijk, neighbours10[i])];
+    //     value11 += weights11[i] * I[Index(ijk, neighbours11[i])];
     // }
-    // return std::max(0.0, BilinearInterpolation(i-i0,j-j0,value00,value01,value10,value11));
+    // return std::max(0.0, BilinearInterpolation(i - i0, j - j0, value00, value01, value10, value11));
 
     // Optimized Voronoi Interpolation:
     double i = interpGrid.i(vTempIF);
@@ -917,24 +743,12 @@ void Radiation::CollideStaticFluidBackwardEuler()
                     double guessFx = Fx[ijk];
                     double guessFy = Fy[ijk];
                     double guessFz = Fz[ijk];
-                    double guessPxx = Pxx[ijk];
-                    double guessPxy = Pxy[ijk];
-                    double guessPxz = Pxz[ijk];
-                    double guessPyy = Pyy[ijk];
-                    double guessPyz = Pyz[ijk];
-                    double guessPzz = Pzz[ijk];
                     double partOfGammaNoneLinear = eta[ijk] + kappa0[ijk] * guessE;
 
                     E[ijk] = 0.0;
                     Fx[ijk] = 0.0;
                     Fy[ijk] = 0.0;
                     Fz[ijk] = 0.0;
-                    Pxx[ijk] = 0.0;
-                    Pxy[ijk] = 0.0;
-                    Pxz[ijk] = 0.0;
-                    Pyy[ijk] = 0.0;
-                    Pyz[ijk] = 0.0;
-                    Pzz[ijk] = 0.0;
                     for (size_t d = 0; d < stencil.nDir; d++)
                     {
                         Tensor3 dir = q[ijk] * stencil.Ct3(d);
@@ -949,24 +763,12 @@ void Radiation::CollideStaticFluidBackwardEuler()
                         Fx[ijk] += c * dir[1];
                         Fy[ijk] += c * dir[2];
                         Fz[ijk] += c * dir[3];
-                        Pxx[ijk] += c * dir[1] * dir[1];
-                        Pxy[ijk] += c * dir[1] * dir[2];
-                        Pxz[ijk] += c * dir[1] * dir[3];
-                        Pyy[ijk] += c * dir[2] * dir[2];
-                        Pyz[ijk] += c * dir[2] * dir[3];
-                        Pzz[ijk] += c * dir[3] * dir[3];
                     }
                     double diffE = IntegerPow<2>((guessE - E[ijk]) / E[ijk]);
                     double diffFx = IntegerPow<2>((guessFx - Fx[ijk]) / Fx[ijk]);
                     double diffFy = IntegerPow<2>((guessFy - Fy[ijk]) / Fy[ijk]);
                     double diffFz = IntegerPow<2>((guessFz - Fz[ijk]) / Fz[ijk]);
-                    double diffPxx = IntegerPow<2>((guessPxx - Pxx[ijk]) / Pxx[ijk]);
-                    double diffPxy = IntegerPow<2>((guessPxy - Pxy[ijk]) / Pxy[ijk]);
-                    double diffPxz = IntegerPow<2>((guessPxz - Pxz[ijk]) / Pxz[ijk]);
-                    double diffPyy = IntegerPow<2>((guessPyy - Pyy[ijk]) / Pyy[ijk]);
-                    double diffPyz = IntegerPow<2>((guessPyz - Pyz[ijk]) / Pyz[ijk]);
-                    double diffPzz = IntegerPow<2>((guessPzz - Pzz[ijk]) / Pzz[ijk]);
-                    diff = sqrt(diffE + diffFx + diffFy + diffFz + diffPxx + diffPxy + diffPxz + diffPyy + diffPyz + diffPzz);
+                    diff = sqrt(diffE + diffFx + diffFy + diffFz);
                 }
                 //{
                 //    std::lock_guard<std::mutex> lock(mutex);
@@ -1173,13 +975,12 @@ void Radiation::RunSimulation()
     session.Start(config.name, "output/" + config.name + "/profileResults.json");
 
     // -------------------- Initialization --------------------
-    // InitSigmaAndNormalization();
     LoadInitialData();
     UpdateSphericalHarmonicsCoefficients();
 
     int timeSteps = ceil(config.simTime / grid.dt);
     config.simTime = timeSteps * grid.dt;
-    logger.SetValues(config.name, config.simTime, MAX_INTERPOLATION_ERROR, SigmaMax(), FluxMax());
+    logger.SetValues(config.name, config.simTime);
 
     // Initial data output:
     if (config.printToTerminal)

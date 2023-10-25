@@ -72,32 +72,39 @@ void StraightBeamShadow(Stencil stencil, StreamingType streamingType, double cfl
     radiation.RunSimulation();
 }
 
-void Diffusion(Stencil stencil, StreamingType streamingType, double cfl)
+void Diffusion(Stencil stencil, StreamingType streamingType, double kappaS, double lambda, double cfl)
 {
     // Create Radiation object:
     size_t nx, ny, nz;
-    nx = ny = nz = 51;
+    nx = ny = nz = 201;
     Coord start(-0.5, -0.5, -0.5);
     Coord end(0.5, 0.5, 0.5);
     Grid grid(nx, ny, nz, start, end);
     grid.SetCFL(cfl);
     Minkowski metric(grid, 1.0, 0.0);
     LebedevStencil lebedevStencil(5);
-    InterpolationGrid interpGrid(200, 400, stencil);
-    // InterpolationGrid interpGrid(500, 1000, stencil);
+    InterpolationGrid interpGrid(500, 1000, stencil);
 
     // Camera:
     Camera camera;
 
+    // Initial Data:
+    // double lambda = 0.0;  // = 3kappa1 / kappa0
+    double kappa0 = kappaS / (1.0 - lambda / 9.0);
+    double kappa1 = kappa0 * lambda / 3.0;
+    double PE = kappa0 * grid.dx;
+    double D = 1.0 / (3.0 * kappa0) * (1.0 + 0.75 * PE); // Me
+    // double D = 1.0 / (3.0 * kappa0) * (1.0 - 0.98 * PE) + grid.dx * grid.dx / grid.dt * 0.65; // Lukas
+    // double D = 1.0 / (3.0 * kappa0); // analytical diffusion
+
     // Config:
-    int d = 3;
-    // double t = 1;    // Carlo
-    double t = 0; // Lucas
+    double t0 = 1;
     Config config =
         {
-            .name = "Diffusion 3d/" + StreamingName(streamingType) + " " + stencil.name + Format(cfl, 2) + "cfl " + std::to_string(nx) + "nx " + std::to_string(ny) + "ny" + std::to_string(nz) + "nz",
-            .t0 = t,
-            .simTime = 3,
+            // .name = "Diffusion 3d/" + StreamingName(streamingType) + " " + stencil.name + " " + Format(cfl, 2, true) + "cfl " + std::to_string(nx) + "nx " + std::to_string(ny) + "ny " + std::to_string(nz) + "nz "  + Format(PE, 1, true) + "PE",
+            .name = "Diffusion 3d/" + StreamingName(streamingType) + " " + stencil.name + " " + Format(cfl, 2, true) + "cfl " + std::to_string(nx) + "nx " + std::to_string(ny) + "ny " + std::to_string(nz) + "nz " + std::to_string((int)kappa0) + "kappa0 " + std::to_string((int)kappa1) + "kappa1 " + Format(PE, 1, true) + "PE",
+            .t0 = t0,
+            .simTime = 1,
             .writePeriod = 1,
             .updateSphericalHarmonics = false,
             .keepSourceNodesActive = false,
@@ -109,21 +116,6 @@ void Diffusion(Stencil stencil, StreamingType streamingType, double cfl)
 
     // Radiation:
     Radiation radiation(metric, stencil, lebedevStencil, interpGrid, camera, config);
-
-    // Initial Data Carlo:
-    // double kappaS = 100; // = kappa0 - kappa1/3
-    // double lambda = 0.0; // = 3kappa1 / kappa0
-    // double kappa0 = kappaS / (1.0 - lambda / 9.0);
-    // double kappa1 = kappa0 * lambda / 3.0;
-
-    // Initial Data Lucas:
-    double kappa0 = 100; // kappa0=0 not allowed by analytic initial data!
-    double lambda = 0.0;
-    double kappa1 = kappa0 * lambda / 3.0;
-    double A = 1;
-    double sigma0 = 0.1;
-    double D = (1.0 - grid.dt * kappa0 / 2.0) / (d * kappa0);
-    double sigmaD = sqrt(2 * D * t);
 
     for (size_t k = 0; k < grid.nz; k++)
         for (size_t j = 0; j < grid.ny; j++)
@@ -139,20 +131,13 @@ void Diffusion(Stencil stencil, StreamingType streamingType, double cfl)
                 radiation.initialKappa1[ijk] = kappa1;
                 radiation.initialKappaA[ijk] = 0;
                 radiation.initialEta[ijk] = 0;
-
                 radiation.isInitialGridPoint[ijk] = true;
-                // Carlo:
-                // double E = pow(kappaS / t, d / 2.0) * exp(-3.0 * kappaS * r * r / (4.0 * t));
-                // radiation.initialE_LF[ijk] = E;
-                // radiation.initialFx_LF[ijk] = x / (2.0 * t) * E;
-                // radiation.initialFy_LF[ijk] = y / (2.0 * t) * E;
-                // radiation.initialFz_LF[ijk] = z / (2.0 * t) * E;
-                // Lucas:
-                double E = A * (sigma0 * sigma0) / (sigma0 * sigma0 + sigmaD * sigmaD) * exp(-r * r / (2 * sigma0 * sigma0 + 2 * sigmaD * sigmaD));
+
+                double E = pow(1.0 / t0, 3.0 / 2.0) * exp(-r * r / (4.0 * D * t0));
                 radiation.initialE_LF[ijk] = E;
-                radiation.initialFx_LF[ijk] = (x * E) / (3.0 * kappa0 * (sigma0 * sigma0 + sigmaD * sigmaD));
-                radiation.initialFy_LF[ijk] = (y * E) / (3.0 * kappa0 * (sigma0 * sigma0 + sigmaD * sigmaD));
-                radiation.initialFz_LF[ijk] = (z * E) / (3.0 * kappa0 * (sigma0 * sigma0 + sigmaD * sigmaD));
+                radiation.initialFx_LF[ijk] = (x * E) / (2.0 * t0);
+                radiation.initialFy_LF[ijk] = (y * E) / (2.0 * t0);
+                radiation.initialFz_LF[ijk] = (z * E) / (2.0 * t0);
             }
     radiation.RunSimulation();
 }
@@ -191,7 +176,7 @@ void CurvedBeam(Stencil stencil, StreamingType streamingType, double cfl, std::s
     // Config:
     Config config =
         {
-            .name = "Curved Beam 3d/" + metric.Name() + "_" + stencil.name + "_" + std::to_string(nx) + "x" + std::to_string(ny) + "y" + std::to_string(nz) + "z_" + Format(cfl, 2) + "cfl_" + StreamingName(streamingType) + ((comment == "") ? "" : ("_" + comment)),
+            .name = "Curved Beam 3d/" + metric.Name() + " " + stencil.name + " " + std::to_string(nx) + "x" + std::to_string(ny) + "y" + std::to_string(nz) + "z" + Format(cfl, 2) + "cfl " + StreamingName(streamingType) + ((comment == "") ? "" : (" " + comment)),
             .simTime = 10.0,
             .writePeriod = 1,
             .updateSphericalHarmonics = false,
@@ -498,14 +483,26 @@ int main(int argc, char *argv[])
     // if (n == 5)
     //    StraightBeamShadow(LebedevStencil(35, 4, 8, M_PI / 8.0), StreamingType::FlatAdaptive, 0.75);
 
-    // if (n == 0)
-    // Diffusion(LebedevStencil(7), StreamingType::FlatFixed, 0.2);
-    // Diffusion(LebedevStencil(23), StreamingType::FlatFixed, 0.5);
-
+    double lambda = 0;
+    double cfl = 0.25;
     if (n == 0)
-        CurvedBeam(LebedevStencil(23, 4, 8, M_PI / 8.0), StreamingType::CurvedFixed, 0.5, "");
+        Diffusion(LebedevStencil(21), StreamingType::FlatFixed, 100.0, lambda, cfl);
+    // Diffusion(LebedevStencil(7, 2, 4, 0.3), StreamingType::FlatAdaptive, 100.0, lambda, cfl);
     if (n == 1)
-        CurvedBeam(LebedevStencil(23, 4, 8, M_PI / 8.0), StreamingType::CurvedAdaptive, 0.5, "");
+        Diffusion(LebedevStencil(21), StreamingType::FlatFixed, 500.0, lambda, cfl);
+    if (n == 2)
+        Diffusion(LebedevStencil(21), StreamingType::FlatFixed, 1000.0, lambda, cfl);
+    if (n == 3)
+        Diffusion(LebedevStencil(21), StreamingType::FlatFixed, 10000.0, lambda, cfl);
+    if (n == 4)
+        Diffusion(LebedevStencil(21), StreamingType::FlatFixed, 100000.0, lambda, cfl);
+    if (n == 5)
+        Diffusion(LebedevStencil(21), StreamingType::FlatFixed, 1000000.0, lambda, cfl);
+
+    // if (n == 0)
+    //     CurvedBeam(LebedevStencil(23, 4, 8, M_PI / 8.0), StreamingType::CurvedFixed, 0.5, "500.1000 InterpGrid uint float");
+    // if (n == 1)
+    //     CurvedBeam(LebedevStencil(23, 4, 8, M_PI / 8.0), StreamingType::CurvedAdaptive, 0.5, "500.1000 InterpGrid uint float");
 
     // OLD:
 

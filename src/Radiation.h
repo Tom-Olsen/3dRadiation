@@ -17,11 +17,8 @@ private:
     static constexpr double MIN_ENERGY_DENSITY = 1e-16;
     static constexpr double LAMBDA_ITTERATION_TOLERENCE = 1e-12;
     static constexpr int MAX_LAMBDA_ITERATIONS = 100;
-    static constexpr double MAX_INTERPOLATION_ERROR = 0.20; // in %
+    static constexpr double MAX_INTERPOLATION_ERROR = 0.01; // in %
     static constexpr glm::vec3 from = glm::vec3(0, 0, 1);
-    // Units conversion is not correct yet!
-    double etaCGStoCode = 7.67822;
-    double kappaCGStoCode = 1.47760;
 
 public:
     Grid &grid;
@@ -54,8 +51,6 @@ public:
     // kappa* and eta must be givne in CGS units
     // and will be converted to code units in the LoadInitialData() method.
 
-    RealBuffer sigma;
-    RealBuffer normalization;
     QuatBuffer q;
     QuatBuffer qNew;
     RealBuffer E;
@@ -108,9 +103,6 @@ public:
     Tensor3 AverageF(size_t i, size_t j, size_t k);
 
     Tensor4 InitialDataLFtoIF(size_t ijk);
-    void InitSigmaAndNormalization();
-    double SigmaMax();
-    double FluxMax();
     void LoadInitialData();
     void UpdateSphericalHarmonicsCoefficients();
     void ComputeMomentsIF();
