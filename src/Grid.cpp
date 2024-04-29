@@ -52,13 +52,41 @@ size_t Grid::Index(size_t i, size_t j, size_t k)
 {
     return i + j * nx + k * nxy;
 }
+double Grid::x(size_t i)
+{
+    return startx + i * dx;
+}
+double Grid::y(size_t j)
+{
+    return starty + j * dy;
+}
+double Grid::z(size_t k)
+{
+    return startz + k * dz;
+}
+double Grid::x(double i)
+{
+    return startx + i * dx;
+}
+double Grid::y(double j)
+{
+    return starty + j * dy;
+}
+double Grid::z(double k)
+{
+    return startz + k * dz;
+}
 Coord Grid::xyz(size_t i, size_t j, size_t k)
 {
-    return Coord(startx + i * dx, starty + j * dy, startz + k * dz);
+    return Coord(x(i), y(j), z(k));
 }
 Coord Grid::xyz(double i, double j, double k)
 {
-    return Coord(startx + i * dx, starty + j * dy, startz + k * dz);
+    return Coord(x(i), y(j), z(k));
+}
+Coord Grid::xyz(size_t ijk)
+{
+    return xyz(i(ijk), j(ijk), k(ijk));
 }
 double Grid::i(double x)
 {

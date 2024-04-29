@@ -280,62 +280,91 @@ void ConvertStencilToUnityMesh(Stencil stencil)
 
 void StencilAnalysis()
 {
-    std::string output0[3 * 4 * 5 * 4];
-    std::string output1[3 * 4 * 5 * 4];
-    std::string output2[3 * 4 * 5 * 4];
-    int numberOfOrders = 4;
-    int orders[numberOfOrders] = {23, 29, 31, 35};
+    // LebedevStencil stencil(23, 0.16, 0.00, 0.00);
+    // LebedevStencil stencil(23, 0.16, 0.11, 0.00);
+    // LebedevStencil stencil(23, 0.16, 0.11, 0.05);
 
-    // 3 * 4 * 5 = 3 * 20 = 60 cases
-#pragma omp parallel for collapse(3) schedule(dynamic)
-    for (int l = 0; l < 4; l++)
-        for (int k = 0; k < 5; k++)
-            for (int i = 0; i < numberOfOrders; i++)
-            {
-                int index = k + (l * 5);
-                int order = orders[i];
-                int nRing0 = 4 + 2 * k;
-                int nRings = l + 1;
-                double thetaGhost = M_PI / 10.0;
-                LebedevStencil stencil(order, nRings, nRing0, thetaGhost);
+    // LebedevStencil stencil(29, 0.165, 0.000, 0.000);
+    // LebedevStencil stencil(29, 0.165, 0.100, 0.000);
+    // LebedevStencil stencil(29, 0.165, 0.100, 0.045);
 
-                std::string directory = "../output/" + std::to_string(order) + "/";
-                CreateDirectory(directory);
+    Tensor4 configs[16] =
+        {
+            Tensor4(23, 0.00, 0.00, 0.000),
+            Tensor4(23, 0.16, 0.00, 0.000),
+            Tensor4(23, 0.16, 0.11, 0.000),
+            Tensor4(23, 0.16, 0.11, 0.050),
 
-                std::string identifier = std::to_string(stencil.nDir) + "nDir " + std::to_string(nRings) + "nRings " + std::to_string(nRing0) + "nRing0 ";
-                std::cout << "starting: " << identifier << std::endl;
-                stencil.fluxToSigmaTable.WriteToCsv(directory + "sigmaTable " + identifier, -1);
-                if (order == orders[0])
-                    output0[index] = identifier + std::to_string(stencil.relativeFluxMax);
-                if (order == orders[1])
-                    output1[index] = identifier + std::to_string(stencil.relativeFluxMax);
-                if (order == orders[2])
-                    output2[index] = identifier + std::to_string(stencil.relativeFluxMax);
-            }
+            Tensor4(29, 0.00, 0.00, 0.000),
+            Tensor4(29, 0.16, 0.00, 0.000),
+            Tensor4(29, 0.16, 0.10, 0.000),
+            Tensor4(29, 0.16, 0.10, 0.045),
+
+            Tensor4(31, 0.00, 0.00, 0.000),
+            Tensor4(31, 0.16, 0.00, 0.000),
+            Tensor4(31, 0.16, 0.10, 0.000),
+            Tensor4(31, 0.16, 0.10, 0.045),
+
+            Tensor4(35, 0.00, 0.00, 0.000),
+            Tensor4(35, 0.16, 0.00, 0.000),
+            Tensor4(35, 0.16, 0.10, 0.000),
+            Tensor4(35, 0.16, 0.10, 0.035)};
+    int orders[4] = {23, 29, 31, 35};
+    std::string output0[4];
+    std::string output1[4];
+    std::string output2[4];
+    std::string output3[4];
+
+    // LebedevStencil stencil(7, 0, 0, 0);
+#pragma omp parallel for collapse(2) schedule(dynamic)
+    for (int j = 0; j < 4; j++)
+        for (int i = 0; i < 4; i++)
+        {
+            int index = i + 4 * j;
+            Tensor4 config = configs[index];
+            int order = config[0];
+            double refinement0Threshold = config[1];
+            double refinement1Threshold = config[2];
+            double refinement2Threshold = config[3];
+            LebedevStencil stencil(order, refinement0Threshold, refinement1Threshold, refinement2Threshold);
+
+            std::string directory = "../output/" + std::to_string(order) + "/";
+            CreateDirectory(directory);
+
+            std::cout << "starting: " << stencil.name << std::endl;
+            stencil.fluxToSigmaTable.WriteToCsv(directory + stencil.name + ".csv", -1);
+            if (order == orders[0])
+                output0[i] = stencil.name + " " + std::to_string(stencil.relativeFluxMax) + " " + std::to_string(stencil.relativeFluxMax / stencil.nDir);
+            if (order == orders[1])
+                output1[i] = stencil.name + " " + std::to_string(stencil.relativeFluxMax) + " " + std::to_string(stencil.relativeFluxMax / stencil.nDir);
+            if (order == orders[2])
+                output2[i] = stencil.name + " " + std::to_string(stencil.relativeFluxMax) + " " + std::to_string(stencil.relativeFluxMax / stencil.nDir);
+            if (order == orders[3])
+                output3[i] = stencil.name + " " + std::to_string(stencil.relativeFluxMax) + " " + std::to_string(stencil.relativeFluxMax / stencil.nDir);
+
+            ConvertStencilToUnityMesh(stencil);
+        }
 
     // output:
     std::ofstream fileOut0("../output/fluxMax" + std::to_string(orders[0]) + ".csv");
     std::ofstream fileOut1("../output/fluxMax" + std::to_string(orders[1]) + ".csv");
     std::ofstream fileOut2("../output/fluxMax" + std::to_string(orders[2]) + ".csv");
-    fileOut0 << "nDir\t nRings\t nRing0\t relFluxMax\n";
-    fileOut1 << "nDir\t nRings\t nRing0\t relFluxMax\n";
-    fileOut2 << "nDir\t nRings\t nRing0\t relFluxMax\n";
-    for (int l = 0; l < 4; l++)
+    std::ofstream fileOut3("../output/fluxMax" + std::to_string(orders[3]) + ".csv");
+    fileOut0 << "stencilName\t relFluxMax\t efficiency\n";
+    fileOut1 << "stencilName\t relFluxMax\t efficiency\n";
+    fileOut2 << "stencilName\t relFluxMax\t efficiency\n";
+    fileOut3 << "stencilName\t relFluxMax\t efficiency\n";
+    for (int i = 0; i < 4; i++)
     {
-        for (int k = 0; k < 5; k++)
-        {
-            int index = k + (l * 5);
-            fileOut0 << output0[index] << "\n";
-            fileOut1 << output1[index] << "\n";
-            fileOut2 << output2[index] << "\n";
-        }
-        fileOut0 << "\n";
-        fileOut1 << "\n";
-        fileOut2 << "\n";
+        fileOut0 << output0[i] << "\n";
+        fileOut1 << output1[i] << "\n";
+        fileOut2 << output2[i] << "\n";
+        fileOut3 << output3[i] << "\n";
     }
     fileOut0.close();
     fileOut1.close();
     fileOut2.close();
+    fileOut3.close();
 }
 int main()
 {
@@ -354,9 +383,9 @@ int main()
 
     // for(int i=3; i<32; i+=2)
     // ConvertStencilToUnityMesh(LebedevStencil(i));
-    // ConvertStencilToUnityMesh(LebedevStencil(35));
-    // ConvertStencilToUnityMesh(LebedevStencil(41));
-    // ConvertStencilToUnityMesh(LebedevStencil(47));
+    // ConvertStencilToUnityMesh(LebedevStencil(31, 0.108, 0.0, 0.0));
+    // ConvertStencilToUnityMesh(LebedevStencil(41, 0.2, 0.12, 0.05));
+    // ConvertStencilToUnityMesh(LebedevStencil(47, 0.2, 0.12, 0.05));
     // for(int i=3; i<36; i+=2)
     // ConvertStencilToUnityMesh(GaussLegendreStencil(i));
 

@@ -23,7 +23,7 @@ Vector3Int& Vector3Int::operator=(const Vector3Int& t)
     return *this;
 }
 
-// Boleans:
+// Booleans:
 bool Vector3Int::operator==(const Vector3Int& other) const
 {
     bool equalA = (data[0] == other[0] && data[1] == other[1] && data[2] == data[2]);

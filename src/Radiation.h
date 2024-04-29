@@ -15,9 +15,8 @@ private:
     static constexpr int HALO = 1;
     static constexpr double MIN_FLUX_NORM = 1e-16;
     static constexpr double MIN_ENERGY_DENSITY = 1e-16;
-    static constexpr double LAMBDA_ITTERATION_TOLERENCE = 1e-12;
+    static constexpr double LAMBDA_ITTERATION_TOLERENCE = 1e-4; // 0.01% error
     static constexpr int MAX_LAMBDA_ITERATIONS = 100;
-    static constexpr double MAX_INTERPOLATION_ERROR = 0.01; // in %
     static constexpr glm::vec3 from = glm::vec3(0, 0, 1);
 
 public:
@@ -30,8 +29,12 @@ public:
     Config config;
     Logger logger;
 
-    // Set from the outside:
+    // Initial data is set from the outside (in code units):
     bool *isInitialGridPoint;
+    // config.initialDataType = InitialDataType::Intensities
+    RealBuffer initialI;
+    QuatBuffer initialQ;
+    // config.initialDataType = InitialDataType::Moments
     RealBuffer initialE_LF;
     RealBuffer initialFx_LF;
     RealBuffer initialFy_LF;
@@ -42,17 +45,12 @@ public:
     RealBuffer initialPyy_LF;
     RealBuffer initialPyz_LF;
     RealBuffer initialPzz_LF;
-    RealBuffer initialKappa0;
-    RealBuffer initialKappa1;
-    RealBuffer initialKappaA;
-    RealBuffer initialEta;
-    RealBuffer initialI;
-    QuatBuffer initialQ;
-    // kappa* and eta must be givne in CGS units
-    // and will be converted to code units in the LoadInitialData() method.
 
+    // Rotation of stencils:
     QuatBuffer q;
     QuatBuffer qNew;
+
+    // Inertial frame moments:
     RealBuffer E;
     RealBuffer Fx;
     RealBuffer Fy;
@@ -63,6 +61,8 @@ public:
     RealBuffer Pyy;
     RealBuffer Pyz;
     RealBuffer Pzz;
+
+    // Lab frame moments:
     RealBuffer E_LF;
     RealBuffer Fx_LF;
     RealBuffer Fy_LF;
@@ -73,12 +73,21 @@ public:
     RealBuffer Pyy_LF;
     RealBuffer Pyz_LF;
     RealBuffer Pzz_LF;
+
+    // Fluid properties:
     RealBuffer kappa0;
     RealBuffer kappa1;
     RealBuffer kappaA;
     RealBuffer eta;
+    RealBuffer ux;
+    RealBuffer uy;
+    RealBuffer uz;
+
+    // Population intensities:
     RealBuffer I;
     RealBuffer Inew;
+    
+    // Spherical harmonics coefficients for geodesic streaming:
     RealBuffer coefficientsS;
     RealBuffer coefficientsX;
     RealBuffer coefficientsY;
@@ -86,6 +95,11 @@ public:
     RealBuffer coefficientsCx;
     RealBuffer coefficientsCy;
     RealBuffer coefficientsCz;
+
+    // Testing:
+    IntBuffer itterationCount;
+    int maxItterationCount = 0;
+    double averageItterationCount = 0;
 
     Radiation() = delete;
     Radiation(Metric &metric, Stencil &stencil, LebedevStencil &streamingStencil, InterpolationGrid &interpGrid, Camera &camera, Config config);
@@ -114,10 +128,11 @@ public:
     void StreamCurvedFixed();
     void StreamCurvedAdaptive();
 
-    void CollideStaticFluidForwardEuler();
-    void CollideStaticFluidBackwardEuler();
-    void CollideForwardEuler();
-    void CollideBackwardEuler();
+    void Collide();
+    //void CollideStaticFluidForwardEuler();
+    //void CollideStaticFluidBackwardEuler();
+    //void CollideForwardEuler();
+    //void CollideBackwardEuler();
 
     void TakePicture();
     void RunSimulation();

@@ -87,6 +87,14 @@ inline T Clamp(T value, T min, T max)
     return std::min(std::max(value, min), max);
 }
 
+// Rounds number of digits after comma given by precision:
+template <typename T>
+inline T Round(T value, int precision = 0)
+{
+    T factor = pow(10, precision);
+    return round(value * factor) / factor;
+}
+
 // Fast integer exponentiation:
 /// @brief a^N with double a and int N.
 /// @tparam N integer power.

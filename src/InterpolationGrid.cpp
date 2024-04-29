@@ -27,6 +27,7 @@ InterpolationGrid::InterpolationGrid(size_t nTh, size_t nPh, const Stencil &sten
             voronoiNeighbours.AddRow(std::get<0>(neighboursAndWeights));
             voronoiWeights.AddRow(std::get<1>(neighboursAndWeights));
         }
+
     voronoiNeighbours.shrink_to_fit();
     voronoiWeights.shrink_to_fit();
 }

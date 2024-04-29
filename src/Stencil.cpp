@@ -152,7 +152,7 @@ std::vector<Vector3> Stencil::VirtualVoronoiCellOf(const Vector3 &p, std::vector
             double t;
             Vector3 intersectionTemp = LinePlaneIntersection(rayOrigin, perp, cell[j], planeNormal, t);
             double dist = PointToPointDistance(rayOrigin, intersectionTemp);
-            if (1e-4 < t && t < tMin)
+            if (1e-8 < t && t < tMin)
             {
                 tMin = t;
                 index = j;
@@ -229,66 +229,143 @@ void Stencil::AllocateBuffers()
     theta.resize(nDir);
     phi.resize(nDir);
 }
+bool ContainsSimilar(const std::vector<Vector3> &list, Vector3 &p, double epsilon = 1e-8)
+{
+    for (const Vector3 &q : list)
+        if ((p - q).Norm() < epsilon)
+            return true;
+    return false;
+}
 void Stencil::AddGhostDirections()
 {
-    size_t index = nDir - nGhost;
-    for (size_t i = 0; i < nRings; i++)
+    double zThreshold0 = MyCos(refinement0Threshold * M_PI);
+    double zThreshold1 = MyCos(refinement1Threshold * M_PI);
+    double zThreshold2 = MyCos(refinement2Threshold * M_PI);
+    std::vector<Vector3Int> triangles = mesh.GetTriangles();
+    std::vector<Vector3> ghostDirections;
+
+    // vertices:
+    // for(int d=0; d<nDir; d++)
+        // std::cout << "(" << Format(Cx(d),6) << "," << Format(Cy(d),6) << "," << Format(Cz(d),6) << "," << Format(Theta(d),6) << "," << Format(Phi(d),6) << ")" << std::endl;
+
+    // Calculate extra refinement ghost directions:
+    for (int t = 0; t < triangles.size(); t++)
     {
-        double ringTheta = thetaGhost * (i + 0.5) / nRings;
-        for (size_t j = 0; j < nRing0 * (i + 1); j++)
+        Vector3Int triangle = triangles[t];
+        Vector3 a = Cv3(triangle[0]);
+        Vector3 b = Cv3(triangle[1]);
+        Vector3 c = Cv3(triangle[2]);
+        Vector3 p = (a + b + c).Normalized();
+        double z = p[2];
+        
+        // triangles:
+        // std::cout << "(" << triangle[0] << "," << triangle[1] << "," << triangle[2] << ")" << std::endl;
+        // centers:
+        // std::cout << "(" << Format(p[0],6) << "," << Format(p[1],6) << "," << Format(p[2],6) << "," << Format(p.Theta(),6) << "," << Format(p.Phi(),6) << ")" << std::endl;
+
+        if (z > zThreshold2)
         {
-            w[index] = 0.0;
-            theta[index] = ringTheta;
-            phi[index] = 2.0 * M_PI * j / (nRing0 * (i + 1.0));
-            cx[index] = MySin(theta[index]) * MyCos(phi[index]);
-            cy[index] = MySin(theta[index]) * MySin(phi[index]);
-            cz[index] = MyCos(theta[index]);
-            index++;
+            // focal centers:
+            // std::cout << "(" << Format(p[0],6) << "," << Format(p[1],6) << "," << Format(p[2],6) << ")" << std::endl;
+            // std::cout << "(" << Format(p[0],6) << "," << Format(p[1],6) << "," << Format(p[2],6) << "," << Format(p.Theta(),6) << "," << Format(p.Phi(),6) << ")" << std::endl;
+            
+            Vector3 p0 = (a + b).Normalized();
+            Vector3 p1 = (b + c).Normalized();
+            Vector3 p2 = (c + a).Normalized();
+            Vector3 q0 = (p0 + p1 + b).Normalized();
+            Vector3 q1 = (p1 + p2 + c).Normalized();
+            Vector3 q2 = (p2 + p0 + a).Normalized();
+
+            // ghost directions:
+            // std::cout << "(" << Format( p[0],6) << "," << Format( p[1],6) << "," << Format( p[2],6) << ")" << std::endl;
+            // std::cout << "(" << Format(p0[0],6) << "," << Format(p0[1],6) << "," << Format(p0[2],6) << ")" << std::endl;
+            // std::cout << "(" << Format(p1[0],6) << "," << Format(p1[1],6) << "," << Format(p1[2],6) << ")" << std::endl;
+            // std::cout << "(" << Format(p2[0],6) << "," << Format(p2[1],6) << "," << Format(p2[2],6) << ")" << std::endl;
+            // std::cout << "(" << Format(q0[0],6) << "," << Format(q0[1],6) << "," << Format(q0[2],6) << ")" << std::endl;
+            // std::cout << "(" << Format(q1[0],6) << "," << Format(q1[1],6) << "," << Format(q1[2],6) << ")" << std::endl;
+            // std::cout << "(" << Format(q2[0],6) << "," << Format(q2[1],6) << "," << Format(q2[2],6) << ")" << std::endl;
+
+            if (!ContainsSimilar(ghostDirections, p,  1e-4))
+                ghostDirections.push_back(p);
+            if (!ContainsSimilar(ghostDirections, p0, 1e-4))
+                ghostDirections.push_back(p0);
+            if (!ContainsSimilar(ghostDirections, p1, 1e-4))
+                ghostDirections.push_back(p1);
+            if (!ContainsSimilar(ghostDirections, p2, 1e-4))
+                ghostDirections.push_back(p2);
+            if (!ContainsSimilar(ghostDirections, q0, 1e-4))
+                ghostDirections.push_back(q0);
+            if (!ContainsSimilar(ghostDirections, q1, 1e-4))
+                ghostDirections.push_back(q1);
+            if (!ContainsSimilar(ghostDirections, q2, 1e-4))
+                ghostDirections.push_back(q2);
+        }
+        else if (z > zThreshold1)
+        {
+            Vector3 p0 = (a + b).Normalized();
+            Vector3 p1 = (b + c).Normalized();
+            Vector3 p2 = (c + a).Normalized();
+            if (!ContainsSimilar(ghostDirections, p0, 1e-4))
+                ghostDirections.push_back(p0);
+            if (!ContainsSimilar(ghostDirections, p1, 1e-4))
+                ghostDirections.push_back(p1);
+            if (!ContainsSimilar(ghostDirections, p2, 1e-4))
+                ghostDirections.push_back(p2);
+        }
+        else if (z > zThreshold0)
+        {
+            if (!ContainsSimilar(ghostDirections, p, 1e-4))
+                ghostDirections.push_back(p);
         }
     }
+
+    // Add ghost directions to velocity stencil:
+    for (const Vector3 &p : ghostDirections)
+    {
+        w.push_back(0);
+        cx.push_back(p[0]);
+        cy.push_back(p[1]);
+        cz.push_back(p[2]);
+        theta.push_back(p.Theta());
+        phi.push_back(p.Phi());
+    }
+    nGhost = ghostDirections.size();
+    nDir += nGhost;
 }
 void Stencil::SortDirections()
 {
-    size_t index[nDir];
-    for (size_t i = 0; i < nDir; i++)
-        index[i] = i;
+    // Combine arrays into a vector of tuples
+    std::vector<std::tuple<double, double, double, double, double, double>> combinedArrays;
+    for (int i = 0; i < nDir; ++i)
+        combinedArrays.emplace_back(w[i], theta[i], phi[i], cx[i], cy[i], cz[i]);
 
-    // Sort index array based on custom compare function:
-    std::sort(index, index + nDir, [this](size_t i, size_t j)
-              {
-        if(theta[i] != theta[j])
-            return theta[i] < theta[j];
-        else
-            return phi[i] < phi[j]; });
+    // Sort the vector of tuples based on theta and then phi
+    std::sort(combinedArrays.begin(), combinedArrays.end(), 
+        [](const auto &a, const auto &b)
+        {
+            // Round theta and phi values
+            double roundedThetaA  = Round(std::get<1>(a), 6);
+            double roundedPhiA    = Round(std::get<2>(a), 6);
+            double roundedThetaB  = Round(std::get<1>(b), 6);
+            double roundedPhiB    = Round(std::get<2>(b), 6);
 
-    // Create temporary arrays to hold sorted values:
-    double sorted_w[nDir];
-    double sorted_cx[nDir];
-    double sorted_cy[nDir];
-    double sorted_cz[nDir];
-    double sorted_theta[nDir];
-    double sorted_phi[nDir];
+            // Compare rounded theta and phi
+            if (roundedThetaA != roundedThetaB)
+                return roundedThetaA < roundedThetaB;
+            else
+                return roundedPhiA < roundedPhiB;
+        }
+    );
 
-    // Copy values from original arrays to temporary arrays:
-    for (size_t i = 0; i < nDir; i++)
+    // Write sorted values back into original arrays
+    for (int i = 0; i < nDir; ++i)
     {
-        sorted_w[i] = w[index[i]];
-        sorted_cx[i] = cx[index[i]];
-        sorted_cy[i] = cy[index[i]];
-        sorted_cz[i] = cz[index[i]];
-        sorted_theta[i] = theta[index[i]];
-        sorted_phi[i] = phi[index[i]];
-    }
-
-    // Overwrite original arrays with sorted values:
-    for (size_t i = 0; i < nDir; i++)
-    {
-        w[i] = sorted_w[i];
-        cx[i] = sorted_cx[i];
-        cy[i] = sorted_cy[i];
-        cz[i] = sorted_cz[i];
-        theta[i] = sorted_theta[i];
-        phi[i] = sorted_phi[i];
+        w[i] = std::get<0>(combinedArrays[i]);
+        theta[i] = std::get<1>(combinedArrays[i]);
+        phi[i] = std::get<2>(combinedArrays[i]);
+        cx[i] = std::get<3>(combinedArrays[i]);
+        cy[i] = std::get<4>(combinedArrays[i]);
+        cz[i] = std::get<5>(combinedArrays[i]);
     }
 }
 void Stencil::InitializeMesh()
@@ -384,10 +461,14 @@ void Stencil::PopulateLookUpTable()
     I.resize(nDir);
     double sigma = 0;
     double currentF = 0;
-    double refinement = 0.5;
-    int nThTestGrid = 100;
-    int nPhTestGrid = 200;
-
+    double refinement = 1;
+    // refinement controles stepsize:
+    // -1.0 = 10^+1.0 = 10.0
+    //  0.5 = 10^-0.5 =  0.316
+    //  1.0 = 10^-1.0 =  0.1
+    //  2.0 = 10^-2.0 =  0.01
+    int nThTestGrid = 50;
+    int nPhTestGrid = 100;
     while (true)
     {
         // Determine normalization for current sigma value:
@@ -424,7 +505,7 @@ void Stencil::PopulateLookUpTable()
                 double phi = 2.0 * M_PI * d1 / (double)nPhTestGrid;
                 Tensor3 dirT3 = Tensor3(MySin(theta) * MyCos(phi), MySin(theta) * MySin(phi), MyCos(theta));
                 Vector3 dirV3 = Vector3(MySin(theta) * MyCos(phi), MySin(theta) * MySin(phi), MyCos(theta));
-                if (MyAcos(Tensor3::Dot(F, dirT3)) > M_PI / 10.0)
+                if (MyAcos(Tensor3::Dot(F, dirT3)) > 0.15 * M_PI)
                     continue;
 
                 // Analytic intensity:
@@ -466,6 +547,14 @@ void Stencil::PopulateLookUpTable()
 void Stencil::Print() const
 {
     std::cout << name << ":\n";
+    std::cout << "           nDir: " << nDir << "\n";
+    std::cout << "         nGhost: " << nGhost << "\n";
+    std::cout << "       sigmaMax: " << sigmaMax << "\n";
+    std::cout << "relativeFluxMax: " << relativeFluxMax << "\n";
+}
+void Stencil::PrintAll() const
+{
+    std::cout << name << ":\n";
     std::cout << "        d,\t        w,\t    theta,\t      phi,\t       cx,\t       cy,\t       cz\n";
     for (size_t d = 0; d < nDir; d++)
     {
@@ -477,21 +566,21 @@ void Stencil::Print() const
 // -----------------------------------------------------------------------
 
 // -------------------------- LebedevStencil ---------------------------
-LebedevStencil::LebedevStencil(size_t nOrder, size_t nRings, size_t nRing0, double thetaGhost)
+LebedevStencil::LebedevStencil(size_t nOrder, double refinement0Threshold, double refinement1Threshold, double refinement2Threshold)
 {
-    this->name = "Lebedev" + std::to_string(nOrder) + "." + std::to_string(nRings) + "." + std::to_string(nRing0) + "_" + FormatNoSignSpace(thetaGhost / M_PI, 3) + "pi";
+    this->name = "Lebedev" + std::to_string(nOrder) + "_" + std::to_string(refinement0Threshold) + "_" + std::to_string(refinement1Threshold) + "_" + FormatNoSignSpace(refinement2Threshold);
     this->nDir = 0;
     this->nOrder = nOrder;
     this->nCoefficients = IntegerPow<2>((nOrder + 1) / 2);
-    this->nRings = nRings;
-    this->nRing0 = nRing0;
-    this->nGhost = nRing0 * nRings * (nRings + 1) / 2;
-    this->thetaGhost = thetaGhost;
+    this->refinement0Threshold = refinement0Threshold;
+    this->refinement1Threshold = refinement1Threshold;
+    this->refinement2Threshold = refinement2Threshold;
 
     std::ifstream inputFile("../stencils/LebedevStencil/LebedevStencil" + std::to_string(nOrder));
     if (!inputFile.is_open())
         ExitOnError("File '/stencils/LebedevStencil/LebedevStencil" + std::to_string(nOrder) + "' is missing.");
 
+    // Read file:
     std::string line;
     int i = 0;
     while (std::getline(inputFile, line))
@@ -502,8 +591,7 @@ LebedevStencil::LebedevStencil(size_t nOrder, size_t nRings, size_t nRing0, doub
         else if (this->nDir == 0)
         {
             // Read count:
-            int count = std::stoi(line);
-            this->nDir = count + this->nGhost;
+            this->nDir = std::stoi(line);
             AllocateBuffers();
         }
         else
@@ -526,9 +614,14 @@ LebedevStencil::LebedevStencil(size_t nOrder, size_t nRings, size_t nRing0, doub
         }
     }
     inputFile.close();
+    
+    SortDirections();
+    InitializeMesh();
+    // mesh.WriteToCsv("../output","before adding ghosts");
     AddGhostDirections();
     SortDirections();
     InitializeMesh();
+    // mesh.WriteToCsv("../output","after adding ghosts");
     InitializeConnectedTriangles();
     InitializeVoronoiCells();
     InitializeVoronoiNeighbours();
@@ -545,10 +638,9 @@ GaussLegendreStencil::GaussLegendreStencil(size_t nOrder)
     this->nDir = 0;
     this->nOrder = nOrder;
     this->nCoefficients = IntegerPow<2>((nOrder + 1) / 2);
-    this->nRings = 0;
-    this->nRing0 = 0;
-    this->nGhost = 0;
-    this->thetaGhost = 0;
+    this->refinement0Threshold = 0;
+    this->refinement1Threshold = 0;
+    this->refinement2Threshold = 0;
 
     std::ifstream inputFile("../stencils/GaussLegendreStencil/GaussLegendreStencil" + std::to_string(nOrder));
     if (!inputFile.is_open())
@@ -564,8 +656,7 @@ GaussLegendreStencil::GaussLegendreStencil(size_t nOrder)
         else if (this->nDir == 0)
         {
             // Read count:
-            int count = std::stoi(line);
-            this->nDir = count + this->nGhost;
+            this->nDir = std::stoi(line);
             AllocateBuffers();
         }
         else

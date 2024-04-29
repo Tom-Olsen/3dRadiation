@@ -34,8 +34,15 @@ public:
 
     // Grid Access Tools:
     size_t Index(size_t i, size_t j, size_t k);
+    double x(size_t i);
+    double y(size_t j);
+    double z(size_t k);
+    double x(double i);
+    double y(double j);
+    double z(double k);
     Coord xyz(size_t i, size_t j, size_t k);
     Coord xyz(double i, double j, double k);
+    Coord xyz(size_t ijk);
     double i(double x);
     double j(double y);
     double k(double z);

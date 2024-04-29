@@ -47,8 +47,11 @@ struct Config
     bool updateSphericalHarmonics;
     bool keepSourceNodesActive;
     bool writeData;
-    bool printToTerminal;
+    bool printSetup = true;
+    bool printProgress = true;
+    bool printResults = true;
     bool useCamera;
+    bool saveInitialData = true;
     StreamingType streamingType;
     InitialDataType initialDataType;
 };

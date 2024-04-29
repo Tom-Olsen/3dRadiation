@@ -27,19 +27,20 @@ struct Stencil
 {
 public:
     // Public Properties:
-    std::string name;     // Name of the stencel, e.g. "Lebedev9.1.4"
-    size_t nDir;          // Number of directions in stencil.
-    size_t nOrder;        // Quadrature integration order.
-    size_t nCoefficients; // Number of exactly integrated Spherical Harmonics, counted with flat index i = l * (l + 1) + m.
-    size_t nRings;        // Number of ghost rings to be added.
-    size_t nRing0;        // Number of ghost directions in smallest ring.
-    size_t nGhost;        // Total amount of ghost directions.
-    double thetaGhost;    // Ghost rings are evenly spread from in (0,thetaGhost), excluding boundaries.
+    std::string name;            // Name of the stencel, e.g. "Lebedev9.1.4"
+    size_t nDir;                 // Number of directions in stencil.
+    size_t nOrder;               // Quadrature integration order.
+    size_t nCoefficients;        // Number of exactly integrated Spherical Harmonics, counted with flat index i = l * (l + 1) + m.
+    size_t nGhost;               // Number of ghost directions.
+    double refinement0Threshold; // Number of ghost rings to be added.
+    double refinement1Threshold; // Number of ghost directions in smallest ring.
+    double refinement2Threshold; // Total amount of ghost directions.
     LookUpTable fluxToSigmaTable;
     LookUpTable fluxToNormalizationTable;
     double sigmaMax;
     double relativeFluxMax;
     Mesh mesh;
+    // static constexpr double maxInterpolationError = 1; // 100%
     static constexpr double maxInterpolationError = 0.01; // 1%
 
 protected:
@@ -98,6 +99,7 @@ protected:
 public:
     // Debugging:
     void Print() const;
+    void PrintAll() const;
 };
 
 // This class holds discretized velocities and the corresponding weights.
@@ -111,7 +113,7 @@ public:
 // when flattenign the sphercal harmonics: i = l * (l + 1) + m
 struct LebedevStencil : public Stencil
 {
-    LebedevStencil(size_t nOrder, size_t nRings = 0, size_t nRing0 = 0, double thetaGhost = 0);
+    LebedevStencil(size_t nOrder, double refinement0Threshold = 0, double refinement1Threshold = 0, double refinement2Threshold = 0);
 };
 
 // This type of stencil is not used in the 'general relativistic Lattice Boltzmann Method for radiative transport' code.

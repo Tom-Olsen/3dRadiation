@@ -378,13 +378,8 @@ void InterpolationBenchmark()
     cout << "Gramm Schmidt Comoving:   " << Format(maxNorm3, 12) << endl;
 }
 
-int main()
+void RealBufferTest()
 {
-    // GrammSchmidtTest();
-    // MyMethodTest();
-    // TetradBenchmark();
-    // InterpolationBenchmark();
-
     RealBuffer a;
     a.resize(3);
     a[0] = 0;
@@ -394,4 +389,23 @@ int main()
     a.push_back(3);
     for (int i = 0; i < a.size(); i++)
         cout << a[i] << endl;
+}
+
+int main()
+{
+    // GrammSchmidtTest();
+    // MyMethodTest();
+    MyMethodBoosted();
+    // TetradBenchmark();
+    // InterpolationBenchmark();
+
+    // LebedevStencil stencilA(21);
+    // cout << "Lebedev21" << endl;
+    // cout << "sigmaMax: " << stencilA.sigmaMax << std::endl;
+    // cout << "relativeFluxMax: " << stencilA.relativeFluxMax << std::endl;
+
+    // LebedevStencil stencilB(21,0.13, 0.0, 0.0);
+    // cout << "Lebedev21 0.13 0.00 0.00" << endl;
+    // cout << "sigmaMax: " << stencilB.sigmaMax << std::endl;
+    // cout << "relativeFluxMax: " << stencilB.relativeFluxMax << std::endl;
 }

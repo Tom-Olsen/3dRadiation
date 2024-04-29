@@ -13,6 +13,8 @@ public:
     Metric &metric;
     int timeSteps;
     double simTime;
+    int maxItterationCount;
+    double averageItterationCount;
 
     // Data management:
     std::string name;
@@ -49,13 +51,11 @@ public:
     {
         std::ofstream file(directoryPath + "/Log.txt");
 
-        file << "Creation Date: " << date << std::endl
-             << std::endl;
+        file << "Creation Date: " << date << std::endl << std::endl;
 
         file << "Spacetime: " << metric.Name() << std::endl;
         file << "Black Hole  Mass,   M = " << metric.m << std::endl;
-        file << "Black Hole  Spin,   a = " << metric.a << std::endl
-             << std::endl;
+        file << "Black Hole  Spin,   a = " << metric.a << std::endl << std::endl;
 
         file << "Grid Structure:" << std::endl;
         file << "Simulation Time = " << simTime << std::endl;
@@ -67,8 +67,7 @@ public:
         file << "dx   = " << metric.grid.dx << std::endl;
         file << "dy   = " << metric.grid.dy << std::endl;
         file << "dz   = " << metric.grid.dz << std::endl;
-        file << "dt   = " << metric.grid.dt << std::endl
-             << std::endl;
+        file << "dt   = " << metric.grid.dt << std::endl << std::endl;
 
         file << "Stencil Properties:" << std::endl;
         file << "Intensity Stencil: nDir          = " << intensityStencil.nDir << std::endl;
@@ -79,12 +78,24 @@ public:
         file << "Intensity Stencil: relative flux max       = " << intensityStencil.relativeFluxMax << std::endl;
         file << "Streaming Stencil: nDir          = " << streamingStencil.nDir << std::endl;
         file << "Streaming Stencil: nOrder        = " << streamingStencil.nOrder << std::endl;
-        file << "Streaming Stencil: nCoefficients = " << streamingStencil.nCoefficients << std::endl
-             << std::endl;
+        file << "Streaming Stencil: nCoefficients = " << streamingStencil.nCoefficients << std::endl << std::endl;
 
+        file << "Lambda Itteration:" << std::endl;
+        file << "Max Lambda Itteration Count     = " << maxItterationCount << std::endl;
+        file << "Average Lambda Itteration Count = " << averageItterationCount << std::endl << std::endl;
         file << "Time measurements:" << std::endl;
+        double totalTime;
+        double writingTime;
         for (int i = 0; i < timeMeasurements.size(); i++)
+        {
             file << timeNames[i] << ": " << timeMeasurements[i] << "s" << std::endl;
+            if (timeNames[i] == "Total Time")
+                totalTime = timeMeasurements[i];
+            if (timeNames[i] == "void Grid::WriteFrametoCsv(float, const RealBuffer&, const RealBuffer&, const RealBuffer&, const RealBuffer&, std::string, std::string)")
+                writingTime = timeMeasurements[i];
+        }
+        
+        file << "Computation Time: " << totalTime - writingTime << "s" << std::endl;
     }
 
     void AddTimeMeasurement(std::string timeName, double timeMeasurement)

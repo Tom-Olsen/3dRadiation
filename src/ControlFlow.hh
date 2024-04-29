@@ -15,8 +15,7 @@ class LF
 #define APPROXIMATION_ORDER 9
 
 // Output Directory:
-#define OUTPUTDIR (std::string) "/mnt/ceph/tolsen/3dRadiation/output/"
-// #define OUTPUTDIR (std::string) "/home/olsen/3dRadiation/output/"
+#define OUTPUTDIR (std::string) "../output/"
 
 // omp parallel for macro:
 #define STRINGIFY(X) #X
