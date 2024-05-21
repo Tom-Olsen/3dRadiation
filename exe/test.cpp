@@ -391,13 +391,49 @@ void RealBufferTest()
         cout << a[i] << endl;
 }
 
+void TestInitialDataFunction()
+{
+    LebedevStencil stencil(21, 0.25, 0.00, 0.00);
+    LebedevStencil stencilBase(21);
+
+    double E = 1;
+    double F = 0.0;
+    double sigma = stencilBase.sigmaOfRelativeFlux.Evaluate(F / E);
+
+    RealBuffer IBase;
+    IBase.resize(stencilBase.nDir);
+    for (int d = 0; d < stencilBase.nDir; d++)
+    {
+        IBase[d] = Intensity(sigma, E, stencilBase.Theta(d)) / (stencilBase.W(d) * stencilBase.nDir);
+        // std::cout << IBase[d] * stencilBase.Cx(d) << "," << IBase[d] * stencilBase.Cy(d) << "," << IBase[d] * stencilBase.Cz(d) << std::endl;
+    }
+
+    RealBuffer I;
+    I.resize(stencil.nDir);
+    for( int d = 0; d < stencil.nDir; d++)
+    {
+        Vector3 dir = stencil.Cv3(d);
+        std::tuple<std::vector<size_t>, std::vector<double>> neighboursAndWeights = stencilBase.VoronoiNeighboursAndWeights(dir);
+        std::span<const size_t> neighbours = std::get<0>(neighboursAndWeights);
+        std::span<const double> weights = std::get<1>(neighboursAndWeights);
+        double interpolatetValue = 0;
+        for (size_t p = 0; p < weights.size(); p++)
+            interpolatetValue += weights[p] * IBase[neighbours[p]];
+        I[d] = interpolatetValue;
+        std::cout << I[d] * stencil.Cx(d) << "," << I[d] * stencil.Cy(d) << "," << I[d] * stencil.Cz(d) << std::endl;
+    }
+}
+
+
+
 int main()
 {
     // GrammSchmidtTest();
     // MyMethodTest();
-    MyMethodBoosted();
+    // MyMethodBoosted();
     // TetradBenchmark();
     // InterpolationBenchmark();
+    TestInitialDataFunction();
 
     // LebedevStencil stencilA(21);
     // cout << "Lebedev21" << endl;

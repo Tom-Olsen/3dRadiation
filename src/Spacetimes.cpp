@@ -54,9 +54,9 @@ Tensor4x4 SchwarzSchild::MetricFunction(const Coord& xyz)
     {
         Tensor4x4 g_ll(0.0);
         g_ll[{0,0}] = -1.0 + rs / r;
-        g_ll[{1,1}] = xyz[1]*xyz[1]/(r2-rs*r) + xyz[2]*xyz[2]/r2 + xyz[3]*xyz[3]/r2;
-        g_ll[{2,2}] = xyz[1]*xyz[1]/r2 + xyz[2]*xyz[2]/(r2-rs*r) + xyz[3]*xyz[3]/r2;
-        g_ll[{3,3}] = xyz[1]*xyz[1]/r2 + xyz[2]*xyz[2]/r2 + xyz[3]*xyz[3]/(r2-rs*r);
+        g_ll[{1,1}] = xyz[1]*xyz[1]/(r2-rs*r) + xyz[2]*xyz[2]/r2        + xyz[3]*xyz[3]/r2;
+        g_ll[{2,2}] = xyz[1]*xyz[1]/r2        + xyz[2]*xyz[2]/(r2-rs*r) + xyz[3]*xyz[3]/r2;
+        g_ll[{3,3}] = xyz[1]*xyz[1]/r2        + xyz[2]*xyz[2]/r2        + xyz[3]*xyz[3]/(r2-rs*r);
         g_ll[{2,1}] = g_ll[{1,2}] = rs*xyz[1]*xyz[2] / (r2*(r-rs));
         g_ll[{3,1}] = g_ll[{1,3}] = rs*xyz[1]*xyz[3] / (r2*(r-rs));
         g_ll[{3,2}] = g_ll[{2,3}] = rs*xyz[2]*xyz[3] / (r2*(r-rs));

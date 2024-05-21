@@ -455,92 +455,79 @@ void Stencil::InitializeVoronoiNeighbours()
 
 void Stencil::PopulateLookUpTable()
 {
-    double E = 1.0;
-    Tensor3 F(0, 0, 1);
+    sigmaMax = MaxSigma();
+    double deltaSigma = 0.1;
+    for(double sigma = 0.0; sigma <= sigmaMax; sigma += deltaSigma)
+    {
+        double flux = (sigma * cosh(sigma) - sinh(sigma)) / (sigma * sinh(sigma));
+        if (sigma == 0.0)
+            sigmaOfRelativeFlux.Add(0, 0);
+        else
+            sigmaOfRelativeFlux.Add(flux, sigma);
+
+        if (sigmaMax - sigma < deltaSigma)
+            deltaSigma = sigmaMax - sigma;
+        if (sigmaMax - sigma < 1e-8)
+            break;
+    }
+    relativeFluxMax = sigmaOfRelativeFlux.xValues[sigmaOfRelativeFlux.size - 1];
+}
+double Stencil::MaxSigma()
+{
     RealBuffer I;
     I.resize(nDir);
-    double sigma = 0;
-    double currentF = 0;
-    double refinement = 1;
-    // refinement controles stepsize:
-    // -1.0 = 10^+1.0 = 10.0
-    //  0.5 = 10^-0.5 =  0.316
-    //  1.0 = 10^-1.0 =  0.1
-    //  2.0 = 10^-2.0 =  0.01
-    int nThTestGrid = 50;
-    int nPhTestGrid = 100;
-    while (true)
+    int nThTestGrid = 100;
+    int nPhTestGrid = 200;
+    double sigma;
+    double deltaSigma = 1;
+
+    for(sigma = 1; sigma < 500; sigma += deltaSigma)
     {
-        // Determine normalization for current sigma value:
-        double normalization = 0;
         for (int d = 0; d < nDir; d++)
-            normalization += W(d) * exp(sigma * Tensor3::Dot(F, Ct3(d)));
-        normalization = log(normalization);
+            I[d] = Intensity(sigma, 1.0, Theta(d));
 
-        // Calculate moments with current sigma value:
-        double currentE = 0;
-        double currentFx = 0;
-        double currentFy = 0;
-        double currentFz = 0;
-        for (int d = 0; d < nDir; d++)
-        {
-            I[d] = E * exp(sigma * Tensor3::Dot(F, Ct3(d)) - normalization);
-            double c = W(d) * I[d];
-            currentE += c;
-            currentFx += c * Cx(d);
-            currentFy += c * Cy(d);
-            currentFz += c * Cz(d);
-        }
-        currentF = Tensor3(currentFx, currentFy, currentFz).EuklNorm();
-
-        // Check if interpolation error is acceptable:
         double averageError = 0;
-        int count = 0;
         for (int d1 = 0; d1 < nPhTestGrid; d1++)
             for (int d0 = 0; d0 < nThTestGrid; d0++)
             {
                 int d = d0 + d1 * nThTestGrid;
-                // Only look at theta=0->M_PI/10.0=0.314159265 disk around north pole:
-                double theta = M_PI * d0 / (nThTestGrid - 1.0);
+                // Only look at theta=0->0.1 M_PI disk around north pole:
+                double theta = 0.1 * M_PI * d0 / (nThTestGrid - 1.0);
                 double phi = 2.0 * M_PI * d1 / (double)nPhTestGrid;
-                Tensor3 dirT3 = Tensor3(MySin(theta) * MyCos(phi), MySin(theta) * MySin(phi), MyCos(theta));
-                Vector3 dirV3 = Vector3(MySin(theta) * MyCos(phi), MySin(theta) * MySin(phi), MyCos(theta));
-                if (MyAcos(Tensor3::Dot(F, dirT3)) > 0.15 * M_PI)
-                    continue;
-
+                Vector3 dir = Vector3(MySin(theta) * MyCos(phi), MySin(theta) * MySin(phi), MyCos(theta));
+    
                 // Analytic intensity:
-                double analyticValue = E * exp(sigma * Tensor3::Dot(F, dirT3) - normalization);
-
+                double analyticValue = Intensity(sigma, 1.0, theta);
+    
                 // Voronoi interpolated intensity:
-                std::tuple<std::vector<size_t>, std::vector<double>> neighboursAndWeights = VoronoiNeighboursAndWeights(dirV3);
+                std::tuple<std::vector<size_t>, std::vector<double>> neighboursAndWeights = VoronoiNeighboursAndWeights(dir);
                 std::span<const size_t> neighbours = std::get<0>(neighboursAndWeights);
                 std::span<const double> weights = std::get<1>(neighboursAndWeights);
                 double interpolatetValue = 0;
                 for (size_t p = 0; p < weights.size(); p++)
                     interpolatetValue += weights[p] * I[neighbours[p]];
-
+    
                 // Error:
                 double error = std::abs((analyticValue - interpolatetValue) / analyticValue);
                 averageError += error;
-                count++;
             }
-        averageError /= count;
+        averageError /= (nThTestGrid * nPhTestGrid);
 
-        if (averageError > maxInterpolationError)
+        // Check if error is too small:
+        if (averageError >= maxInterpolationError)
         {
-            sigma -= pow(10, -refinement);
-            refinement++;
-            sigma += pow(10, -refinement);
-            if (refinement >= 8)
-                break;
-        }
-        else
-        {
-            fluxToSigmaTable.Add(currentF, sigma);
-            fluxToNormalizationTable.Add(currentF, normalization);
-            sigma += pow(10, -refinement);
+            // Roll back sigma and reduce deltaSigma:
+            sigma -= deltaSigma;
+            deltaSigma /= 10;
+            
+            // Stop after 6 sigits of accuracy:
+            if (deltaSigma <= sigmaMaxSearchAccuracy)
+                return sigma;
         }
     }
+
+    ExitOnError("MaxSigma: Could not find sigma with error below " + std::to_string(maxInterpolationError));
+    return 0;
 }
 
 // Debugging:
@@ -617,17 +604,13 @@ LebedevStencil::LebedevStencil(size_t nOrder, double refinement0Threshold, doubl
     
     SortDirections();
     InitializeMesh();
-    // mesh.WriteToCsv("../output","before adding ghosts");
     AddGhostDirections();
     SortDirections();
     InitializeMesh();
-    // mesh.WriteToCsv("../output","after adding ghosts");
     InitializeConnectedTriangles();
     InitializeVoronoiCells();
     InitializeVoronoiNeighbours();
     PopulateLookUpTable();
-    sigmaMax = fluxToSigmaTable.outputs[fluxToSigmaTable.size - 1];
-    relativeFluxMax = fluxToSigmaTable.inputs[fluxToSigmaTable.size - 1];
 }
 // ---------------------------------------------------------------------
 

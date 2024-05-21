@@ -1,11 +1,10 @@
 #include "Radiation.h"
 
-Radiation::Radiation(Metric &metric, Stencil &stencil, LebedevStencil &streamingStencil, InterpolationGrid &interpGrid, Camera &camera, Config config)
+Radiation::Radiation(Metric &metric, LebedevStencil &stencil, LebedevStencil &streamingStencil, InterpolationGrid &interpGrid, Camera &camera, Config config)
     : grid(metric.grid), metric(metric), stencil(stencil), streamingStencil(streamingStencil), interpGrid(interpGrid), camera(camera), config(config), logger(stencil, streamingStencil, metric)
 {
     isInitialGridPoint = new bool[grid.nxyz]();
     initialI.resize(grid.nxyz * stencil.nDir);
-    initialQ.resize(grid.nxyz);
     initialE_LF.resize(grid.nxyz);
     initialFx_LF.resize(grid.nxyz);
     initialFy_LF.resize(grid.nxyz);
@@ -67,7 +66,7 @@ Radiation::Radiation(Metric &metric, Stencil &stencil, LebedevStencil &streaming
     PARALLEL_FOR(1)
     for (size_t ijk = 0; ijk < grid.nxyz; ijk++)
     {
-        q[ijk] = qNew[ijk] = initialQ[ijk] = glm::quat(1, 0, 0, 0);
+        q[ijk] = qNew[ijk] = glm::quat(1, 0, 0, 0);
         itterationCount[ijk] = 0;
     }
 
@@ -154,6 +153,45 @@ void Radiation::LoadInitialData()
 {
     PROFILE_FUNCTION();
     bool isAdaptiveStreaming = (config.streamingType == StreamingType::FlatAdaptive || config.streamingType == StreamingType::CurvedAdaptive);
+    
+    if (config.initialDataType == InitialDataType::Intensities)
+    {
+        if (isAdaptiveStreaming)
+            LoadInitialDataIntensitiesAdaptive();
+        else
+            LoadInitialDataIntensitiesFixed();
+    }
+    else if (config.initialDataType == InitialDataType::Moments)
+    {
+        if (isAdaptiveStreaming)
+            LoadInitialDataMomentsAdaptive();
+        else
+            LoadInitialDataMomentsFixed();
+    }
+    else
+        ExitOnError("Radiation.cpp: LoadInitialData() => Unknown initial data type.");
+}
+void Radiation::LoadInitialDataIntensitiesFixed()
+{
+    // When using a fixed stencil extra ghost directions have no real benefit.
+    if (stencil.refinement0Threshold > 0.0 || stencil.refinement1Threshold > 0.0 || stencil.refinement2Threshold > 0.0)
+        ExitOnError("Radiation.cpp: LoadInitialDataIntensitiesFixed() => Refined stencils do not support fixed streaming.");
+
+    PARALLEL_FOR(1)
+    for (size_t ijk = 0; ijk < grid.nxyz; ijk++)
+    {
+        if (!isInitialGridPoint[ijk])
+            continue;
+
+        for (size_t d = 0; d < stencil.nDir; d++)
+            I[Index(ijk, d)] = initialI[Index(ijk, d)];
+    }
+}
+void Radiation::LoadInitialDataMomentsFixed()
+{
+    // When using a fixed stencil extra ghost directions have no real benefit.
+    if (stencil.refinement0Threshold > 0.0 || stencil.refinement1Threshold > 0.0 || stencil.refinement2Threshold > 0.0)
+        ExitOnError("Radiation.cpp: LoadInitialDataMomentsFixed() => Refined stencils do not support fixed streaming.");
 
     PARALLEL_FOR(1)
     for (size_t ijk = 0; ijk < grid.nxyz; ijk++)
@@ -168,37 +206,97 @@ void Radiation::LoadInitialData()
         double initialFy_IF = initialDataIF[2];
         double initialFz_IF = initialDataIF[3];
 
-        // Flux direction and magnitude in IF:
+        // Relative flux magnitude, sigma, flux direction:
         Tensor3 initialFxyz_IF(initialFx_IF, initialFy_IF, initialFz_IF);
         double initialF_IF = initialFxyz_IF.EuklNorm();
         double relativeF_IF = initialF_IF / initialE_IF;
-        Tensor3 dirInitialF = (isAdaptiveStreaming) ? Tensor3(0, 0, 1) : Tensor3(initialFx_IF / initialF_IF, initialFy_IF / initialF_IF, initialFz_IF / initialF_IF);
-        glm::vec3 to(initialFx_IF / initialF_IF, initialFy_IF / initialF_IF, initialFz_IF / initialF_IF);
-        if (initialF_IF < MIN_FLUX_NORM)
-        {
-            dirInitialF = Tensor3(0, 0, 1);
-            to = glm::vec3(0, 0, 1);
-        }
+        double sigma = stencil.sigmaOfRelativeFlux.Evaluate(relativeF_IF);
+        Tensor3 dirInitialF = (initialF_IF < MIN_FLUX_NORM) ? Tensor3(0, 0, 1) : Tensor3(initialFx_IF / initialF_IF, initialFy_IF / initialF_IF, initialFz_IF / initialF_IF);
 
-        double sigma = stencil.fluxToSigmaTable.Evaluate(relativeF_IF);
-        double normalization = stencil.fluxToNormalizationTable.Evaluate(relativeF_IF);
-
-        if (config.initialDataType == InitialDataType::Moments)
-        {
-            // Von Mises distribution:
-            // https://en.wikipedia.org/wiki/Von_Mises_distribution
-            q[ijk] = (isAdaptiveStreaming) ? glm::quat(from, to) : glm::quat(1, 0, 0, 0);
-            for (size_t d = 0; d < stencil.nDir; d++)
-                I[Index(ijk, d)] = initialE_IF * exp(sigma * Tensor3::Dot(dirInitialF, stencil.Ct3(d)) - normalization);
-        }
-        else if (config.initialDataType == InitialDataType::Intensities)
-        {
-            q[ijk] = (isAdaptiveStreaming) ? initialQ[ijk] : glm::quat(1, 0, 0, 0);
-            for (size_t d = 0; d < stencil.nDir; d++)
-                I[Index(ijk, d)] = initialI[Index(ijk, d)];
-        }
+        for (size_t d = 0; d < stencil.nDir; d++)
+            I[Index(ijk, d)] = Intensity(sigma, initialE_IF, dirInitialF, stencil.Ct3(d));
     }
 }
+void Radiation::LoadInitialDataIntensitiesAdaptive()
+{
+    ExitOnError("Radiation.cpp: LoadInitialDataIntensitiesAdaptive() => Adaptive stencils do not support initial data by intensities.");
+}
+void Radiation::LoadInitialDataMomentsAdaptive()
+{
+    PARALLEL_FOR(1)
+    for (size_t ijk = 0; ijk < grid.nxyz; ijk++)
+    {
+        if (!isInitialGridPoint[ijk])
+            continue;
+
+        // Convert given LF initial data to IF:
+        Tensor4 initialDataIF = InitialDataLFtoIF(ijk);
+        double initialE_IF = initialDataIF[0];
+        double initialFx_IF = initialDataIF[1];
+        double initialFy_IF = initialDataIF[2];
+        double initialFz_IF = initialDataIF[3];
+
+        // Relative flux magnitude, sigma, stencil quaternion (to):
+        Tensor3 initialFxyz_IF(initialFx_IF, initialFy_IF, initialFz_IF);
+        double initialF_IF = initialFxyz_IF.EuklNorm();
+        double relativeF_IF = initialF_IF / initialE_IF;
+        double sigma = stencil.sigmaOfRelativeFlux.Evaluate(relativeF_IF);
+        glm::vec3 to = (initialF_IF < MIN_FLUX_NORM) ? glm::vec3(0, 0, 1) : glm::vec3(initialFx_IF / initialF_IF, initialFy_IF / initialF_IF, initialFz_IF / initialF_IF);
+
+        q[ijk] = glm::quat(from, to);
+        for (size_t d = 0; d < stencil.nDir; d++)
+            I[Index(ijk, d)] = Intensity(sigma, initialE_IF, stencil.Theta(d));
+    }
+}
+// Weighting initial data with 1/(w*N) produces worse results.
+//void Radiation::LoadInitialDataMomentsAdaptive()
+//{
+//    // Base stencil and intensities for initial data interpolation:
+//    LebedevStencil stencilBase(stencil.nOrder);
+//    RealBuffer IBase;
+//    IBase.resize(stencilBase.nDir * grid.nxyz);
+//    auto BaseIndex = [&](size_t ijk, size_t d)
+//    { return d + ijk * stencilBase.nDir; };
+//    
+//    PARALLEL_FOR(1)
+//    for (size_t ijk = 0; ijk < grid.nxyz; ijk++)
+//    {
+//        if (!isInitialGridPoint[ijk])
+//            continue;
+//
+//        // Convert given LF initial data to IF:
+//        Tensor4 initialDataIF = InitialDataLFtoIF(ijk);
+//        double initialE_IF = initialDataIF[0];
+//        double initialFx_IF = initialDataIF[1];
+//        double initialFy_IF = initialDataIF[2];
+//        double initialFz_IF = initialDataIF[3];
+//
+//        // Relative flux magnitude, sigma, stencil quaternion (to):
+//        Tensor3 initialFxyz_IF(initialFx_IF, initialFy_IF, initialFz_IF);
+//        double initialF_IF = initialFxyz_IF.EuklNorm();
+//        double relativeF_IF = initialF_IF / initialE_IF;
+//        double sigma = stencil.sigmaOfRelativeFlux.Evaluate(relativeF_IF);
+//        glm::vec3 to = (initialF_IF < MIN_FLUX_NORM) ? glm::vec3(0, 0, 1) : glm::vec3(initialFx_IF / initialF_IF, initialFy_IF / initialF_IF, initialFz_IF / initialF_IF);
+//
+//        // Calculated deweighted intensities on stencilBase:
+//        q[ijk] = glm::quat(from, to);
+//        for (size_t d = 0; d < stencilBase.nDir; d++)
+//            IBase[BaseIndex(ijk, d)] = Intensity(sigma, initialE_IF, stencilBase.Theta(d)) / (stencilBase.W(d) * stencilBase.nDir);
+//
+//        // Interpolate to actual stencil:
+//        for (size_t d = 0; d < stencil.nDir; d++)
+//        {
+//            Vector3 dir = stencil.Cv3(d);
+//            std::tuple<std::vector<size_t>, std::vector<double>> neighboursAndWeights = stencilBase.VoronoiNeighboursAndWeights(dir);
+//            std::span<const size_t> neighbours = std::get<0>(neighboursAndWeights);
+//            std::span<const double> weights = std::get<1>(neighboursAndWeights);
+//            double interpolatetValue = 0;
+//            for (size_t p = 0; p < weights.size(); p++)
+//                interpolatetValue += weights[p] * IBase[BaseIndex(ijk, neighbours[p])];
+//            I[Index(ijk,d)] = interpolatetValue;
+//        }
+//    }
+//}
 
 void Radiation::UpdateSphericalHarmonicsCoefficients()
 {
@@ -826,24 +924,24 @@ void Radiation::TakePicture()
     PARALLEL_FOR(1)
     for (size_t ijk = 0; ijk < camera.pixelCount; ijk++)
     {
-        Coord pixel = camera.xyz(ijk); // xyz coord of pixel in world space.
-        if (grid.OutsideDomain(pixel))
+        Coord pixelWorld = camera.xyzWorld(ijk); // xyz coord of pixel in world space.
+        if (grid.OutsideDomain(pixelWorld))
         {
             camera.image[ijk] = 0;
             continue;
         }
 
-        // We want to measure only the intensities that move orthogonal through the camera plane,
+        // We want to measure only the intensities that moves orthogonal through the camera plane,
         // meaning the light velocity is the opposite of the camera normal vector.
         Tensor3 lookDir = camera.lookDirection;
         Tensor4 uLF(1, -lookDir[1], -lookDir[2], -lookDir[3]);
-        uLF = NullNormalize(uLF, metric.GetMetric_ll(pixel));
-        Tensor3 vIF = Vec3ObservedByEulObs<LF, IF>(uLF, pixel, metric);
+        uLF = NullNormalize(uLF, metric.GetMetric_ll(pixelWorld));
+        Tensor3 vIF = Vec3ObservedByEulObs<LF, IF>(uLF, pixelWorld, metric);
 
         // Get 8 nearest Grid Points:
-        double iTemp = grid.i(pixel[1]);
-        double jTemp = grid.j(pixel[2]);
-        double kTemp = grid.k(pixel[3]);
+        double iTemp = grid.i(pixelWorld[1]);
+        double jTemp = grid.j(pixelWorld[2]);
+        double kTemp = grid.k(pixelWorld[3]);
         size_t i0 = std::floor(iTemp);
         size_t i1 = i0 + 1;
         size_t j0 = std::floor(jTemp);
@@ -852,7 +950,6 @@ void Radiation::TakePicture()
         size_t k1 = k0 + 1;
 
         // Intensity interpolation:
-        // double alpha = metric.GetAlpha(pixel); // removed to get intensity as seen by observer infinitly far away.
         double intensityAt_i0j0k0 = IntegerPow<4>(1.0 / metric.GetAlpha(grid.Index(i0, j0, k0))) * IntensityAt(grid.Index(i0, j0, k0), vIF);
         double intensityAt_i0j0k1 = IntegerPow<4>(1.0 / metric.GetAlpha(grid.Index(i0, j0, k1))) * IntensityAt(grid.Index(i0, j0, k1), vIF);
         double intensityAt_i0j1k0 = IntegerPow<4>(1.0 / metric.GetAlpha(grid.Index(i0, j1, k0))) * IntensityAt(grid.Index(i0, j1, k0), vIF);
@@ -915,6 +1012,11 @@ void Radiation::RunSimulation()
             ComputeMomentsIF();
             ComputeMomentsLF();
             grid.WriteFrametoCsv(currentTime, E_LF, Fx_LF, Fy_LF, Fz_LF, logger.directoryPath + "/Moments/");
+            if (config.useCamera)
+            {
+                TakePicture();
+                camera.WriteImagetoCsv(currentTime, logger.directoryPath + "/Images/");
+            }
             timeSinceLastFrame = 0;
         }
 
@@ -961,6 +1063,11 @@ void Radiation::RunSimulation()
                 ComputeMomentsIF();
                 ComputeMomentsLF();
                 grid.WriteFrametoCsv(currentTime, E_LF, Fx_LF, Fy_LF, Fz_LF, logger.directoryPath + "/Moments/");
+                if (config.useCamera)
+                {
+                    TakePicture();
+                    camera.WriteImagetoCsv(currentTime, logger.directoryPath + "/Images/");
+                }
                 timeSinceLastFrame = 0;
             }
         }
@@ -971,6 +1078,11 @@ void Radiation::RunSimulation()
             ComputeMomentsIF();
             ComputeMomentsLF();
             grid.WriteFrametoCsv(currentTime, E_LF, Fx_LF, Fy_LF, Fz_LF, logger.directoryPath + "/Moments/");
+            if (config.useCamera)
+            {
+                TakePicture();
+                camera.WriteImagetoCsv(currentTime, logger.directoryPath + "/Images/");
+            }
             timeSinceLastFrame = 0;
         }
     }

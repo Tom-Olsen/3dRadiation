@@ -10,26 +10,28 @@
 class Camera
 {
 public:
-    double* image;
-    int resX;
-    int resY;
-    int pixelCount;
-    int width;
-    int height;
+    RealBuffer image;
+    size_t resX;
+    size_t resY;
+    size_t pixelCount;
+    size_t width;
+    size_t height;
 
     Coord position;
     glm::vec3 eulerAngles;
     Tensor3 lookDirection;
 
-    Camera(int resX, int resY, int width, int height, Coord position, glm::vec3 eulerAngles);
+    Camera(size_t resX, size_t resY, size_t width, size_t height, Coord position, glm::vec3 eulerAngles);
     Camera();
     
     size_t Index(size_t i, size_t j);
-    Coord xyz(size_t i, size_t j);
-    Coord xyz(size_t ij);
+    Coord xyzLocal(size_t i, size_t j);
+    Coord xyzLocal(size_t ij);
+    Coord xyzWorld(size_t i, size_t j);
+    Coord xyzWorld(size_t ij);
 
-    void WriteImagetoCsv
-    (float time, const int frameNumber, std::string directory, std::string name="");
+
+    void WriteImagetoCsv(float time, std::string directory, std::string name = "");
 };
 
 

@@ -21,6 +21,9 @@ Tensor4x4 TransformIFtoLF(const Tensor4x4 &tensor, const Tensor4x4 &tetrad);
 Tensor4x4 TransformLFtoIF(const Tensor4x4 &tensor, const Tensor4x4 &tetradInverse);
 
 Tensor4x4 BoostMatrix(const Tensor3 & u);
+double FluxMagnitude(double sigma, double E);
+double Intensity(double sigma, double E, double theta);
+double Intensity(double sigma, double E, Tensor3 dirF, Tensor3 c);
 
 template <class FrameIn, class FrameOut>
 Tensor3 Vec3ObservedByEulObs(const Tensor4 &u, const Coord &xyz, Metric &metric);

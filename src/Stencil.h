@@ -35,13 +35,12 @@ public:
     double refinement0Threshold; // Number of ghost rings to be added.
     double refinement1Threshold; // Number of ghost directions in smallest ring.
     double refinement2Threshold; // Total amount of ghost directions.
-    LookUpTable fluxToSigmaTable;
-    LookUpTable fluxToNormalizationTable;
+    LookUpTable sigmaOfRelativeFlux;
     double sigmaMax;
     double relativeFluxMax;
     Mesh mesh;
-    // static constexpr double maxInterpolationError = 1; // 100%
-    static constexpr double maxInterpolationError = 0.01; // 1%
+    static constexpr double maxInterpolationError  = 0.01; // 1%
+    static constexpr double sigmaMaxSearchAccuracy = 1e-3; // 0.1%
 
 protected:
     // Internal Buffers (data for each vertex):
@@ -95,6 +94,7 @@ protected:
     void InitializeVoronoiCells();
     void InitializeVoronoiNeighbours();
     void PopulateLookUpTable();
+    double MaxSigma();
 
 public:
     // Debugging:

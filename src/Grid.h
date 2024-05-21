@@ -13,15 +13,10 @@ private:
 
 public:
     // Members:
-    size_t nx;
-    size_t ny;
-    size_t nz;
-    size_t nxy;
-    size_t nxyz;
+    size_t nx, ny, nz, nxy, nxyz;
     double dx, dy, dz, dt;
     double startx, starty, startz;
     double endx, endy, endz;
-    double dxInv, dyInv, dzInv;
 
     // Constructors:
     Grid() = delete;
@@ -57,5 +52,8 @@ public:
 
     // Write Data to file:
     void WriteFrametoCsv(float time, const RealBuffer &r, const RealBuffer &g, const RealBuffer &b, const RealBuffer &a, std::string directory, std::string name = "");
+
+    // Debugging:
+    void Print();
 };
 #endif //__INCLUDE_GUARD_Grid_h__

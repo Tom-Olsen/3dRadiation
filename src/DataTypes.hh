@@ -965,91 +965,101 @@ public:
 struct LookUpTable
 {
     int size = 0;
-    std::vector<double> inputs;
-    std::vector<double> outputs;
+    std::vector<double> xValues;
+    std::vector<double> yValues;
 
-    void Add(double input, double output)
+    void Add(double x, double y)
     {
-        if (inputs.size() == 0 || input < inputs[0])
+        if (xValues.size() == 0 || x < xValues[0])
         {
-            inputs.insert(inputs.begin(), input);
-            outputs.insert(outputs.begin(), output);
+            xValues.insert(xValues.begin(), x);
+            yValues.insert(yValues.begin(), y);
         }
-        else if (input > inputs.back())
+        else if (x > xValues.back())
         {
-            inputs.push_back(input);
-            outputs.push_back(output);
+            xValues.push_back(x);
+            yValues.push_back(y);
         }
         else
         {
             // Find the correct spot where new values must be inserted:
-            auto iterator = std::lower_bound(inputs.begin(), inputs.end(), input);
+            auto iterator = std::lower_bound(xValues.begin(), xValues.end(), x);
 
             // Only add new values if they are not in the vectors yet:
-            if (iterator == inputs.end() || input < *iterator)
+            if (iterator == xValues.end() || x < *iterator)
             {
-                int index = std::distance(inputs.begin(), iterator);
-                inputs.insert(inputs.begin() + index, input);
-                outputs.insert(outputs.begin() + index, output);
+                int index = std::distance(xValues.begin(), iterator);
+                xValues.insert(xValues.begin() + index, x);
+                yValues.insert(yValues.begin() + index, y);
             }
         }
-        size = inputs.size();
+        size = xValues.size();
     }
 
     double Evaluate(double x)
     {
         if (size == 0)
             ExitOnError("Trying to read from empty look up table.");
-        if (x <= inputs[0] || size == 1)
-            return outputs[0];
-        if (x >= inputs[size - 1])
-            return outputs[size - 1];
+        if (x <= xValues[0] || size == 1)
+            return yValues[0];
+        if (x >= xValues[size - 1])
+            return yValues[size - 1];
 
-        auto lowerIterator = std::lower_bound(inputs.begin(), inputs.end(), x) - 1;
+        auto lowerIterator = std::lower_bound(xValues.begin(), xValues.end(), x) - 1;
         auto upperIterator = lowerIterator + 1;
 
         // Handle the case where x is exactly one of the input values
-        if (lowerIterator != inputs.end() && *lowerIterator == x)
+        if (lowerIterator != xValues.end() && *lowerIterator == x)
         {
-            int index = std::distance(inputs.begin(), lowerIterator);
-            return outputs[index];
+            int index = std::distance(xValues.begin(), lowerIterator);
+            return yValues[index];
         }
 
-        int index0 = std::distance(inputs.begin(), lowerIterator);
-        int index1 = std::distance(inputs.begin(), upperIterator);
+        int index0 = std::distance(xValues.begin(), lowerIterator);
+        int index1 = std::distance(xValues.begin(), upperIterator);
 
-        double x0 = inputs[index0];
-        double x1 = inputs[index1];
-        double y0 = outputs[index0];
-        double y1 = outputs[index1];
+        double x0 = xValues[index0];
+        double x1 = xValues[index1];
+        double y0 = yValues[index0];
+        double y1 = yValues[index1];
 
         double t = (x - x0) / (x1 - x0);
         return y0 + t * (y1 - y0);
     }
 
+    void Print(std::string name)
+    {
+        if (size == 0)
+            ExitOnError("Trying to read from empty look up table.");
+        std::cout << name << ":\n";
+        for (size_t i = 0; i < size - 1; i++)
+            std::cout << "(" << xValues[i] << "," << yValues[i] << ")\n";
+        std::cout << "(" << xValues[size - 1] << "," << yValues[size - 1] << ")\n";
+    }
+
     void WriteToCsv(std::string name, int resolution)
     {
-        if (inputs.size() == 0)
+        if (size == 0)
             ExitOnError("Trying to read from empty look up table.");
 
         std::ofstream fileOut(name + ".csv");
 
-        double x0 = inputs[0];
-        double x1 = inputs[inputs.size() - 1];
+        double x0 = xValues[0];
+        double x1 = xValues[size - 1];
 
         fileOut << "#x,y\n";
         if (resolution < 0)
         {
             for (size_t i = 0; i < size; i++)
-                fileOut << Format(inputs[i], 8) << "," << Format(outputs[i], 8) << "\n";
+                fileOut << Format(xValues[i], 8) << "," << Format(yValues[i], 8) << "\n";
         }
         else
         {
             for (size_t i = 0; i < resolution; i++)
             {
-                double t = i / (resolution - 1.0);
-                double x = x0 + t * (x1 - x0);
-                fileOut << Format(x, 8) << "," << Format(Evaluate(x), 8) << "\n";
+                double x = (x1 - x0) * i / (resolution - 1.0) + x0;
+                double y = Evaluate(x);
+                fileOut << Format(x, 8) << "," << Format(y, 8) << "\n";
             }
         }
 

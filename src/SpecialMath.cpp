@@ -100,6 +100,24 @@ Tensor4x4 BoostMatrix(const Tensor3 & u)
                      -gamma * u[2],     (gamma - 1) * u[1] * u[2] / betaSq, 1 + (gamma - 1) * u[2] * u[2] / betaSq,     (gamma - 1) * u[2] * u[3] / betaSq,
                      -gamma * u[3],     (gamma - 1) * u[1] * u[3] / betaSq,     (gamma - 1) * u[2] * u[3] / betaSq, 1 + (gamma - 1) * u[3] * u[3] / betaSq);
 }
+double FluxMagnitude(double sigma, double E)
+{
+    if (sigma < 1e-10)
+        return 0;
+    return E * (sigma * cosh(sigma) - sinh(sigma)) / (sigma * sinh(sigma));
+}
+double Intensity(double sigma, double E, double theta)
+{
+    if (sigma < 1e-10)
+        return E;
+    return E * exp(sigma * MyCos(theta) - std::log(sinh(sigma) / sigma));
+}
+double Intensity(double sigma, double E, Tensor3 dirF, Tensor3 c)
+{
+    if (sigma < 1e-10)
+        return E;
+    return E * exp(sigma * Tensor3::Dot(dirF, c) - std::log(sinh(sigma) / sigma));
+}
 
 
 

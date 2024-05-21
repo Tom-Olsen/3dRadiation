@@ -22,7 +22,7 @@ private:
 public:
     Grid &grid;
     Metric &metric;
-    Stencil &stencil;
+    LebedevStencil &stencil;
     LebedevStencil &streamingStencil;
     InterpolationGrid &interpGrid;
     Camera &camera;
@@ -33,7 +33,6 @@ public:
     bool *isInitialGridPoint;
     // config.initialDataType = InitialDataType::Intensities
     RealBuffer initialI;
-    QuatBuffer initialQ;
     // config.initialDataType = InitialDataType::Moments
     RealBuffer initialE_LF;
     RealBuffer initialFx_LF;
@@ -102,7 +101,7 @@ public:
     double averageItterationCount = 0;
 
     Radiation() = delete;
-    Radiation(Metric &metric, Stencil &stencil, LebedevStencil &streamingStencil, InterpolationGrid &interpGrid, Camera &camera, Config config);
+    Radiation(Metric &metric, LebedevStencil &stencil, LebedevStencil &streamingStencil, InterpolationGrid &interpGrid, Camera &camera, Config config);
     ~Radiation();
 
     size_t Index(size_t ijk, size_t d);
@@ -118,6 +117,10 @@ public:
 
     Tensor4 InitialDataLFtoIF(size_t ijk);
     void LoadInitialData();
+    void LoadInitialDataIntensitiesFixed();
+    void LoadInitialDataMomentsFixed();
+    void LoadInitialDataIntensitiesAdaptive();
+    void LoadInitialDataMomentsAdaptive();
     void UpdateSphericalHarmonicsCoefficients();
     void ComputeMomentsIF();
     void ComputeMomentsLF();
