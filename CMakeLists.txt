@@ -18,6 +18,7 @@ file(GLOB srcs src/*.cpp)
 
 # Executables to generate and their dependencies:
 add_executable(main.out exe/main.cpp ${srcs})
+add_executable(benchmark.out exe/benchmark.cpp ${srcs})
 add_executable(test.out exe/test.cpp ${srcs})
 add_executable(dataTypesTest.out exe/dataTypesTest.cpp ${srcs})
 add_executable(gridTest.out exe/gridTest.cpp ${srcs})
@@ -34,6 +35,7 @@ add_executable(blackHoleImage.out exe/blackHoleImage.cpp ${srcs})
 # c++ flags:
 # target_compile_options(main.out PUBLIC)
 target_compile_options(main.out PUBLIC -O3 -ffast-math)
+target_compile_options(benchmark.out PUBLIC -O3 -ffast-math)
 target_compile_options(test.out PUBLIC -O3 -ffast-math)
 target_compile_options(dataTypesTest.out PUBLIC -O3 -ffast-math)
 target_compile_options(gridTest.out PUBLIC -O3 -ffast-math)
@@ -49,6 +51,7 @@ target_compile_options(blackHoleImage.out PUBLIC -O3 -ffast-math)
 
 # libraries to link:
 target_link_libraries(main.out OpenMP::OpenMP_CXX)
+target_link_libraries(benchmark.out OpenMP::OpenMP_CXX)
 target_link_libraries(test.out OpenMP::OpenMP_CXX)
 target_link_libraries(dataTypesTest.out OpenMP::OpenMP_CXX)
 target_link_libraries(gridTest.out OpenMP::OpenMP_CXX)

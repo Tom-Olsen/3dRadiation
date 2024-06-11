@@ -39,8 +39,9 @@ public:
     double sigmaMax;
     double relativeFluxMax;
     Mesh mesh;
-    static constexpr double maxInterpolationError  = 0.01; // 1%
-    static constexpr double sigmaMaxSearchAccuracy = 1e-3; // 0.1%
+    static constexpr double maxInterpolationError  = 0.01; // 1% (standard value)
+    // static constexpr double maxInterpolationError  = 0.20; // (test higher values)
+    static constexpr double sigmaMaxSearchAccuracy = 1e-3;
 
 protected:
     // Internal Buffers (data for each vertex):

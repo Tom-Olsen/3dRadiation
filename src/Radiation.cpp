@@ -248,55 +248,6 @@ void Radiation::LoadInitialDataMomentsAdaptive()
             I[Index(ijk, d)] = Intensity(sigma, initialE_IF, stencil.Theta(d));
     }
 }
-// Weighting initial data with 1/(w*N) produces worse results.
-//void Radiation::LoadInitialDataMomentsAdaptive()
-//{
-//    // Base stencil and intensities for initial data interpolation:
-//    LebedevStencil stencilBase(stencil.nOrder);
-//    RealBuffer IBase;
-//    IBase.resize(stencilBase.nDir * grid.nxyz);
-//    auto BaseIndex = [&](size_t ijk, size_t d)
-//    { return d + ijk * stencilBase.nDir; };
-//    
-//    PARALLEL_FOR(1)
-//    for (size_t ijk = 0; ijk < grid.nxyz; ijk++)
-//    {
-//        if (!isInitialGridPoint[ijk])
-//            continue;
-//
-//        // Convert given LF initial data to IF:
-//        Tensor4 initialDataIF = InitialDataLFtoIF(ijk);
-//        double initialE_IF = initialDataIF[0];
-//        double initialFx_IF = initialDataIF[1];
-//        double initialFy_IF = initialDataIF[2];
-//        double initialFz_IF = initialDataIF[3];
-//
-//        // Relative flux magnitude, sigma, stencil quaternion (to):
-//        Tensor3 initialFxyz_IF(initialFx_IF, initialFy_IF, initialFz_IF);
-//        double initialF_IF = initialFxyz_IF.EuklNorm();
-//        double relativeF_IF = initialF_IF / initialE_IF;
-//        double sigma = stencil.sigmaOfRelativeFlux.Evaluate(relativeF_IF);
-//        glm::vec3 to = (initialF_IF < MIN_FLUX_NORM) ? glm::vec3(0, 0, 1) : glm::vec3(initialFx_IF / initialF_IF, initialFy_IF / initialF_IF, initialFz_IF / initialF_IF);
-//
-//        // Calculated deweighted intensities on stencilBase:
-//        q[ijk] = glm::quat(from, to);
-//        for (size_t d = 0; d < stencilBase.nDir; d++)
-//            IBase[BaseIndex(ijk, d)] = Intensity(sigma, initialE_IF, stencilBase.Theta(d)) / (stencilBase.W(d) * stencilBase.nDir);
-//
-//        // Interpolate to actual stencil:
-//        for (size_t d = 0; d < stencil.nDir; d++)
-//        {
-//            Vector3 dir = stencil.Cv3(d);
-//            std::tuple<std::vector<size_t>, std::vector<double>> neighboursAndWeights = stencilBase.VoronoiNeighboursAndWeights(dir);
-//            std::span<const size_t> neighbours = std::get<0>(neighboursAndWeights);
-//            std::span<const double> weights = std::get<1>(neighboursAndWeights);
-//            double interpolatetValue = 0;
-//            for (size_t p = 0; p < weights.size(); p++)
-//                interpolatetValue += weights[p] * IBase[BaseIndex(ijk, neighbours[p])];
-//            I[Index(ijk,d)] = interpolatetValue;
-//        }
-//    }
-//}
 
 void Radiation::UpdateSphericalHarmonicsCoefficients()
 {
@@ -824,9 +775,12 @@ void Radiation::Collide()
                 if (metric.InsideBH(grid.xyz(i, j, k)))
                     continue;
                 size_t ijk = grid.Index(i, j, k);
+            
+                Tensor3 uLF(ux[ijk], uy[ijk], uz[ijk]);
+                Tensor3 uIF = TransformLFtoIF(uLF, metric.GetTetrad(ijk));
 
                 double alpha = metric.GetAlpha(ijk);
-                double uu = ux[ijk] * ux[ijk] + uy[ijk] * uy[ijk] + uz[ijk] * uz[ijk];
+                double uu = uIF[1] * uIF[1] + uIF[2] * uIF[2] + uIF[3] * uIF[3];
                 double lorentz = 1.0 / sqrt(1.0 - uu);
 
                 int cycles = 0;
@@ -834,26 +788,26 @@ void Radiation::Collide()
                 while (abs(diff) > LAMBDA_ITTERATION_TOLERENCE && (cycles < MAX_LAMBDA_ITERATIONS))
                 {
                     cycles++;
-                    double guessE = E[ijk];
-                    double guessFx = Fx[ijk];
-                    double guessFy = Fy[ijk];
-                    double guessFz = Fz[ijk];
-                    double guessPxx = Pxx[ijk];
-                    double guessPxy = Pxy[ijk];
-                    double guessPxz = Pxz[ijk];
-                    double guessPyy = Pyy[ijk];
-                    double guessPyz = Pyz[ijk];
-                    double guessPzz = Pzz[ijk];
+                    double prevE = E[ijk];
+                    double prevFx = Fx[ijk];
+                    double prevFy = Fy[ijk];
+                    double prevFz = Fz[ijk];
+                    double prevPxx = Pxx[ijk];
+                    double prevPxy = Pxy[ijk];
+                    double prevPxz = Pxz[ijk];
+                    double prevPyy = Pyy[ijk];
+                    double prevPyz = Pyz[ijk];
+                    double prevPzz = Pzz[ijk];
 
-                    double uF = ux[ijk] * guessFx + uy[ijk] * guessFy + uz[ijk] * guessFz;    // u_i F^i
-                    double uxP = ux[ijk] * guessPxx + uy[ijk] * guessPxy + uz[ijk] * guessPxz; // x component of u_i P^ij
-                    double uyP = ux[ijk] * guessPxy + uy[ijk] * guessPyy + uz[ijk] * guessPyz; // y component of u_i P^ij
-                    double uzP = ux[ijk] * guessPxz + uy[ijk] * guessPyz + uz[ijk] * guessPzz; // y component of u_i P^ij
-                    double uuP = ux[ijk] * uxP + uy[ijk] * uyP + uz[ijk] * uzP; // u_i u_j P^ij
-                    double guessFluidE = lorentz * lorentz * (guessE - 2.0 * uF + uuP);
-                    double guessFluidFx = lorentz * lorentz * (guessFluidFx - lorentz * guessE * ux[ijk] - uxP + ux[ijk] * lorentz / (1.0 + lorentz) * ((2.0 * lorentz + 1.0) * uF - lorentz * uuP));
-                    double guessFluidFy = lorentz * lorentz * (guessFluidFy - lorentz * guessE * uy[ijk] - uyP + uy[ijk] * lorentz / (1.0 + lorentz) * ((2.0 * lorentz + 1.0) * uF - lorentz * uuP));
-                    double guessFluidFz = lorentz * lorentz * (guessFluidFz - lorentz * guessE * uz[ijk] - uzP + uz[ijk] * lorentz / (1.0 + lorentz) * ((2.0 * lorentz + 1.0) * uF - lorentz * uuP));
+                    double uF  = uIF[1] *  prevFx + uIF[2] *  prevFy + uIF[3] *  prevFz; // u_i F^i
+                    double uxP = uIF[1] * prevPxx + uIF[2] * prevPxy + uIF[3] * prevPxz; // x component of u_i P^ij
+                    double uyP = uIF[1] * prevPxy + uIF[2] * prevPyy + uIF[3] * prevPyz; // y component of u_i P^ij
+                    double uzP = uIF[1] * prevPxz + uIF[2] * prevPyz + uIF[3] * prevPzz; // y component of u_i P^ij
+                    double uuP = uIF[1] * uxP + uIF[2] * uyP + uIF[3] * uzP; // u_i u_j P^ij
+                    double prevFluidE  = lorentz * lorentz * (prevE - 2.0 * uF + uuP);
+                    double prevFluidFx = lorentz * lorentz * (prevFx - lorentz * prevE * uIF[1] - uxP + uIF[1] * lorentz / (1.0 + lorentz) * ((2.0 * lorentz + 1.0) * uF - lorentz * uuP));
+                    double prevFluidFy = lorentz * lorentz * (prevFy - lorentz * prevE * uIF[2] - uyP + uIF[2] * lorentz / (1.0 + lorentz) * ((2.0 * lorentz + 1.0) * uF - lorentz * uuP));
+                    double prevFluidFz = lorentz * lorentz * (prevFz - lorentz * prevE * uIF[3] - uzP + uIF[3] * lorentz / (1.0 + lorentz) * ((2.0 * lorentz + 1.0) * uF - lorentz * uuP));
 
                     E[ijk] = 0.0;
                     Fx[ijk] = 0.0;
@@ -867,15 +821,24 @@ void Radiation::Collide()
                     Pzz[ijk] = 0.0;
                     for (size_t d = 0; d < stencil.nDir; d++)
                     {
-                        Tensor3 nIF = q[ijk] * stencil.Ct3(d);
                         size_t index = Index(ijk, d);
-                        double un = ux[ijk] * nIF[1] + uy[ijk] * nIF[2] + uz[ijk] * nIF[3];
-                        double A = lorentz * (1.0 - un);
-                        double nF = nIF[1] * guessFx + nIF[2] * guessFy + nIF[3] * guessFz;
 
-                        double M = kappa0[ijk] * guessFluidE + 3.0 * kappa1[ijk] * nF;
+                        // Doppler factor:
+                        Tensor3 nIF = q[ijk] * stencil.Ct3(d);
+                        double un = uIF[1] * nIF[1] + uIF[2] * nIF[2] + uIF[3] * nIF[3];
+                        double A = lorentz * (1.0 - un);
+
+                        // nFF contracted with fluxFF:
+                        Tensor3 nFF = (nIF - (1 - (lorentz * un) / (lorentz + 1)) * lorentz * uIF) / A;
+                        double nF = nFF[1] * prevFluidFx + nFF[2] * prevFluidFy + nFF[3] * prevFluidFz;
+
+                        // Moment collision term:
+                        double M = kappa0[ijk] * prevFluidE + 3.0 * kappa1[ijk] * nF;
+
+                        // Collision:
                         Inew[index] = (I[index] + alpha * grid.dt * (eta[ijk] + M) / (A * A * A)) / (1.0 + alpha * grid.dt * (kappaA[ijk] + kappa0[ijk]) * A);
 
+                        // Compute new moments:
                         double c = stencil.W(d) * Inew[index];
                         E[ijk] += c;
                         Fx[ijk] += c * nIF[1];
@@ -889,16 +852,16 @@ void Radiation::Collide()
                         Pzz[ijk] += c * nIF[3] * nIF[3];
                     }
 
-                    double diffE = IntegerPow<2>((guessE - E[ijk]) / E[ijk]);
-                    double diffFx = IntegerPow<2>((guessFx - Fx[ijk]) / Fx[ijk]);
-                    double diffFy = IntegerPow<2>((guessFy - Fy[ijk]) / Fy[ijk]);
-                    double diffFz = IntegerPow<2>((guessFz - Fz[ijk]) / Fz[ijk]);
-                    double diffPxx = IntegerPow<2>((guessPxx - Pxx[ijk]) / Pxx[ijk]);
-                    double diffPxy = IntegerPow<2>((guessPxy - Pxy[ijk]) / Pxy[ijk]);
-                    double diffPxz = IntegerPow<2>((guessPxz - Pxz[ijk]) / Pxz[ijk]);
-                    double diffPyy = IntegerPow<2>((guessPyy - Pyy[ijk]) / Pyy[ijk]);
-                    double diffPyz = IntegerPow<2>((guessPyz - Pyz[ijk]) / Pyz[ijk]);
-                    double diffPzz = IntegerPow<2>((guessPzz - Pzz[ijk]) / Pzz[ijk]);
+                    double diffE = IntegerPow<2>((prevE - E[ijk]) / E[ijk]);
+                    double diffFx = IntegerPow<2>((prevFx - Fx[ijk]) / Fx[ijk]);
+                    double diffFy = IntegerPow<2>((prevFy - Fy[ijk]) / Fy[ijk]);
+                    double diffFz = IntegerPow<2>((prevFz - Fz[ijk]) / Fz[ijk]);
+                    double diffPxx = IntegerPow<2>((prevPxx - Pxx[ijk]) / Pxx[ijk]);
+                    double diffPxy = IntegerPow<2>((prevPxy - Pxy[ijk]) / Pxy[ijk]);
+                    double diffPxz = IntegerPow<2>((prevPxz - Pxz[ijk]) / Pxz[ijk]);
+                    double diffPyy = IntegerPow<2>((prevPyy - Pyy[ijk]) / Pyy[ijk]);
+                    double diffPyz = IntegerPow<2>((prevPyz - Pyz[ijk]) / Pyz[ijk]);
+                    double diffPzz = IntegerPow<2>((prevPzz - Pzz[ijk]) / Pzz[ijk]);
                     diff = sqrt(diffE + diffFx + diffFy + diffFz + diffPxx + diffPxy + diffPxz + diffPyy + diffPyz + diffPzz);
                 }
                 itterationCount[ijk] = cycles;
@@ -1117,6 +1080,11 @@ void Radiation::RunSimulation()
         logger.AddTimeMeasurement(names[i], session.GetTotalTime(names[i]));
     }
     if (config.printResults)
+    {
         std::cout << "Computation Time: " << totalTime - writingTime << "s" << std::endl;
+        std::cout << "Benchmark: " << grid.nxyz * timeSteps / (1e6 * (totalTime - writingTime)) << "MLUPS" << std::endl;
+    }
+    if (config.writeData)
+        logger.Write();
     // --------------------------------------------------------
 }

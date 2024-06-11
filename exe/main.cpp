@@ -2,17 +2,19 @@
 #include "../src/Radiation.h"
 using namespace std;
 
-#define SAVE_ID false
+// Macros:
+#define WRITE_DATA true
 #define PRINT_SETUP true
 #define PRINT_PROGRESS true
 #define PRINT_RESULTS true
+#define SAVE_ID false
 
-void SphereWave(LebedevStencil stencil, StreamingType streamingType, double cfl)
+Logger SphereWave(LebedevStencil stencil, StreamingType streamingType, double cfl)
 {
     // Grid, Metric, Stencil:
-    size_t nx = 180;
-    size_t ny = 180;
-    size_t nz = 180;
+    size_t nx = 181;
+    size_t ny = 181;
+    size_t nz = 181;
     Coord start(-0.9, -0.9, -0.9);
     Coord end(0.9, 0.9, 0.9);
     Grid grid(nx, ny, nz, start, end);
@@ -31,14 +33,13 @@ void SphereWave(LebedevStencil stencil, StreamingType streamingType, double cfl)
             .writePeriod = 1.0,
             .updateSphericalHarmonics = false,
             .keepSourceNodesActive = false,
-            .writeData = true,
+            .writeData = WRITE_DATA,
             .printSetup = PRINT_SETUP,
             .printProgress = PRINT_PROGRESS,
             .printResults = PRINT_RESULTS,
             .useCamera = false,
             .saveInitialData = SAVE_ID,
             .streamingType = streamingType,
-            // .initialDataType = InitialDataType::Intensities,
             .initialDataType = InitialDataType::Moments,
         };
 
@@ -76,6 +77,7 @@ void SphereWave(LebedevStencil stencil, StreamingType streamingType, double cfl)
                 }
             }
     radiation.RunSimulation();
+    return radiation.logger;
 }
 void SphereWaveAnalysis(int n)
 {
@@ -93,12 +95,12 @@ void SphereWaveAnalysis(int n)
     if(n == 8) SphereWave(LebedevStencil(41, 0.00, 0.15, 0.00), StreamingType::FlatAdaptive, cfl);
 }
 
-void Shadow(LebedevStencil stencil, StreamingType streamingType, double cfl)
+Logger Shadow(LebedevStencil stencil, StreamingType streamingType, double cfl)
 {
     // Grid, Metric, Stencil:
-    size_t nx = 190;
-    size_t ny = 190;
-    size_t nz = 190;
+    size_t nx = 191;
+    size_t ny = 191;
+    size_t nz = 191;
     Coord start(-0.2, -0.2, -0.2);
     Coord end(1.7, 1.7, 1.7);
     Grid grid(nx, ny, nz, start, end);
@@ -117,7 +119,7 @@ void Shadow(LebedevStencil stencil, StreamingType streamingType, double cfl)
             .writePeriod = 2.0,
             .updateSphericalHarmonics = false,
             .keepSourceNodesActive = true,
-            .writeData = true,
+            .writeData = WRITE_DATA,
             .printSetup = PRINT_SETUP,
             .printProgress = PRINT_PROGRESS,
             .printResults = PRINT_RESULTS,
@@ -162,6 +164,7 @@ void Shadow(LebedevStencil stencil, StreamingType streamingType, double cfl)
                     radiation.kappaA[ijk] = 1e10;
             }
     radiation.RunSimulation();
+    return radiation.logger;
 }
 void ShadowAnalysis(int n)
 {
@@ -179,12 +182,12 @@ void ShadowAnalysis(int n)
     if(n == 8) Shadow(LebedevStencil(41, 0.00, 0.15, 0.00), StreamingType::FlatAdaptive, cfl);
 }
 
-void Star(LebedevStencil stencil, StreamingType streamingType, double cfl, double kappaA)
+Logger Star(LebedevStencil stencil, StreamingType streamingType, double cfl, double kappaA)
 {
     // Grid, Metric, Stencil:
-    size_t nx = 160;
-    size_t ny = 160;
-    size_t nz = 160;
+    size_t nx = 161;
+    size_t ny = 161;
+    size_t nz = 161;
     Coord start(-4, -4, -4);
     Coord end(4, 4, 4);
     Grid grid(nx, ny, nz, start, end);
@@ -203,7 +206,7 @@ void Star(LebedevStencil stencil, StreamingType streamingType, double cfl, doubl
             .writePeriod = 11,
             .updateSphericalHarmonics = false,
             .keepSourceNodesActive = false,
-            .writeData = true,
+            .writeData = WRITE_DATA,
             .printSetup = PRINT_SETUP,
             .printProgress = PRINT_PROGRESS,
             .printResults = PRINT_RESULTS,
@@ -253,6 +256,7 @@ void Star(LebedevStencil stencil, StreamingType streamingType, double cfl, doubl
                 }
             }
     radiation.RunSimulation();
+    return radiation.logger;
 }
 void StarAnalysis(int n)
 {
@@ -270,11 +274,11 @@ void StarAnalysis(int n)
     if(n == 8) Star(LebedevStencil(29, 0.00, 0.15, 0.00), StreamingType::FlatAdaptive, cfl, 1e10);
 }
 
-void BeamCrossing(LebedevStencil stencil, StreamingType streamingType, double cfl)
+Logger BeamCrossing(LebedevStencil stencil, StreamingType streamingType, double cfl)
 {
     // Create Radiation object:
-    size_t nx = 200;
-    size_t ny = 100;
+    size_t nx = 201;
+    size_t ny = 101;
     size_t nz = 50;
     Coord start(-0.5, -0.25, -0.125);
     Coord end(0.5, 0.25, 0.125);
@@ -298,7 +302,7 @@ void BeamCrossing(LebedevStencil stencil, StreamingType streamingType, double cf
             .writePeriod = 1,
             .updateSphericalHarmonics = false,
             .keepSourceNodesActive = true,
-            .writeData = true,
+            .writeData = WRITE_DATA,
             .printSetup = PRINT_SETUP,
             .printProgress = PRINT_PROGRESS,
             .printResults = PRINT_RESULTS,
@@ -374,12 +378,13 @@ void BeamCrossing(LebedevStencil stencil, StreamingType streamingType, double cf
                 }
             }
     radiation.RunSimulation();
+    return radiation.logger;
 }
 void BeamCrossingAnalysis(int n)
 {
     // All missing
     double cfl = 0.9;
-    if(n == 0) BeamCrossing(LebedevStencil(59, 0.00, 0.00, 0.00), StreamingType::FlatFixed   , cfl);
+    // if(n == 0) BeamCrossing(LebedevStencil(59, 0.00, 0.00, 0.00), StreamingType::FlatFixed   , cfl);
     
     if(n == 1) BeamCrossing(LebedevStencil(29, 0.15, 0.00, 0.00), StreamingType::FlatAdaptive, cfl);
     if(n == 2) BeamCrossing(LebedevStencil(29, 0.00, 0.15, 0.00), StreamingType::FlatAdaptive, cfl);
@@ -389,15 +394,14 @@ void BeamCrossingAnalysis(int n)
 
     if(n == 5) BeamCrossing(LebedevStencil(41, 0.15, 0.00, 0.00), StreamingType::FlatAdaptive, cfl);
     if(n == 6) BeamCrossing(LebedevStencil(41, 0.00, 0.15, 0.00), StreamingType::FlatAdaptive, cfl);
-    
 }
 
-void Diffusion(LebedevStencil stencil, StreamingType streamingType, double kappaS, double lambda, double cfl, double correctionFactor)
+Logger Diffusion(LebedevStencil stencil, StreamingType streamingType, double kappaS, double lambda, double cfl, double correctionFactor)
 {
     // Create Radiation object:
-    size_t nx = 100;
-    size_t ny = 100;
-    size_t nz = 100;
+    size_t nx = 101;
+    size_t ny = 101;
+    size_t nz = 101;
     Coord start(-0.5, -0.5, -0.5);
     Coord end(0.5, 0.5, 0.5);
     Grid grid(nx, ny, nz, start, end);
@@ -425,7 +429,7 @@ void Diffusion(LebedevStencil stencil, StreamingType streamingType, double kappa
             .writePeriod = 1.0,
             .updateSphericalHarmonics = false,
             .keepSourceNodesActive = false,
-            .writeData = true,
+            .writeData = WRITE_DATA,
             .printSetup = PRINT_SETUP,
             .printProgress = PRINT_PROGRESS,
             .printResults = PRINT_RESULTS,
@@ -464,11 +468,13 @@ void Diffusion(LebedevStencil stencil, StreamingType streamingType, double kappa
                 radiation.initialFz_LF[ijk] = (z * E) / (2.0 * t0 * (1.0 + correctionFactor * PE));
             }
     radiation.RunSimulation();
+    return radiation.logger;
 }
 void DiffusionAnalysis(int n)
 {
     double lambda = 0;
-    double cfl = 0.5;
+    // double cfl = 0.5;
+    double cfl = 0.9;
     double correctionFactor = 0.75;
     // Refined stencil + adaptive streaming for kappa=10^2 and kappa=10^5:
     if (n == 0) Diffusion(LebedevStencil(29, 0.00, 0.00, 0.00), StreamingType::FlatFixed   ,    100.0, lambda, cfl, correctionFactor);
@@ -477,12 +483,12 @@ void DiffusionAnalysis(int n)
     if (n == 3) Diffusion(LebedevStencil(29, 0.00, 0.15, 0.00), StreamingType::FlatAdaptive, 100000.0, lambda, cfl, correctionFactor);
 }
 
-void MovingDiffusion(LebedevStencil stencil, StreamingType streamingType, double kappaS, double lambda, double cfl, double correctionFactor, double ux)
+Logger MovingDiffusion(LebedevStencil stencil, StreamingType streamingType, double kappaS, double lambda, double cfl, double correctionFactor, double ux)
 {
     // Create Radiation object:
-    size_t nx = 2 * 150;
-    size_t ny = 2 * 50;
-    size_t nz = 2 * 50;
+    size_t nx = 2 * 150 + 1;
+    size_t ny = 2 *  50 + 1;
+    size_t nz = 2 *  50 + 1;
     Coord start(-1.0, -0.5, -0.5);
     Coord end(2.0, 0.5, 0.5);
     Grid grid(nx, ny, nz, start, end);
@@ -520,7 +526,7 @@ void MovingDiffusion(LebedevStencil stencil, StreamingType streamingType, double
             .writePeriod = simTime / 2.0,
             .updateSphericalHarmonics = false,
             .keepSourceNodesActive = false,
-            .writeData = true,
+            .writeData = WRITE_DATA,
             .printSetup = PRINT_SETUP,
             .printProgress = PRINT_PROGRESS,
             .printResults = PRINT_RESULTS,
@@ -574,6 +580,7 @@ void MovingDiffusion(LebedevStencil stencil, StreamingType streamingType, double
                 radiation.initialFz_LF[ijk] = Tlf[{3, 0}];
             }
     radiation.RunSimulation();
+    return radiation.logger;
 }
 void MovingDiffusionAnalysis(int n)
 {
@@ -590,12 +597,12 @@ void MovingDiffusionAnalysis(int n)
     if (n == 7) MovingDiffusion(LebedevStencil(29, 0.00, 0.15, 0.00), StreamingType::FlatAdaptive, 1000.0, lambda, cfl, correctionFactor, 0.5);
 }
 
-void CurvedBeam(LebedevStencil stencil, StreamingType streamingType, double cfl)
+Logger CurvedBeam(LebedevStencil stencil, StreamingType streamingType, double cfl)
 {
     // Create Radiation object:
-    size_t nx = 200;
-    size_t ny = 160;
-    size_t nz = 20;
+    size_t nx = 201;
+    size_t ny = 161;
+    size_t nz =  21;
     Coord start(0, 0, -0.25);
     Coord end(5, 4, 0.25);
     Grid grid(nx, ny, nz, start, end);
@@ -614,7 +621,7 @@ void CurvedBeam(LebedevStencil stencil, StreamingType streamingType, double cfl)
             .writePeriod = 11.0,
             .updateSphericalHarmonics = false,
             .keepSourceNodesActive = true,
-            .writeData = true,
+            .writeData = WRITE_DATA,
             .printSetup = PRINT_SETUP,
             .printProgress = PRINT_PROGRESS,
             .printResults = PRINT_RESULTS,
@@ -656,6 +663,7 @@ void CurvedBeam(LebedevStencil stencil, StreamingType streamingType, double cfl)
                 }
             }
     radiation.RunSimulation();
+    return radiation.logger;
 }
 void CurvedBeamAnalysis(int n)
 {
@@ -673,7 +681,7 @@ void CurvedBeamAnalysis(int n)
     if(n == 8) CurvedBeam(LebedevStencil(41, 0.00, 0.15, 0.00), StreamingType::CurvedAdaptive, cfl);
 }
 
-void ThinHalfDisk(LebedevStencil stencil, StreamingType streamingType, double cfl, int resolutionScale)
+Logger ThinHalfDisk(LebedevStencil stencil, StreamingType streamingType, double cfl, int resolutionScale)
 {
     // Black Hole and Thin Disk:
     double m = 1;
@@ -683,9 +691,9 @@ void ThinHalfDisk(LebedevStencil stencil, StreamingType streamingType, double cf
     double diskOuter = 6 * r;   // 12
 
     // Grid, Metric, Stencil:
-    size_t nx = resolutionScale * 28;
-    size_t ny = resolutionScale * 16;
-    size_t nz = resolutionScale * 32;
+    size_t nx = resolutionScale * 28 + 1;
+    size_t ny = resolutionScale * 16 + 1;
+    size_t nz = resolutionScale * 32 + 1;
     Coord start(-14, -1, -18);
     Coord   end( 14, 15,  14);
     Grid grid(nx, ny, nz, start, end);
@@ -715,7 +723,7 @@ void ThinHalfDisk(LebedevStencil stencil, StreamingType streamingType, double cf
             .writePeriod = 10.0,
             .updateSphericalHarmonics = false,
             .keepSourceNodesActive = true,
-            .writeData = true,
+            .writeData = WRITE_DATA,
             .printSetup = PRINT_SETUP,
             .printProgress = PRINT_PROGRESS,
             .printResults = PRINT_RESULTS,
@@ -772,6 +780,7 @@ void ThinHalfDisk(LebedevStencil stencil, StreamingType streamingType, double cf
                 }
             }
     radiation.RunSimulation();
+    return radiation.logger;
 }
 void ThinHalfDiskAnalysis(int n)
 {
@@ -784,7 +793,7 @@ void ThinHalfDiskAnalysis(int n)
     if(n == 5) ThinHalfDisk(LebedevStencil(41, 0.00, 0.00, 0.00), StreamingType::CurvedFixed   , cfl, 6);
 }
 
-void ThinFullDisk(LebedevStencil stencil, StreamingType streamingType, double cfl, int resolutionScale)
+Logger ThinFullDisk(LebedevStencil stencil, StreamingType streamingType, double cfl, int resolutionScale)
 {
     // Black Hole and Thin Disk:
     double m = 1;
@@ -794,9 +803,9 @@ void ThinFullDisk(LebedevStencil stencil, StreamingType streamingType, double cf
     double diskOuter = 6 * r;   // 12
 
     // Grid, Metric, Stencil:
-    size_t nx = resolutionScale * 28;
-    size_t ny = resolutionScale * 25;
-    size_t nz = resolutionScale * 32;
+    size_t nx = resolutionScale * 28 + 1;
+    size_t ny = resolutionScale * 25 + 1;
+    size_t nz = resolutionScale * 32 + 1;
     Coord start(-14, -10, -18);
     Coord   end( 14,  15,  14);
     Grid grid(nx, ny, nz, start, end);
@@ -827,7 +836,7 @@ void ThinFullDisk(LebedevStencil stencil, StreamingType streamingType, double cf
             .writePeriod = 10.0,
             .updateSphericalHarmonics = false,
             .keepSourceNodesActive = true,
-            .writeData = true,
+            .writeData = WRITE_DATA,
             .printSetup = PRINT_SETUP,
             .printProgress = PRINT_PROGRESS,
             .printResults = PRINT_RESULTS,
@@ -884,6 +893,7 @@ void ThinFullDisk(LebedevStencil stencil, StreamingType streamingType, double cf
                 }
             }
     radiation.RunSimulation();
+    return radiation.logger;
 }
 void ThinFullDiskAnalysis(int n)
 {
@@ -925,7 +935,6 @@ void StencilAnalysis(int n)
             stencil.Print();
         }
 }
-
 void TestThinDiskSetup()
 {
     // Black Hole and Thin Disk:
@@ -1009,6 +1018,6 @@ int main(int argc, char *argv[])
     // CurvedBeamAnalysis(n);       // Done
     // TestThinDiskSetup();         // Done
     // ThinHalfDiskAnalysis(n);     // Not needed for paper, just a quick test for Full Disk
-    ThinFullDiskAnalysis(n);
+    // ThinFullDiskAnalysis(n);     // Done
     // StencilAnalysis(n);          // Done
 }

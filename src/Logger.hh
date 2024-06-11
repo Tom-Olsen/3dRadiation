@@ -43,20 +43,21 @@ public:
 
         // File system overhead:
         directoryPath = OUTPUTDIR + name;
-        if (!CreateDirectory(directoryPath))
-            double a = 0;
     }
 
-    ~Logger()
+    void Write()
     {
+        CreateDirectory(directoryPath);
         std::ofstream file(directoryPath + "/Log.txt");
 
         file << "Creation Date: " << date << std::endl << std::endl;
 
+        // Spacetime:
         file << "Spacetime: " << metric.Name() << std::endl;
         file << "Black Hole  Mass,   M = " << metric.m << std::endl;
         file << "Black Hole  Spin,   a = " << metric.a << std::endl << std::endl;
 
+        // Grid:
         file << "Grid Structure:" << std::endl;
         file << "Simulation Time = " << simTime << std::endl;
         file << "(startx,starty,startz) = (" << metric.grid.startx << "," << metric.grid.starty << "," << metric.grid.startz << ")" << std::endl;
@@ -69,6 +70,7 @@ public:
         file << "dz   = " << metric.grid.dz << std::endl;
         file << "dt   = " << metric.grid.dt << std::endl << std::endl;
 
+        // Stencil:
         file << "Stencil Properties:" << std::endl;
         file << "Intensity Stencil: nDir          = " << intensityStencil.nDir << std::endl;
         file << "Intensity Stencil: nOrder        = " << intensityStencil.nOrder << std::endl;
@@ -80,28 +82,48 @@ public:
         file << "Streaming Stencil: nOrder        = " << streamingStencil.nOrder << std::endl;
         file << "Streaming Stencil: nCoefficients = " << streamingStencil.nCoefficients << std::endl << std::endl;
 
+        // Lambda Itteration:
         file << "Lambda Itteration:" << std::endl;
         file << "Max Lambda Itteration Count     = " << maxItterationCount << std::endl;
         file << "Average Lambda Itteration Count = " << averageItterationCount << std::endl << std::endl;
-        file << "Time measurements:" << std::endl;
-        double totalTime;
-        double writingTime;
-        for (int i = 0; i < timeMeasurements.size(); i++)
-        {
-            file << timeNames[i] << ": " << timeMeasurements[i] << "s" << std::endl;
-            if (timeNames[i] == "Total Time")
-                totalTime = timeMeasurements[i];
-            if (timeNames[i] == "void Grid::WriteFrametoCsv(float, const RealBuffer&, const RealBuffer&, const RealBuffer&, const RealBuffer&, std::string, std::string)")
-                writingTime = timeMeasurements[i];
-        }
         
-        file << "Computation Time: " << totalTime - writingTime << "s" << std::endl;
+        // Times:
+        file << "Time measurements:" << std::endl;
+        for (int i = 0; i < timeMeasurements.size(); i++)
+            file << timeNames[i] << ": " << timeMeasurements[i] << "s" << std::endl;
+        file << "Computation Time: " << ComputationTime() << "s" << std::endl;
+
+        // Benchmark:
+        file << "Benchmark: " << metric.grid.nxyz * timeSteps / (1e6 * ComputationTime()) << "MLUPS" << std::endl;
     }
 
     void AddTimeMeasurement(std::string timeName, double timeMeasurement)
     {
         timeNames.push_back(timeName);
         timeMeasurements.push_back(timeMeasurement);
+    }
+
+    double TotalTime()
+    {
+        for (int i = 0; i < timeMeasurements.size(); i++)
+        {
+            if (timeNames[i] == "Total Time")
+                return timeMeasurements[i];
+        }
+        return 0;
+    }
+    double WritingTime()
+    {
+        for (int i = 0; i < timeMeasurements.size(); i++)
+        {
+            if (timeNames[i] == "void Grid::WriteFrametoCsv(float, const RealBuffer&, const RealBuffer&, const RealBuffer&, const RealBuffer&, std::string, std::string)")
+                return timeMeasurements[i];
+        }
+        return 0;
+    }
+    double ComputationTime()
+    {
+        return TotalTime() - WritingTime();
     }
 };
 

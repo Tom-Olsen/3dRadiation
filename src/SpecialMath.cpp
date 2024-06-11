@@ -37,17 +37,25 @@ double Norm2(const Tensor4 &vector, const Tensor4x4 &g_ll)
 
 Tensor4 NullNormalize(const Tensor4 &vector, const Tensor4x4 &g_ll)
 {
-    double a = 0;
+    // v = (1, v1, v2, v3)
+    // w = (1, x*v1, x*v2, x*v3), with g_munu w^mu w^nu = 0
+    // leads to quadratic equation for x.
+    double A = 0;
     for (int i = 1; i < 4; i++)
         for (int j = 1; j < 4; j++)
-            a += g_ll[rank2Indices{i, j}] * vector[i] * vector[j];
-    double b = 0;
+            A += g_ll[{i, j}] * vector[i] * vector[j];
+    double B = 0;
     for (int i = 1; i < 4; i++)
-        b += g_ll[rank2Indices{0, i}] * vector[0] * vector[i];
-    double c = g_ll[rank2Indices{0, 0}] * vector[0] * vector[0];
-    double d = -b / a + sqrt((b * b) / (a * a) - c / a);
+        B += 2.0 * g_ll[{0, i}] * vector[0] * vector[i];
+    double C = g_ll[{0, 0}] * vector[0] * vector[0];
+    double x = (-B + sqrt(B * B - 4.0 * A * C)) / (2.0 * A);
 
-    return Tensor4(vector[0], vector[1] * d, vector[2] * d, vector[3] * d);
+    if (A == 0)
+        x = -C / A;
+    if (A == 0 && B == 0)
+        x = 1.0;
+
+    return Tensor4(vector[0], x * vector[1], x * vector[2], x * vector[3]);
 }
 
 Tensor3 TransformIFtoLF(const Tensor3 &vector, const Tensor4x4 &tetrad)

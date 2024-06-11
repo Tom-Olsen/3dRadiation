@@ -20,7 +20,7 @@ public:
 
     // Constructors:
     Grid() = delete;
-    Grid(size_t nx, size_t ny, size_t nz, Coord start, Coord end);
+    Grid(size_t nx, size_t ny, size_t nz, Coord start, Coord end, size_t halo = 1);
     Grid(const Grid &grid);
 
     // Setters/Getters:

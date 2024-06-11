@@ -134,6 +134,12 @@ inline Coord operator*(const Coord &lhs, double rhs)
     return Coord(lhs[1] * rhs, lhs[2] * rhs, lhs[3] * rhs);
 }
 
+// Scalar Division:
+inline Coord operator/(const Coord &coord, const double &scalar)
+{
+    return Coord(coord[1] / scalar, coord[2] / scalar, coord[3] / scalar);
+}
+
 // Quaternion multiplication:
 inline Coord operator*(const glm::quat &q, const Coord &p)
 {
