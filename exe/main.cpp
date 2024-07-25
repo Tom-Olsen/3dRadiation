@@ -562,10 +562,23 @@ Logger MovingDiffusion(LebedevStencil stencil, StreamingType streamingType, doub
                 double Fx = (x * E) / (2.0 * t0 * (1.0 + correctionFactor * PE));
                 double Fy = (y * E) / (2.0 * t0 * (1.0 + correctionFactor * PE));
                 double Fz = (z * E) / (2.0 * t0 * (1.0 + correctionFactor * PE));
+                double Pxx = E / (3.0 * (1.0 + correctionFactor * PE));
+                double Pxy = 0.0;
+                double Pxz = 0.0;
+                double Pyx = 0.0;
+                double Pyy = E / (3.0 * (1.0 + correctionFactor * PE));
+                double Pyz = 0.0;
+                double Pzx = 0.0;
+                double Pzy = 0.0;
+                double Pzz = E / (3.0 * (1.0 + correctionFactor * PE));
 
                 // Lab Frame Moments:
                 Tensor4x4 boost = BoostMatrix(Tensor3(-ux, 0, 0));
-                Tensor4x4 Tff = Tensor4x4(E, Fx, Fy, Fz, Fx, 0, 0, 0, Fy, 0, 0, 0, Fz, 0, 0, 0);
+                Tensor4x4 Tff = Tensor4x4
+                (E ,  Fx,  Fy,  Fz,
+                 Fx, Pxx, Pxy, Pxz,
+                 Fy, Pyx, Pyy, Pyz,
+                 Fz, Pzx, Pzy, Pzz);
                 Tensor4x4 Tlf(0);
                 for (int i = 0; i < 4; i++)
                     for (int j = 0; j < 4; j++)
@@ -1014,7 +1027,7 @@ int main(int argc, char *argv[])
     // StarAnalysis(n);             // Done
     // BeamCrossingAnalysis(n);     // Done
     // DiffusionAnalysis(n);        // Done
-    // MovingDiffusionAnalysis(n);  // Done
+    MovingDiffusionAnalysis(n);  // Done
     // CurvedBeamAnalysis(n);       // Done
     // TestThinDiskSetup();         // Done
     // ThinHalfDiskAnalysis(n);     // Not needed for paper, just a quick test for Full Disk
