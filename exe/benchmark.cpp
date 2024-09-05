@@ -243,14 +243,14 @@ int main(int argc, char *argv[])
     double eta = 10;
     double ux = 0.5;
 
-    // if (n == 0) Benchmark(StreamingType::FlatFixed     , false);
-    // if (n == 1) Benchmark(StreamingType::FlatFixed     , true);
-    // if (n == 2) Benchmark(StreamingType::FlatAdaptive  , false);
-    // if (n == 3) Benchmark(StreamingType::FlatAdaptive  , true);
-    // if (n == 4) Benchmark(StreamingType::CurvedFixed   , false);
-    // if (n == 5) Benchmark(StreamingType::CurvedFixed   , true);
-    // if (n == 6) Benchmark(StreamingType::CurvedAdaptive, false);
-    // if (n == 7) Benchmark(StreamingType::CurvedAdaptive, true);
+    if (n == 0) Benchmark(StreamingType::FlatFixed     , false);
+    if (n == 1) Benchmark(StreamingType::FlatFixed     , true);
+    if (n == 2) Benchmark(StreamingType::FlatAdaptive  , false);
+    if (n == 3) Benchmark(StreamingType::FlatAdaptive  , true);
+    if (n == 4) Benchmark(StreamingType::CurvedFixed   , false);
+    if (n == 5) Benchmark(StreamingType::CurvedFixed   , true);
+    if (n == 6) Benchmark(StreamingType::CurvedAdaptive, false);
+    if (n == 7) Benchmark(StreamingType::CurvedAdaptive, true);
 
     // Scaling analysis. Run this with different OMP_NUM_THREADS:
     // OMP_NUM_THREADS=N ./benchmark.out

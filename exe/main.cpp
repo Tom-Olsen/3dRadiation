@@ -681,17 +681,21 @@ Logger CurvedBeam(LebedevStencil stencil, StreamingType streamingType, double cf
 void CurvedBeamAnalysis(int n)
 {
     double cfl = 0.9;
-    if(n == 0) CurvedBeam(LebedevStencil(29, 0.00, 0.00, 0.00), StreamingType::CurvedFixed   , cfl);
-    if(n == 1) CurvedBeam(LebedevStencil(29, 0.15, 0.00, 0.00), StreamingType::CurvedAdaptive, cfl);
-    if(n == 2) CurvedBeam(LebedevStencil(29, 0.00, 0.15, 0.00), StreamingType::CurvedAdaptive, cfl);
+    if(n ==  0) CurvedBeam(LebedevStencil(29, 0.00, 0.00, 0.00), StreamingType::CurvedFixed   , cfl);
+    if(n ==  1) CurvedBeam(LebedevStencil(29, 0.15, 0.00, 0.00), StreamingType::CurvedAdaptive, cfl);
+    if(n ==  2) CurvedBeam(LebedevStencil(29, 0.00, 0.15, 0.00), StreamingType::CurvedAdaptive, cfl);
 
-    if(n == 3) CurvedBeam(LebedevStencil(35, 0.00, 0.00, 0.00), StreamingType::CurvedFixed   , cfl);
-    if(n == 4) CurvedBeam(LebedevStencil(35, 0.15, 0.00, 0.00), StreamingType::CurvedAdaptive, cfl);
-    if(n == 5) CurvedBeam(LebedevStencil(35, 0.00, 0.15, 0.00), StreamingType::CurvedAdaptive, cfl);
+    if(n ==  3) CurvedBeam(LebedevStencil(35, 0.00, 0.00, 0.00), StreamingType::CurvedFixed   , cfl);
+    if(n ==  4) CurvedBeam(LebedevStencil(35, 0.15, 0.00, 0.00), StreamingType::CurvedAdaptive, cfl);
+    if(n ==  5) CurvedBeam(LebedevStencil(35, 0.00, 0.15, 0.00), StreamingType::CurvedAdaptive, cfl);
 
-    if(n == 6) CurvedBeam(LebedevStencil(41, 0.00, 0.00, 0.00), StreamingType::CurvedFixed   , cfl);
-    if(n == 7) CurvedBeam(LebedevStencil(41, 0.15, 0.00, 0.00), StreamingType::CurvedAdaptive, cfl);
-    if(n == 8) CurvedBeam(LebedevStencil(41, 0.00, 0.15, 0.00), StreamingType::CurvedAdaptive, cfl);
+    if(n ==  6) CurvedBeam(LebedevStencil(41, 0.00, 0.00, 0.00), StreamingType::CurvedFixed   , cfl);
+    if(n ==  7) CurvedBeam(LebedevStencil(41, 0.15, 0.00, 0.00), StreamingType::CurvedAdaptive, cfl);
+    if(n ==  8) CurvedBeam(LebedevStencil(41, 0.00, 0.15, 0.00), StreamingType::CurvedAdaptive, cfl);
+    
+    if(n ==  9) CurvedBeam(LebedevStencil(59, 0.00, 0.00, 0.00), StreamingType::CurvedFixed   , cfl);
+    if(n == 10) CurvedBeam(LebedevStencil(59, 0.15, 0.00, 0.00), StreamingType::CurvedAdaptive, cfl);
+    if(n == 11) CurvedBeam(LebedevStencil(59, 0.00, 0.15, 0.00), StreamingType::CurvedAdaptive, cfl);
 }
 
 Logger ThinHalfDisk(LebedevStencil stencil, StreamingType streamingType, double cfl, int resolutionScale)
@@ -1027,7 +1031,7 @@ int main(int argc, char *argv[])
     // StarAnalysis(n);             // Done
     // BeamCrossingAnalysis(n);     // Done
     // DiffusionAnalysis(n);        // Done
-    MovingDiffusionAnalysis(n);  // Done
+    // MovingDiffusionAnalysis(n);  // Done
     // CurvedBeamAnalysis(n);       // Done
     // TestThinDiskSetup();         // Done
     // ThinHalfDiskAnalysis(n);     // Not needed for paper, just a quick test for Full Disk
