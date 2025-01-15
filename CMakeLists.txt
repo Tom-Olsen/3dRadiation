@@ -1,5 +1,5 @@
-project(Radiation3d)
 cmake_minimum_required(VERSION 3.16)
+project(Radiation3d)
 
 # Set output path:
 # set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/..)

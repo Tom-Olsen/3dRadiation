@@ -952,6 +952,160 @@ void StencilAnalysis(int n)
             stencil.Print();
         }
 }
+void StencilConfig(int n)
+{
+    if (n == 0)
+    {// order = 15
+        double a = 0.00;
+        double b = 0.07;
+        double c = 0.14;
+        double ref0[] = {a, b, c, a, a, c};
+        double ref1[] = {a, a, a, b, c, b};
+        std::cout << "order = 15:\n";
+        std::cout << "ref0, ref1,    nReal, nGhost, nPop\n";
+        for (int i = 0; i < 6; i++)
+        {
+            LebedevStencil stencil = LebedevStencil(15, ref0[i], ref1[i], 0.00);
+            std::cout << ref0[i] << ", " << ref1[i] << "\t" << stencil.nDir - stencil.nGhost << ", " << stencil.nGhost << ", " << stencil.nDir << "\n";
+        }
+    }
+    if (n == 1)
+    {// order = 17
+        double a = 0.00;
+        double b = 0.06;
+        double c = 0.11;
+        double d = 0.15;
+        double ref0[] = {a, b, c, d, a, a, a, c, d, d};
+        double ref1[] = {a, a, a, a, b, c, d, b, b, c};
+        std::cout << "order = 17:\n";
+        std::cout << "ref0, ref1,    nReal, nGhost, nPop\n";
+        for (int i = 0; i < 10; i++)
+        {
+            LebedevStencil stencil = LebedevStencil(17, ref0[i], ref1[i], 0.00);
+            std::cout << ref0[i] << ", " << ref1[i] << "\t" << stencil.nDir - stencil.nGhost << ", " << stencil.nGhost << ", " << stencil.nDir << "\n";
+        }
+    }
+    if (n == 2)
+    {// order = 19
+        double a = 0.00;
+        double b = 0.05;
+        double c = 0.13;
+        double d = 0.15;
+        double ref0[] = {a, b, c, d, a, a, a, c, d, d};
+        double ref1[] = {a, a, a, a, b, c, d, b, b, c};
+        std::cout << "order = 19:\n";
+        std::cout << "ref0, ref1,    nReal, nGhost, nPop\n";
+        for (int i = 0; i < 10; i++)
+        {
+            LebedevStencil stencil = LebedevStencil(19, ref0[i], ref1[i], 0.00);
+            std::cout << ref0[i] << ", " << ref1[i] << "\t" << stencil.nDir - stencil.nGhost << ", " << stencil.nGhost << ", " << stencil.nDir << "\n";
+        }
+    }
+    if (n == 3)
+    {// order = 21
+        double a = 0.00;
+        double b = 0.08;
+        double c = 0.13;
+        double d = 0.15;
+        double ref0[] = {a, b, c, d, a, a, a, c, d, d};
+        double ref1[] = {a, a, a, a, b, c, d, b, b, c};
+        std::cout << "order = 21:\n";
+        std::cout << "ref0, ref1,    nReal, nGhost, nPop\n";
+        for (int i = 0; i < 10; i++)
+        {
+            LebedevStencil stencil = LebedevStencil(21, ref0[i], ref1[i], 0.00);
+            std::cout << ref0[i] << ", " << ref1[i] << "\t" << stencil.nDir - stencil.nGhost << ", " << stencil.nGhost << ", " << stencil.nDir << "\n";
+        }
+    }
+    if (n == 4)
+    {// order = 23
+        double a = 0.00;
+        double b = 0.04;
+        double c = 0.08;
+        double d = 0.11;
+        double e = 0.15;
+        double ref0[] = {a, b, c, d, e, a, a, a, a, c, d, e, d, e, e};
+        double ref1[] = {a, a, a, a, a, b, c, d, e, b, b, b, c, c, d};
+        std::cout << "order = 23:\n";
+        std::cout << "ref0, ref1,    nReal, nGhost, nPop\n";
+        for (int i = 0; i < 15; i++)
+        {
+            LebedevStencil stencil = LebedevStencil(23, ref0[i], ref1[i], 0.00);
+            std::cout << ref0[i] << ", " << ref1[i] << "\t" << stencil.nDir - stencil.nGhost << ", " << stencil.nGhost << ", " << stencil.nDir << "\n";
+        }
+    }
+    if (n == 5)
+    {// order = 29
+        double a = 0.00;
+        double b = 0.04;
+        double c = 0.08;
+        double d = 0.11;
+        double e = 0.14;
+        double ref0[] = {a, b, c, d, e, a, a, a, a, c, d, e, d, e, e};
+        double ref1[] = {a, a, a, a, a, b, c, d, e, b, b, b, c, c, d};
+        std::cout << "order = 29:\n";
+        std::cout << "ref0, ref1,    nReal, nGhost, nPop\n";
+        for (int i = 0; i < 15; i++)
+        {
+            LebedevStencil stencil = LebedevStencil(29, ref0[i], ref1[i], 0.00);
+            std::cout << ref0[i] << ", " << ref1[i] << "\t" << stencil.nDir - stencil.nGhost << ", " << stencil.nGhost << ", " << stencil.nDir << "\n";
+        }
+    }
+    if (n == 6)
+    {// order = 31
+        double a = 0.00;
+        double b = 0.04;
+        double c = 0.07;
+        double d = 0.12;
+        double e = 0.15;
+        double ref0[] = {a, b, c, d, e, a, a, a, a, c, d, e, d, e, e};
+        double ref1[] = {a, a, a, a, a, b, c, d, e, b, b, b, c, c, d};
+        std::cout << "order = 31:\n";
+        std::cout << "ref0, ref1,    nReal, nGhost, nPop\n";
+        for (int i = 0; i < 15; i++)
+        {
+            LebedevStencil stencil = LebedevStencil(31, ref0[i], ref1[i], 0.00);
+            std::cout << ref0[i] << ", " << ref1[i] << "\t" << stencil.nDir - stencil.nGhost << ", " << stencil.nGhost << ", " << stencil.nDir << "\n";
+        }
+    }
+    if (n == 7)
+    {// order = 35
+        double a = 0.00;
+        double b = 0.03;
+        double c = 0.07;
+        double d = 0.09;
+        double e = 0.12;
+        double f = 0.15;
+        double ref0[] = {a, b, c, d, e, f, a, a, a, a, a, c, d, e, f, d, e, f, e, f, f};
+        double ref1[] = {a, a, a, a, a, a, b, c, d, e, f, b, b, b, b, c, c, c, d, d, e};
+        std::cout << "order = 35:\n";
+        std::cout << "ref0, ref1,    nReal, nGhost, nPop\n";
+        for (int i = 0; i < 21; i++)
+        {
+            LebedevStencil stencil = LebedevStencil(35, ref0[i], ref1[i], 0.00);
+            std::cout << ref0[i] << ", " << ref1[i] << "\t" << stencil.nDir - stencil.nGhost << ", " << stencil.nGhost << ", " << stencil.nDir << "\n";
+        }
+    }
+    if (n == 8)
+    {// order = 41
+        double a = 0.000;
+        double b = 0.020;
+        double c = 0.050;
+        double d = 0.070;
+        double e = 0.100;
+        double f = 0.125;
+        double g = 0.105;
+        double ref0[] = {a, b, c, d, e, f, g, a, a, a, a, a, a, c, d, e, f, g, d, e, f, g, e, f, g, f, g, g};
+        double ref1[] = {a, a, a, a, a, a, a, b, c, d, e, f, g, b, b, b, b, b, c, c, c, c, d, d, d, e, e, f};
+        std::cout << "order = 41:\n";
+        std::cout << "ref0, ref1,    nReal, nGhost, nPop\n";
+        for (int i = 0; i < 28; i++)
+        {
+            LebedevStencil stencil = LebedevStencil(41, ref0[i], ref1[i], 0.00);
+            std::cout << ref0[i] << ", " << ref1[i] << "\t" << stencil.nDir - stencil.nGhost << ", " << stencil.nGhost << ", " << stencil.nDir << "\n";
+        }
+    }
+}
 void TestThinDiskSetup()
 {
     // Black Hole and Thin Disk:
@@ -1037,4 +1191,5 @@ int main(int argc, char *argv[])
     // ThinHalfDiskAnalysis(n);     // Not needed for paper, just a quick test for Full Disk
     // ThinFullDiskAnalysis(n);     // Done
     // StencilAnalysis(n);          // Done
+    // StencilConfig(n);
 }
