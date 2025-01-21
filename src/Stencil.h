@@ -39,6 +39,7 @@ public:
     double sigmaMax;
     double relativeFluxMax;
     Mesh mesh;
+    std::unique_ptr<ConvexHull> hull;
     static constexpr double maxInterpolationError  = 0.01; // 1% (standard value)
     // static constexpr double maxInterpolationError  = 0.20; // (test higher values)
     static constexpr double sigmaMaxSearchAccuracy = 1e-3;
@@ -88,9 +89,10 @@ private:
 protected:
     // Initialization:
     void AllocateBuffers();
+    void InitializeMesh();
+    void ReorderConvexHull();
     void AddGhostDirections();
     void SortDirections();
-    void InitializeMesh();
     void InitializeConnectedTriangles();
     void InitializeVoronoiCells();
     void InitializeVoronoiNeighbours();

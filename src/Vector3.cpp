@@ -121,6 +121,16 @@ Vector3 Vector3::GetCenter(const std::vector<Vector3> &vertices)
     center /= vertices.size();
     return center;
 }
+bool Vector3::AreEpsilonEqual(const Vector3 &p0, const Vector3 &p1)
+{
+    return (p0 - p1).Norm() < 1e-8;
+}
+bool Vector3::AreColinear(const Vector3 &p0, const Vector3 &p1, const Vector3 &p2)
+{
+    Vector3 v0 = p1 - p0;
+    Vector3 v1 = p2 - p0;
+    return (Cross(v0, v1).Norm() < 1e-8);
+}
 bool Vector3::AreCoplanar(const Vector3 &p0, const Vector3 &p1, const Vector3 &p2, const Vector3 &p3)
 {
     // equation of plane: a*x + b*y + c*z + d = 0
@@ -133,7 +143,11 @@ bool Vector3::AreCoplanar(const Vector3 &p0, const Vector3 &p1, const Vector3 &p
 // Output:
 std::ostream &operator<<(std::ostream &os, const Vector3 &v)
 {
-    os << v[0] << "," << v[1] << "," << v[2];
+    int precision = 6;
+    os << "("
+    << Format(v[0], precision) << ","
+    << Format(v[1], precision) << ","
+    << Format(v[2], precision) << ")";
     return os;
 }
 

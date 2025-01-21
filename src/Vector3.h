@@ -41,6 +41,8 @@ public:
     double Theta() const;
     double Phi() const;
     static Vector3 GetCenter(const std::vector<Vector3> &vertices);
+    static bool AreEpsilonEqual(const Vector3 &p0, const Vector3 &p1);
+    static bool AreColinear(const Vector3 &p0, const Vector3 &p1, const Vector3 &p2);
     static bool AreCoplanar(const Vector3 &p0, const Vector3 &p1, const Vector3 &p2, const Vector3 &p3);
 
     // Output:

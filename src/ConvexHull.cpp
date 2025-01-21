@@ -17,11 +17,24 @@ ConvexHull::ConvexHull(const std::vector<Vector3> &vertices) : m_vertices(vertic
     
     m_hull.shrink_to_fit();
 }
-
+void ConvexHull::Expand(const Vector3& vertex)
+{
+    if (!InsideHull(vertex))
+        AddVertex(vertex);
+}
+void ConvexHull::Expand(const std::vector<Vector3> &vertices)
+{
+    m_hull.reserve(m_hull.size() + vertices.size());
+    for (const Vector3 &vertex : vertices)
+    {
+        if (!InsideHull(vertex))
+            AddVertex(vertex);
+    }
+}
 void ConvexHull::OriginalOrdering(const std::vector<Vector3> &vertices)
 {
-    if (vertices.size() < m_hull.size())
-        ExitOnError("Reordering makes no sense, given vertices are to short.");
+    if (vertices.size() != m_hull.size())
+        ExitOnError("Reordering makes no sense, given vertices do not match convex hull.");
 
     // Only concider verticies that are on the convex hull:
     std::vector<Vector3> orderedHull;
@@ -78,6 +91,7 @@ void ConvexHull::OriginalOrdering(const std::vector<Vector3> &vertices)
     m_triangles = orderedTriangles;
 }
 
+// Getters:
 std::vector<Vector3> ConvexHull::GetVertices()
 {
     return m_hull;
@@ -91,14 +105,40 @@ Mesh ConvexHull::GetMesh()
     return Mesh(m_hull, m_triangles);
 }
 
+// Internal methods for convex hull construction:
 void ConvexHull::InitialTetrahedron()
 {
-    // Search fourth vertex, such that vertex 0,1,2,i are not coplanar:
     int vertex0 = m_vertices.size() - 1;
-    int vertex1 = m_vertices.size() - 2;
-    int vertex2 = m_vertices.size() - 3;
-    int vertex3 = -1;
 
+    // Find vertex1 which is not identical to vertex0:
+    int vertex1 = -1;
+    for (int i = m_vertices.size() - 2; i > -1; i--)
+    {
+        if (!Vector3::AreEpsilonEqual(m_vertices[vertex0], m_vertices[i]))
+        {
+            vertex1 = i;
+            break;
+        }
+    }
+    if (vertex1 == -1)
+        ExitOnError("All given points are epsilon identical.");
+
+    // Find vertex2 which is not colinear with vertex0 and vertex1:
+    int vertex2 = -1;
+    for (int i = m_vertices.size() - 3; i > -1; i--)
+    {
+        if (!Vector3::AreColinear(m_vertices[vertex0], m_vertices[vertex1], m_vertices[i]))
+        {
+            vertex2 = i;
+            break;
+        }
+    }
+    if (vertex2 == -1)
+        ExitOnError("All given points are colinear.");
+
+
+    // Find vertex3 which is not coplanar with vertex0, vertex1, and vertex2:
+    int vertex3 = -1;
     for (int i = m_vertices.size() - 4; i > -1; i--)
     {
         if (!Vector3::AreCoplanar(m_vertices[vertex0], m_vertices[vertex1], m_vertices[vertex2], m_vertices[i]))
@@ -115,7 +155,7 @@ void ConvexHull::InitialTetrahedron()
     m_hull.push_back(m_vertices[vertex1]);
     m_hull.push_back(m_vertices[vertex2]);
     m_hull.push_back(m_vertices[vertex3]);
-    center = Vector3::GetCenter(m_hull);
+    m_center = Vector3::GetCenter(m_hull);
 
     // Add Faces to Tetrahedron:
     m_triangles.push_back(OrientedTriangle(0, 1, 2));
@@ -140,7 +180,7 @@ void ConvexHull::AddVertex(const Vector3 &newVertex)
     RemoveBadVertices(badTriangles, polygonEdges);
 
     // connect new vertex to polygonEdge:
-    center = Vector3::GetCenter(m_hull);
+    m_center = Vector3::GetCenter(m_hull);
     for (const Vector2Int &edge : polygonEdges)
     {
         Vector3Int newTriangle = OrientedTriangle(m_hull.size() - 1, edge[0], edge[1]);
@@ -159,7 +199,7 @@ bool ConvexHull::CanSeeTriangle(Vector3 vertex, Vector3Int triangle)
 Vector3Int ConvexHull::OrientedTriangle(int a, int b, int c)
 {
     Vector3Int triangle(a, b, c);
-    if (!CanSeeTriangle(center, triangle))
+    if (!CanSeeTriangle(m_center, triangle))
         return triangle;
     else
         return Vector3Int(a, c, b);
@@ -224,7 +264,6 @@ std::vector<Vector2Int> ConvexHull::PolygonEdges(const std::vector<Vector3Int> &
 }
 void ConvexHull::RemoveBadVertices(const std::vector<Vector3Int> &badTriangles, std::vector<Vector2Int> &polygonEdges)
 {
-
     // unroll bad triangles
     std::vector<int> badTrianglesUnrolled;
     for (const Vector3Int &triangle : badTriangles)
@@ -259,6 +298,9 @@ void ConvexHull::RemoveBadVertices(const std::vector<Vector3Int> &badTriangles, 
     }
     
     // Remove badVertices in reversed order and adjust triangles and edges:
+    // c# sortrs  badVertices first as "OrderByDescending"
+    // However in c++ a std::set<T> is always ordered.
+    // Thus reverse order is equivalent to ordered by descending.
     for (auto rit = badVertices.rbegin(); rit != badVertices.rend(); rit++)
     {
         m_hull.erase(m_hull.begin() + *rit);

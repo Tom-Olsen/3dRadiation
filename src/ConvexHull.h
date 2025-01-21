@@ -18,16 +18,20 @@ private:
     std::vector<Vector3> m_vertices;
     std::vector<Vector3> m_hull;
     std::vector<Vector3Int> m_triangles;
-    Vector3 center;
+    Vector3 m_center;
 
 public:
     ConvexHull(const std::vector<Vector3>& vertices);
+    void Expand(const Vector3& vertex);
+    void Expand(const std::vector<Vector3>& vertices);
     void OriginalOrdering(const std::vector<Vector3>& vertices);
 
+    // Getters:
     std::vector<Vector3> GetVertices();
     std::vector<Vector3Int> GetTriangles();
     Mesh GetMesh();
 
+private: // Internal methods for convex hull construction:
     void InitialTetrahedron();
     void AddVertex(const Vector3& newVertex);
     bool CanSeeTriangle(Vector3 vertex, Vector3Int triangle);

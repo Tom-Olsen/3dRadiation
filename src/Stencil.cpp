@@ -1,6 +1,5 @@
 #include "Stencil.h"
-
-// ------------------------------- Stencil -------------------------------
+// ------------------------------ Stencil ------------------------------
 // Getters:
 double Stencil::W(size_t d) const
 {
@@ -244,10 +243,6 @@ void Stencil::AddGhostDirections()
     std::vector<Vector3Int> triangles = mesh.GetTriangles();
     std::vector<Vector3> ghostDirections;
 
-    // vertices:
-    // for(int d=0; d<nDir; d++)
-        // std::cout << "(" << Format(Cx(d),6) << "," << Format(Cy(d),6) << "," << Format(Cz(d),6) << "," << Format(Theta(d),6) << "," << Format(Phi(d),6) << ")" << std::endl;
-
     // Calculate extra refinement ghost directions:
     for (int t = 0; t < triangles.size(); t++)
     {
@@ -258,17 +253,8 @@ void Stencil::AddGhostDirections()
         Vector3 p = (a + b + c).Normalized();
         double z = p[2];
         
-        // triangles:
-        // std::cout << "(" << triangle[0] << "," << triangle[1] << "," << triangle[2] << ")" << std::endl;
-        // centers:
-        // std::cout << "(" << Format(p[0],6) << "," << Format(p[1],6) << "," << Format(p[2],6) << "," << Format(p.Theta(),6) << "," << Format(p.Phi(),6) << ")" << std::endl;
-
         if (z > zThreshold2)
         {
-            // focal centers:
-            // std::cout << "(" << Format(p[0],6) << "," << Format(p[1],6) << "," << Format(p[2],6) << ")" << std::endl;
-            // std::cout << "(" << Format(p[0],6) << "," << Format(p[1],6) << "," << Format(p[2],6) << "," << Format(p.Theta(),6) << "," << Format(p.Phi(),6) << ")" << std::endl;
-            
             Vector3 p0 = (a + b).Normalized();
             Vector3 p1 = (b + c).Normalized();
             Vector3 p2 = (c + a).Normalized();
@@ -276,46 +262,26 @@ void Stencil::AddGhostDirections()
             Vector3 q1 = (p1 + p2 + c).Normalized();
             Vector3 q2 = (p2 + p0 + a).Normalized();
 
-            // ghost directions:
-            // std::cout << "(" << Format( p[0],6) << "," << Format( p[1],6) << "," << Format( p[2],6) << ")" << std::endl;
-            // std::cout << "(" << Format(p0[0],6) << "," << Format(p0[1],6) << "," << Format(p0[2],6) << ")" << std::endl;
-            // std::cout << "(" << Format(p1[0],6) << "," << Format(p1[1],6) << "," << Format(p1[2],6) << ")" << std::endl;
-            // std::cout << "(" << Format(p2[0],6) << "," << Format(p2[1],6) << "," << Format(p2[2],6) << ")" << std::endl;
-            // std::cout << "(" << Format(q0[0],6) << "," << Format(q0[1],6) << "," << Format(q0[2],6) << ")" << std::endl;
-            // std::cout << "(" << Format(q1[0],6) << "," << Format(q1[1],6) << "," << Format(q1[2],6) << ")" << std::endl;
-            // std::cout << "(" << Format(q2[0],6) << "," << Format(q2[1],6) << "," << Format(q2[2],6) << ")" << std::endl;
-
-            if (!ContainsSimilar(ghostDirections, p,  1e-4))
-                ghostDirections.push_back(p);
-            if (!ContainsSimilar(ghostDirections, p0, 1e-4))
-                ghostDirections.push_back(p0);
-            if (!ContainsSimilar(ghostDirections, p1, 1e-4))
-                ghostDirections.push_back(p1);
-            if (!ContainsSimilar(ghostDirections, p2, 1e-4))
-                ghostDirections.push_back(p2);
-            if (!ContainsSimilar(ghostDirections, q0, 1e-4))
-                ghostDirections.push_back(q0);
-            if (!ContainsSimilar(ghostDirections, q1, 1e-4))
-                ghostDirections.push_back(q1);
-            if (!ContainsSimilar(ghostDirections, q2, 1e-4))
-                ghostDirections.push_back(q2);
+            if (!ContainsSimilar(ghostDirections, p,  1e-4)) ghostDirections.push_back(p);
+            if (!ContainsSimilar(ghostDirections, p0, 1e-4)) ghostDirections.push_back(p0);
+            if (!ContainsSimilar(ghostDirections, p1, 1e-4)) ghostDirections.push_back(p1);
+            if (!ContainsSimilar(ghostDirections, p2, 1e-4)) ghostDirections.push_back(p2);
+            if (!ContainsSimilar(ghostDirections, q0, 1e-4)) ghostDirections.push_back(q0);
+            if (!ContainsSimilar(ghostDirections, q1, 1e-4)) ghostDirections.push_back(q1);
+            if (!ContainsSimilar(ghostDirections, q2, 1e-4)) ghostDirections.push_back(q2);
         }
         else if (z > zThreshold1)
         {
             Vector3 p0 = (a + b).Normalized();
             Vector3 p1 = (b + c).Normalized();
             Vector3 p2 = (c + a).Normalized();
-            if (!ContainsSimilar(ghostDirections, p0, 1e-4))
-                ghostDirections.push_back(p0);
-            if (!ContainsSimilar(ghostDirections, p1, 1e-4))
-                ghostDirections.push_back(p1);
-            if (!ContainsSimilar(ghostDirections, p2, 1e-4))
-                ghostDirections.push_back(p2);
+            if (!ContainsSimilar(ghostDirections, p0, 1e-4)) ghostDirections.push_back(p0);
+            if (!ContainsSimilar(ghostDirections, p1, 1e-4)) ghostDirections.push_back(p1);
+            if (!ContainsSimilar(ghostDirections, p2, 1e-4)) ghostDirections.push_back(p2);
         }
         else if (z > zThreshold0)
         {
-            if (!ContainsSimilar(ghostDirections, p, 1e-4))
-                ghostDirections.push_back(p);
+            if (!ContainsSimilar(ghostDirections, p, 1e-4)) ghostDirections.push_back(p);
         }
     }
 
@@ -328,7 +294,9 @@ void Stencil::AddGhostDirections()
         cz.push_back(p[2]);
         theta.push_back(p.Theta());
         phi.push_back(p.Phi());
+        hull->Expand(p);
     }
+    mesh = hull->GetMesh();
     nGhost = ghostDirections.size();
     nDir += nGhost;
 }
@@ -344,10 +312,10 @@ void Stencil::SortDirections()
         [](const auto &a, const auto &b)
         {
             // Round theta and phi values
-            double roundedThetaA  = Round(std::get<1>(a), 6);
-            double roundedPhiA    = Round(std::get<2>(a), 6);
-            double roundedThetaB  = Round(std::get<1>(b), 6);
-            double roundedPhiB    = Round(std::get<2>(b), 6);
+            double roundedThetaA  = Round(std::get<1>(a), 8);
+            double roundedPhiA    = Round(std::get<2>(a), 8);
+            double roundedThetaB  = Round(std::get<1>(b), 8);
+            double roundedPhiB    = Round(std::get<2>(b), 8);
 
             // Compare rounded theta and phi
             if (roundedThetaA != roundedThetaB)
@@ -358,7 +326,7 @@ void Stencil::SortDirections()
     );
 
     // Write sorted values back into original arrays
-    for (int i = 0; i < nDir; ++i)
+    for (int i = 0; i < nDir; i++)
     {
         w[i] = std::get<0>(combinedArrays[i]);
         theta[i] = std::get<1>(combinedArrays[i]);
@@ -377,9 +345,20 @@ void Stencil::InitializeMesh()
         vertices.push_back(Cv3(d));
 
     // Triangulate vertices:
-    ConvexHull convexHull(vertices);
-    convexHull.OriginalOrdering(vertices);
-    mesh = convexHull.GetMesh();
+    hull = std::make_unique<ConvexHull>(vertices);
+    mesh = hull->GetMesh();
+}
+void Stencil::ReorderConvexHull()
+{
+    // Setup vertices vector for convex hull reordering:
+    std::vector<Vector3> vertices;
+    vertices.reserve(nDir);
+    for (size_t d = 0; d < nDir; d++)
+        vertices.push_back(Cv3(d));
+
+    // Reorder convex hull and reconstruct mesh:
+    hull->OriginalOrdering(vertices);
+    mesh = hull->GetMesh();
 }
 void Stencil::InitializeConnectedTriangles()
 {
@@ -479,7 +458,7 @@ double Stencil::MaxSigma()
     int nThTestGrid = 100;
     int nPhTestGrid = 200;
     double sigma;
-    double deltaSigma = 1;
+    double deltaSigma = 10;
 
     for(sigma = 1; sigma < 500; sigma += deltaSigma)
     {
@@ -487,6 +466,8 @@ double Stencil::MaxSigma()
             I[d] = Intensity(sigma, 1.0, Theta(d));
 
         double averageError = 0;
+        
+        //#pragma omp parallel for collapse(2) schedule(dynamic) reduction(+:averageError)
         for (int d1 = 0; d1 < nPhTestGrid; d1++)
             for (int d0 = 0; d0 < nThTestGrid; d0++)
             {
@@ -550,7 +531,7 @@ void Stencil::PrintAll() const
     }
     std::cout << std::endl;
 }
-// -----------------------------------------------------------------------
+// ---------------------------------------------------------------------
 
 // -------------------------- LebedevStencil ---------------------------
 LebedevStencil::LebedevStencil(size_t nOrder, double refinement0Threshold, double refinement1Threshold, double refinement2Threshold)
@@ -602,11 +583,12 @@ LebedevStencil::LebedevStencil(size_t nOrder, double refinement0Threshold, doubl
     }
     inputFile.close();
     
-    SortDirections();
+    SortDirections();   // makes convex hull construction 100-1000 times faster
     InitializeMesh();
+    ReorderConvexHull();
     AddGhostDirections();
     SortDirections();
-    InitializeMesh();
+    ReorderConvexHull();
     InitializeConnectedTriangles();
     InitializeVoronoiCells();
     InitializeVoronoiNeighbours();

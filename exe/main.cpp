@@ -76,23 +76,40 @@ Logger SphereWave(LebedevStencil stencil, StreamingType streamingType, double cf
                         radiation.initialI[radiation.Index(ijk, d)] = 1;
                 }
             }
+
+    std::cout << "Starting Sphere Wave Simulation" << std::endl;
     radiation.RunSimulation();
     return radiation.logger;
 }
 void SphereWaveAnalysis(int n)
 {
     double cfl = 0.9;
-    if(n == 0) SphereWave(LebedevStencil(29, 0.00, 0.00, 0.00), StreamingType::FlatFixed   , cfl);
-    if(n == 1) SphereWave(LebedevStencil(29, 0.15, 0.00, 0.00), StreamingType::FlatAdaptive, cfl);
-    if(n == 2) SphereWave(LebedevStencil(29, 0.00, 0.15, 0.00), StreamingType::FlatAdaptive, cfl);
+    if(n == 0) SphereWave(LebedevStencil(21, 0.14, 0.12, 0.00), StreamingType::FlatAdaptive, cfl);  // 194 = 170 + 24
+    if(n == 1) SphereWave(LebedevStencil(23, 0.00, 0.00, 0.00), StreamingType::FlatFixed   , cfl);  // 194
 
-    if(n == 3) SphereWave(LebedevStencil(35, 0.00, 0.00, 0.00), StreamingType::FlatFixed   , cfl);
-    if(n == 4) SphereWave(LebedevStencil(35, 0.15, 0.00, 0.00), StreamingType::FlatAdaptive, cfl);
-    if(n == 5) SphereWave(LebedevStencil(35, 0.00, 0.15, 0.00), StreamingType::FlatAdaptive, cfl);
-
-    if(n == 6) SphereWave(LebedevStencil(41, 0.00, 0.00, 0.00), StreamingType::FlatFixed   , cfl);
-    if(n == 7) SphereWave(LebedevStencil(41, 0.15, 0.00, 0.00), StreamingType::FlatAdaptive, cfl);
-    if(n == 8) SphereWave(LebedevStencil(41, 0.00, 0.15, 0.00), StreamingType::FlatAdaptive, cfl);
+    if(n == 2) SphereWave(LebedevStencil(29, 0.00, 0.13, 0.00), StreamingType::FlatAdaptive, cfl);  // 350 = 302 + 48
+    if(n == 3) SphereWave(LebedevStencil(31, 0.00, 0.00, 0.00), StreamingType::FlatFixed   , cfl);  // 350
+    
+    if(n == 4) SphereWave(LebedevStencil(35, 0.00, 0.20, 0.00), StreamingType::FlatAdaptive, cfl);  // 582 = 434 + 148
+    if(n == 5) SphereWave(LebedevStencil(41, 0.00, 0.00, 0.00), StreamingType::FlatFixed   , cfl);  // 590
+    
+    if(n == 6) SphereWave(LebedevStencil(41, 0.20, 0.18, 0.00), StreamingType::FlatAdaptive, cfl);  // 770 = 590 + 120
+    if(n == 7) SphereWave(LebedevStencil(47, 0.00, 0.00, 0.00), StreamingType::FlatFixed   , cfl);  // 770
+    
+    if(n == 8) SphereWave(LebedevStencil(47, 0.19, 0.17, 0.00), StreamingType::FlatAdaptive, cfl);  // 978 = 770 + 208
+    if(n == 9) SphereWave(LebedevStencil(53, 0.00, 0.00, 0.00), StreamingType::FlatFixed   , cfl);  // 974
+    
+    if(n ==10) SphereWave(LebedevStencil(53, 0.18, 0.13, 0.00), StreamingType::FlatAdaptive, cfl);  // 1202 = 974 + 228
+    if(n ==11) SphereWave(LebedevStencil(59, 0.00, 0.00, 0.00), StreamingType::FlatFixed   , cfl);  // 1202
+    
+    if(n ==12) SphereWave(LebedevStencil(59, 0.16, 0.14, 0.00), StreamingType::FlatAdaptive, cfl);  // 1454 = 1202 + 252
+    if(n ==13) SphereWave(LebedevStencil(65, 0.00, 0.00, 0.00), StreamingType::FlatFixed   , cfl);  // 1454
+    
+    if(n ==14) SphereWave(LebedevStencil(65, 0.19, 0.02, 0.00), StreamingType::FlatAdaptive, cfl);  // 1730 = 1454 + 276
+    if(n ==15) SphereWave(LebedevStencil(71, 0.00, 0.00, 0.00), StreamingType::FlatFixed   , cfl);  // 1730
+    
+    if(n ==16) SphereWave(LebedevStencil(71, 0.17, 0.06, 0.00), StreamingType::FlatAdaptive, cfl);  // 2030 = 1730 + 300
+    if(n ==17) SphereWave(LebedevStencil(77, 0.00, 0.00, 0.00), StreamingType::FlatFixed   , cfl);  // 2030
 }
 
 Logger Shadow(LebedevStencil stencil, StreamingType streamingType, double cfl)
@@ -163,23 +180,40 @@ Logger Shadow(LebedevStencil stencil, StreamingType streamingType, double cfl)
                 if (dist <= planetRadius)
                     radiation.kappaA[ijk] = 1e10;
             }
+
+    std::cout << "Starting Shadow Simulation" << std::endl;
     radiation.RunSimulation();
     return radiation.logger;
 }
 void ShadowAnalysis(int n)
 {
     double cfl = 0.9;
-    if(n == 0) Shadow(LebedevStencil(29, 0.00, 0.00, 0.00), StreamingType::FlatFixed   , cfl);
-    if(n == 1) Shadow(LebedevStencil(29, 0.15, 0.00, 0.00), StreamingType::FlatAdaptive, cfl);
-    if(n == 2) Shadow(LebedevStencil(29, 0.00, 0.15, 0.00), StreamingType::FlatAdaptive, cfl);
+    if(n == 0) Shadow(LebedevStencil(21, 0.14, 0.12, 0.00), StreamingType::FlatAdaptive, cfl);  // 194 = 170 + 24
+    if(n == 1) Shadow(LebedevStencil(23, 0.00, 0.00, 0.00), StreamingType::FlatFixed   , cfl);  // 194
 
-    if(n == 3) Shadow(LebedevStencil(35, 0.00, 0.00, 0.00), StreamingType::FlatFixed   , cfl);
-    if(n == 4) Shadow(LebedevStencil(35, 0.15, 0.00, 0.00), StreamingType::FlatAdaptive, cfl);
-    if(n == 5) Shadow(LebedevStencil(35, 0.00, 0.15, 0.00), StreamingType::FlatAdaptive, cfl);
-
-    if(n == 6) Shadow(LebedevStencil(41, 0.00, 0.00, 0.00), StreamingType::FlatFixed   , cfl);
-    if(n == 7) Shadow(LebedevStencil(41, 0.15, 0.00, 0.00), StreamingType::FlatAdaptive, cfl);
-    if(n == 8) Shadow(LebedevStencil(41, 0.00, 0.15, 0.00), StreamingType::FlatAdaptive, cfl);
+    if(n == 2) Shadow(LebedevStencil(29, 0.00, 0.13, 0.00), StreamingType::FlatAdaptive, cfl);  // 350 = 302 + 48
+    if(n == 3) Shadow(LebedevStencil(31, 0.00, 0.00, 0.00), StreamingType::FlatFixed   , cfl);  // 350
+    
+    if(n == 4) Shadow(LebedevStencil(35, 0.00, 0.20, 0.00), StreamingType::FlatAdaptive, cfl);  // 582 = 434 + 148
+    if(n == 5) Shadow(LebedevStencil(41, 0.00, 0.00, 0.00), StreamingType::FlatFixed   , cfl);  // 590
+    
+    if(n == 6) Shadow(LebedevStencil(41, 0.20, 0.18, 0.00), StreamingType::FlatAdaptive, cfl);  // 770 = 590 + 120
+    if(n == 7) Shadow(LebedevStencil(47, 0.00, 0.00, 0.00), StreamingType::FlatFixed   , cfl);  // 770
+    
+    if(n == 8) Shadow(LebedevStencil(47, 0.19, 0.17, 0.00), StreamingType::FlatAdaptive, cfl);  // 978 = 770 + 208
+    if(n == 9) Shadow(LebedevStencil(53, 0.00, 0.00, 0.00), StreamingType::FlatFixed   , cfl);  // 974
+    
+    if(n ==10) Shadow(LebedevStencil(53, 0.18, 0.13, 0.00), StreamingType::FlatAdaptive, cfl);  // 1202 = 974 + 228
+    if(n ==11) Shadow(LebedevStencil(59, 0.00, 0.00, 0.00), StreamingType::FlatFixed   , cfl);  // 1202
+    
+    if(n ==12) Shadow(LebedevStencil(59, 0.16, 0.14, 0.00), StreamingType::FlatAdaptive, cfl);  // 1454 = 1202 + 252
+    if(n ==13) Shadow(LebedevStencil(65, 0.00, 0.00, 0.00), StreamingType::FlatFixed   , cfl);  // 1454
+    
+    if(n ==14) Shadow(LebedevStencil(65, 0.19, 0.02, 0.00), StreamingType::FlatAdaptive, cfl);  // 1730 = 1454 + 276
+    if(n ==15) Shadow(LebedevStencil(71, 0.00, 0.00, 0.00), StreamingType::FlatFixed   , cfl);  // 1730
+    
+    if(n ==16) Shadow(LebedevStencil(71, 0.17, 0.06, 0.00), StreamingType::FlatAdaptive, cfl);  // 2030 = 1730 + 300
+    if(n ==17) Shadow(LebedevStencil(77, 0.00, 0.00, 0.00), StreamingType::FlatFixed   , cfl);  // 2030
 }
 
 Logger Star(LebedevStencil stencil, StreamingType streamingType, double cfl, double kappaA)
@@ -255,6 +289,9 @@ Logger Star(LebedevStencil stencil, StreamingType streamingType, double cfl, dou
                     radiation.initialFz_LF[ijk] = F1 / (r * r) * xyz[3] / r;
                 }
             }
+
+            
+    std::cout << "Starting Star Simulation" << std::endl;
     radiation.RunSimulation();
     return radiation.logger;
 }
@@ -377,23 +414,40 @@ Logger BeamCrossing(LebedevStencil stencil, StreamingType streamingType, double 
                     radiation.initialI[radiation.Index(ijk, d1)] = 1.0 / stencil.W(d1);
                 }
             }
+            
+    std::cout << "Starting Beam Crossing Simulation" << std::endl;
     radiation.RunSimulation();
     return radiation.logger;
 }
 void BeamCrossingAnalysis(int n)
 {
-    // All missing
     double cfl = 0.9;
-    // if(n == 0) BeamCrossing(LebedevStencil(59, 0.00, 0.00, 0.00), StreamingType::FlatFixed   , cfl);
+    if(n == 0) BeamCrossing(LebedevStencil(21, 0.14, 0.12, 0.00), StreamingType::FlatAdaptive, cfl);  // 194 = 170 + 24
+    if(n == 1) BeamCrossing(LebedevStencil(23, 0.00, 0.00, 0.00), StreamingType::FlatFixed   , cfl);  // 194
+
+    if(n == 2) BeamCrossing(LebedevStencil(29, 0.00, 0.13, 0.00), StreamingType::FlatAdaptive, cfl);  // 350 = 302 + 48
+    if(n == 3) BeamCrossing(LebedevStencil(31, 0.00, 0.00, 0.00), StreamingType::FlatFixed   , cfl);  // 350
     
-    if(n == 1) BeamCrossing(LebedevStencil(29, 0.15, 0.00, 0.00), StreamingType::FlatAdaptive, cfl);
-    if(n == 2) BeamCrossing(LebedevStencil(29, 0.00, 0.15, 0.00), StreamingType::FlatAdaptive, cfl);
-
-    if(n == 3) BeamCrossing(LebedevStencil(35, 0.15, 0.00, 0.00), StreamingType::FlatAdaptive, cfl);
-    if(n == 4) BeamCrossing(LebedevStencil(35, 0.00, 0.15, 0.00), StreamingType::FlatAdaptive, cfl);
-
-    if(n == 5) BeamCrossing(LebedevStencil(41, 0.15, 0.00, 0.00), StreamingType::FlatAdaptive, cfl);
-    if(n == 6) BeamCrossing(LebedevStencil(41, 0.00, 0.15, 0.00), StreamingType::FlatAdaptive, cfl);
+    if(n == 4) BeamCrossing(LebedevStencil(35, 0.00, 0.20, 0.00), StreamingType::FlatAdaptive, cfl);  // 582 = 434 + 148
+    if(n == 5) BeamCrossing(LebedevStencil(41, 0.00, 0.00, 0.00), StreamingType::FlatFixed   , cfl);  // 590
+    
+    if(n == 6) BeamCrossing(LebedevStencil(41, 0.20, 0.18, 0.00), StreamingType::FlatAdaptive, cfl);  // 770 = 590 + 120
+    if(n == 7) BeamCrossing(LebedevStencil(47, 0.00, 0.00, 0.00), StreamingType::FlatFixed   , cfl);  // 770
+    
+    if(n == 8) BeamCrossing(LebedevStencil(47, 0.19, 0.17, 0.00), StreamingType::FlatAdaptive, cfl);  // 978 = 770 + 208
+    if(n == 9) BeamCrossing(LebedevStencil(53, 0.00, 0.00, 0.00), StreamingType::FlatFixed   , cfl);  // 974
+    
+    if(n ==10) BeamCrossing(LebedevStencil(53, 0.18, 0.13, 0.00), StreamingType::FlatAdaptive, cfl);  // 1202 = 974 + 228
+    if(n ==11) BeamCrossing(LebedevStencil(59, 0.00, 0.00, 0.00), StreamingType::FlatFixed   , cfl);  // 1202
+    
+    if(n ==12) BeamCrossing(LebedevStencil(59, 0.16, 0.14, 0.00), StreamingType::FlatAdaptive, cfl);  // 1454 = 1202 + 252
+    if(n ==13) BeamCrossing(LebedevStencil(65, 0.00, 0.00, 0.00), StreamingType::FlatFixed   , cfl);  // 1454
+    
+    if(n ==14) BeamCrossing(LebedevStencil(65, 0.19, 0.02, 0.00), StreamingType::FlatAdaptive, cfl);  // 1730 = 1454 + 276
+    if(n ==15) BeamCrossing(LebedevStencil(71, 0.00, 0.00, 0.00), StreamingType::FlatFixed   , cfl);  // 1730
+    
+    if(n ==16) BeamCrossing(LebedevStencil(71, 0.17, 0.06, 0.00), StreamingType::FlatAdaptive, cfl);  // 2030 = 1730 + 300
+    if(n ==17) BeamCrossing(LebedevStencil(77, 0.00, 0.00, 0.00), StreamingType::FlatFixed   , cfl);  // 2030
 }
 
 Logger Diffusion(LebedevStencil stencil, StreamingType streamingType, double kappaS, double lambda, double cfl, double correctionFactor)
@@ -467,6 +521,8 @@ Logger Diffusion(LebedevStencil stencil, StreamingType streamingType, double kap
                 radiation.initialFy_LF[ijk] = (y * E) / (2.0 * t0 * (1.0 + correctionFactor * PE));
                 radiation.initialFz_LF[ijk] = (z * E) / (2.0 * t0 * (1.0 + correctionFactor * PE));
             }
+            
+    std::cout << "Starting Diffusion Simulation" << std::endl;
     radiation.RunSimulation();
     return radiation.logger;
 }
@@ -592,6 +648,8 @@ Logger MovingDiffusion(LebedevStencil stencil, StreamingType streamingType, doub
                 radiation.initialFy_LF[ijk] = Tlf[{2, 0}];
                 radiation.initialFz_LF[ijk] = Tlf[{3, 0}];
             }
+
+    std::cout << "Starting Moving Diffusion Simulation" << std::endl;
     radiation.RunSimulation();
     return radiation.logger;
 }
@@ -615,7 +673,7 @@ Logger CurvedBeam(LebedevStencil stencil, StreamingType streamingType, double cf
     // Create Radiation object:
     size_t nx = 201;
     size_t ny = 161;
-    size_t nz =  21;
+    size_t nz =  21;    
     Coord start(0, 0, -0.25);
     Coord end(5, 4, 0.25);
     Grid grid(nx, ny, nz, start, end);
@@ -629,7 +687,7 @@ Logger CurvedBeam(LebedevStencil stencil, StreamingType streamingType, double cf
     // Config:
     Config config =
         {
-            .name = "Curved Beam 3d/" + metric.Name() + " " + stencil.name + " " + std::to_string(nx) + "nx" + std::to_string(ny) + "ny" + std::to_string(nz) + "nz" + Format(cfl, 2) + "cfl " + StreamingName(streamingType),
+            .name = "Curved Beam 3d/" + metric.Name() + "_" + StreamingName(streamingType) + "_" + stencil.name + Format(cfl, 2) + "cfl",
             .simTime = 10.0,
             .writePeriod = 11.0,
             .updateSphericalHarmonics = false,
@@ -675,27 +733,40 @@ Logger CurvedBeam(LebedevStencil stencil, StreamingType streamingType, double cf
                     radiation.initialFz_LF[ijk] = 10 * vLF[3];
                 }
             }
+
+    std::cout << "Starting Curved Beam Simulation" << std::endl;
     radiation.RunSimulation();
     return radiation.logger;
 }
 void CurvedBeamAnalysis(int n)
 {
     double cfl = 0.9;
-    if(n ==  0) CurvedBeam(LebedevStencil(29, 0.00, 0.00, 0.00), StreamingType::CurvedFixed   , cfl);
-    if(n ==  1) CurvedBeam(LebedevStencil(29, 0.15, 0.00, 0.00), StreamingType::CurvedAdaptive, cfl);
-    if(n ==  2) CurvedBeam(LebedevStencil(29, 0.00, 0.15, 0.00), StreamingType::CurvedAdaptive, cfl);
+    if(n == 0) CurvedBeam(LebedevStencil(21, 0.14, 0.12, 0.00), StreamingType::FlatAdaptive, cfl);  // 194 = 170 + 24
+    if(n == 1) CurvedBeam(LebedevStencil(23, 0.00, 0.00, 0.00), StreamingType::FlatFixed   , cfl);  // 194
 
-    if(n ==  3) CurvedBeam(LebedevStencil(35, 0.00, 0.00, 0.00), StreamingType::CurvedFixed   , cfl);
-    if(n ==  4) CurvedBeam(LebedevStencil(35, 0.15, 0.00, 0.00), StreamingType::CurvedAdaptive, cfl);
-    if(n ==  5) CurvedBeam(LebedevStencil(35, 0.00, 0.15, 0.00), StreamingType::CurvedAdaptive, cfl);
-
-    if(n ==  6) CurvedBeam(LebedevStencil(41, 0.00, 0.00, 0.00), StreamingType::CurvedFixed   , cfl);
-    if(n ==  7) CurvedBeam(LebedevStencil(41, 0.15, 0.00, 0.00), StreamingType::CurvedAdaptive, cfl);
-    if(n ==  8) CurvedBeam(LebedevStencil(41, 0.00, 0.15, 0.00), StreamingType::CurvedAdaptive, cfl);
+    if(n == 2) CurvedBeam(LebedevStencil(29, 0.00, 0.13, 0.00), StreamingType::FlatAdaptive, cfl);  // 350 = 302 + 48
+    if(n == 3) CurvedBeam(LebedevStencil(31, 0.00, 0.00, 0.00), StreamingType::FlatFixed   , cfl);  // 350
     
-    if(n ==  9) CurvedBeam(LebedevStencil(59, 0.00, 0.00, 0.00), StreamingType::CurvedFixed   , cfl);
-    if(n == 10) CurvedBeam(LebedevStencil(59, 0.15, 0.00, 0.00), StreamingType::CurvedAdaptive, cfl);
-    if(n == 11) CurvedBeam(LebedevStencil(59, 0.00, 0.15, 0.00), StreamingType::CurvedAdaptive, cfl);
+    if(n == 4) CurvedBeam(LebedevStencil(35, 0.00, 0.20, 0.00), StreamingType::FlatAdaptive, cfl);  // 582 = 434 + 148
+    if(n == 5) CurvedBeam(LebedevStencil(41, 0.00, 0.00, 0.00), StreamingType::FlatFixed   , cfl);  // 590
+    
+    if(n == 6) CurvedBeam(LebedevStencil(41, 0.20, 0.18, 0.00), StreamingType::FlatAdaptive, cfl);  // 770 = 590 + 120
+    if(n == 7) CurvedBeam(LebedevStencil(47, 0.00, 0.00, 0.00), StreamingType::FlatFixed   , cfl);  // 770
+    
+    if(n == 8) CurvedBeam(LebedevStencil(47, 0.19, 0.17, 0.00), StreamingType::FlatAdaptive, cfl);  // 978 = 770 + 208
+    if(n == 9) CurvedBeam(LebedevStencil(53, 0.00, 0.00, 0.00), StreamingType::FlatFixed   , cfl);  // 974
+    
+    if(n ==10) CurvedBeam(LebedevStencil(53, 0.18, 0.13, 0.00), StreamingType::FlatAdaptive, cfl);  // 1202 = 974 + 228
+    if(n ==11) CurvedBeam(LebedevStencil(59, 0.00, 0.00, 0.00), StreamingType::FlatFixed   , cfl);  // 1202
+    
+    if(n ==12) CurvedBeam(LebedevStencil(59, 0.16, 0.14, 0.00), StreamingType::FlatAdaptive, cfl);  // 1454 = 1202 + 252
+    if(n ==13) CurvedBeam(LebedevStencil(65, 0.00, 0.00, 0.00), StreamingType::FlatFixed   , cfl);  // 1454
+    
+    if(n ==14) CurvedBeam(LebedevStencil(65, 0.19, 0.02, 0.00), StreamingType::FlatAdaptive, cfl);  // 1730 = 1454 + 276
+    if(n ==15) CurvedBeam(LebedevStencil(71, 0.00, 0.00, 0.00), StreamingType::FlatFixed   , cfl);  // 1730
+    
+    if(n ==16) CurvedBeam(LebedevStencil(71, 0.17, 0.06, 0.00), StreamingType::FlatAdaptive, cfl);  // 2030 = 1730 + 300
+    if(n ==17) CurvedBeam(LebedevStencil(77, 0.00, 0.00, 0.00), StreamingType::FlatFixed   , cfl);  // 2030
 }
 
 Logger ThinHalfDisk(LebedevStencil stencil, StreamingType streamingType, double cfl, int resolutionScale)
@@ -952,157 +1023,70 @@ void StencilAnalysis(int n)
             stencil.Print();
         }
 }
+void PrintStencilConfig(LebedevStencil& stencil)
+{
+    int nDir = stencil.nDir;
+    int nGhost = stencil.nGhost;
+    int nReal = nDir - nGhost;
+
+    std::string spaceReal = "";
+    if (nReal < 10) spaceReal += " ";
+    if (nReal < 100) spaceReal += " ";
+    std::string spaceGhost = "";
+    if (nGhost < 10) spaceGhost += " ";
+    if (nGhost < 100) spaceGhost += " ";
+    std::string spaceDir = "";
+    if (nDir < 10) spaceDir += " ";
+    if (nDir < 100) spaceDir += " ";
+
+    std::cout << stencil.refinement0Threshold << ", " << stencil.refinement1Threshold << ",\t";
+    std::cout << spaceReal << nReal << ", ";
+    std::cout << spaceGhost << nGhost << ", ";
+    std::cout << spaceDir << nDir << "\n";
+    std::cout << std::flush;
+}
 void StencilConfig(int n)
 {
-    if (n == 0)
-    {// order = 15
-        double a = 0.00;
-        double b = 0.07;
-        double c = 0.14;
-        double ref0[] = {a, b, c, a, a, c};
-        double ref1[] = {a, a, a, b, c, b};
-        std::cout << "order = 15:\n";
-        std::cout << "ref0, ref1,    nReal, nGhost, nPop\n";
-        for (int i = 0; i < 6; i++)
-        {
-            LebedevStencil stencil = LebedevStencil(15, ref0[i], ref1[i], 0.00);
-            std::cout << ref0[i] << ", " << ref1[i] << "\t" << stencil.nDir - stencil.nGhost << ", " << stencil.nGhost << ", " << stencil.nDir << "\n";
-        }
+    std::cout << std::fixed << std::setprecision(3);
+    int N = 21;
+    double ref[] = {0.00, 0.01, 0.02, 0.03, 0.04, 0.05, 0.06, 0.07, 0.08, 0.09, 0.10, 0.11, 0.12, 0.13, 0.14, 0.15, 0.16, 0.17, 0.18, 0.19, 0.20};
+
+    int order = -1;
+    if (n ==  0) order = 15;
+    if (n ==  1) order = 17;
+    if (n ==  2) order = 19;
+    if (n ==  3) order = 21;
+    if (n ==  4) order = 23;
+    if (n ==  5) order = 29;
+    if (n ==  6) order = 31;
+    if (n ==  7) order = 35;
+    if (n ==  8) order = 41;
+    if (n ==  9) order = 47;
+    if (n == 10) order = 53;
+    if (n == 11) order = 59;
+    if (n == 12) order = 65;
+    if (n == 13) order = 71;
+
+    if (n == 14)
+    {
+        std::cout << "order = " << order << "\n";
+        std::cout << " ref0,  ref1,    nR,  nG, nDir\n";
+        int order = 77;
+        LebedevStencil stencilA = LebedevStencil(order, 0.00, 0.00, 0.00);
+        PrintStencilConfig(stencilA);
+        return;
     }
-    if (n == 1)
-    {// order = 17
-        double a = 0.00;
-        double b = 0.06;
-        double c = 0.11;
-        double d = 0.15;
-        double ref0[] = {a, b, c, d, a, a, a, c, d, d};
-        double ref1[] = {a, a, a, a, b, c, d, b, b, c};
-        std::cout << "order = 17:\n";
-        std::cout << "ref0, ref1,    nReal, nGhost, nPop\n";
-        for (int i = 0; i < 10; i++)
+    
+    std::cout << "order = " << order << "\n";
+    std::cout << " ref0,  ref1,    nR,  nG, nDir\n";
+    for (int i = 0; i < N; i++)
+    {
+        LebedevStencil stencilA = LebedevStencil(order, ref[0], ref[i], 0.00);
+        PrintStencilConfig(stencilA);
+        for (int j = i + 1; j < N; j++)
         {
-            LebedevStencil stencil = LebedevStencil(17, ref0[i], ref1[i], 0.00);
-            std::cout << ref0[i] << ", " << ref1[i] << "\t" << stencil.nDir - stencil.nGhost << ", " << stencil.nGhost << ", " << stencil.nDir << "\n";
-        }
-    }
-    if (n == 2)
-    {// order = 19
-        double a = 0.00;
-        double b = 0.05;
-        double c = 0.13;
-        double d = 0.15;
-        double ref0[] = {a, b, c, d, a, a, a, c, d, d};
-        double ref1[] = {a, a, a, a, b, c, d, b, b, c};
-        std::cout << "order = 19:\n";
-        std::cout << "ref0, ref1,    nReal, nGhost, nPop\n";
-        for (int i = 0; i < 10; i++)
-        {
-            LebedevStencil stencil = LebedevStencil(19, ref0[i], ref1[i], 0.00);
-            std::cout << ref0[i] << ", " << ref1[i] << "\t" << stencil.nDir - stencil.nGhost << ", " << stencil.nGhost << ", " << stencil.nDir << "\n";
-        }
-    }
-    if (n == 3)
-    {// order = 21
-        double a = 0.00;
-        double b = 0.08;
-        double c = 0.13;
-        double d = 0.15;
-        double ref0[] = {a, b, c, d, a, a, a, c, d, d};
-        double ref1[] = {a, a, a, a, b, c, d, b, b, c};
-        std::cout << "order = 21:\n";
-        std::cout << "ref0, ref1,    nReal, nGhost, nPop\n";
-        for (int i = 0; i < 10; i++)
-        {
-            LebedevStencil stencil = LebedevStencil(21, ref0[i], ref1[i], 0.00);
-            std::cout << ref0[i] << ", " << ref1[i] << "\t" << stencil.nDir - stencil.nGhost << ", " << stencil.nGhost << ", " << stencil.nDir << "\n";
-        }
-    }
-    if (n == 4)
-    {// order = 23
-        double a = 0.00;
-        double b = 0.04;
-        double c = 0.08;
-        double d = 0.11;
-        double e = 0.15;
-        double ref0[] = {a, b, c, d, e, a, a, a, a, c, d, e, d, e, e};
-        double ref1[] = {a, a, a, a, a, b, c, d, e, b, b, b, c, c, d};
-        std::cout << "order = 23:\n";
-        std::cout << "ref0, ref1,    nReal, nGhost, nPop\n";
-        for (int i = 0; i < 15; i++)
-        {
-            LebedevStencil stencil = LebedevStencil(23, ref0[i], ref1[i], 0.00);
-            std::cout << ref0[i] << ", " << ref1[i] << "\t" << stencil.nDir - stencil.nGhost << ", " << stencil.nGhost << ", " << stencil.nDir << "\n";
-        }
-    }
-    if (n == 5)
-    {// order = 29
-        double a = 0.00;
-        double b = 0.04;
-        double c = 0.08;
-        double d = 0.11;
-        double e = 0.14;
-        double ref0[] = {a, b, c, d, e, a, a, a, a, c, d, e, d, e, e};
-        double ref1[] = {a, a, a, a, a, b, c, d, e, b, b, b, c, c, d};
-        std::cout << "order = 29:\n";
-        std::cout << "ref0, ref1,    nReal, nGhost, nPop\n";
-        for (int i = 0; i < 15; i++)
-        {
-            LebedevStencil stencil = LebedevStencil(29, ref0[i], ref1[i], 0.00);
-            std::cout << ref0[i] << ", " << ref1[i] << "\t" << stencil.nDir - stencil.nGhost << ", " << stencil.nGhost << ", " << stencil.nDir << "\n";
-        }
-    }
-    if (n == 6)
-    {// order = 31
-        double a = 0.00;
-        double b = 0.04;
-        double c = 0.07;
-        double d = 0.12;
-        double e = 0.15;
-        double ref0[] = {a, b, c, d, e, a, a, a, a, c, d, e, d, e, e};
-        double ref1[] = {a, a, a, a, a, b, c, d, e, b, b, b, c, c, d};
-        std::cout << "order = 31:\n";
-        std::cout << "ref0, ref1,    nReal, nGhost, nPop\n";
-        for (int i = 0; i < 15; i++)
-        {
-            LebedevStencil stencil = LebedevStencil(31, ref0[i], ref1[i], 0.00);
-            std::cout << ref0[i] << ", " << ref1[i] << "\t" << stencil.nDir - stencil.nGhost << ", " << stencil.nGhost << ", " << stencil.nDir << "\n";
-        }
-    }
-    if (n == 7)
-    {// order = 35
-        double a = 0.00;
-        double b = 0.03;
-        double c = 0.07;
-        double d = 0.09;
-        double e = 0.12;
-        double f = 0.15;
-        double ref0[] = {a, b, c, d, e, f, a, a, a, a, a, c, d, e, f, d, e, f, e, f, f};
-        double ref1[] = {a, a, a, a, a, a, b, c, d, e, f, b, b, b, b, c, c, c, d, d, e};
-        std::cout << "order = 35:\n";
-        std::cout << "ref0, ref1,    nReal, nGhost, nPop\n";
-        for (int i = 0; i < 21; i++)
-        {
-            LebedevStencil stencil = LebedevStencil(35, ref0[i], ref1[i], 0.00);
-            std::cout << ref0[i] << ", " << ref1[i] << "\t" << stencil.nDir - stencil.nGhost << ", " << stencil.nGhost << ", " << stencil.nDir << "\n";
-        }
-    }
-    if (n == 8)
-    {// order = 41
-        double a = 0.000;
-        double b = 0.020;
-        double c = 0.050;
-        double d = 0.070;
-        double e = 0.100;
-        double f = 0.125;
-        double g = 0.105;
-        double ref0[] = {a, b, c, d, e, f, g, a, a, a, a, a, a, c, d, e, f, g, d, e, f, g, e, f, g, f, g, g};
-        double ref1[] = {a, a, a, a, a, a, a, b, c, d, e, f, g, b, b, b, b, b, c, c, c, c, d, d, d, e, e, f};
-        std::cout << "order = 41:\n";
-        std::cout << "ref0, ref1,    nReal, nGhost, nPop\n";
-        for (int i = 0; i < 28; i++)
-        {
-            LebedevStencil stencil = LebedevStencil(41, ref0[i], ref1[i], 0.00);
-            std::cout << ref0[i] << ", " << ref1[i] << "\t" << stencil.nDir - stencil.nGhost << ", " << stencil.nGhost << ", " << stencil.nDir << "\n";
+            LebedevStencil stencil = LebedevStencil(order, ref[j], ref[i], 0.00);
+            PrintStencilConfig(stencil);
         }
     }
 }
@@ -1180,16 +1164,16 @@ int main(int argc, char *argv[])
     if (argc > 1)
         n = atoi(argv[1]);
 
-    // SphereWaveAnalysis(n);       // Done
-    // ShadowAnalysis(n);           // Done
+    // SphereWaveAnalysis(n);       // 
+    ShadowAnalysis(n);           // 
     // StarAnalysis(n);             // Done
-    // BeamCrossingAnalysis(n);     // Done
+    // BeamCrossingAnalysis(n);     // 
     // DiffusionAnalysis(n);        // Done
     // MovingDiffusionAnalysis(n);  // Done
-    // CurvedBeamAnalysis(n);       // Done
+    // CurvedBeamAnalysis(n);       // 
     // TestThinDiskSetup();         // Done
     // ThinHalfDiskAnalysis(n);     // Not needed for paper, just a quick test for Full Disk
     // ThinFullDiskAnalysis(n);     // Done
     // StencilAnalysis(n);          // Done
-    // StencilConfig(n);
+    // StencilConfig(n);            // Done
 }

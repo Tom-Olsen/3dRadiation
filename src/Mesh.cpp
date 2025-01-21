@@ -40,11 +40,11 @@ void Mesh::WriteToCsv(std::string directory, std::string name)
     std::ofstream fileOut(fullPath);
     fileOut << "vertices:\n";
     for(const Vector3& v : m_vertices)
-        fileOut << v << "\n";
+        fileOut << v[0] << "," << v[1] << "," << v[2] << "\n";
     
     fileOut << "\n";
     fileOut << "triangles:\n";
     for(const Vector3Int& t : m_triangles)
-        fileOut << t << "\n";
+        fileOut << t[0] << "," << t[1] << "," << t[2] << "\n";
     fileOut.close();
 }

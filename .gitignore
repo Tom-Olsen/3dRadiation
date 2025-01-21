@@ -16,6 +16,7 @@ report.txt
 slurm*
 report*
 perf.data*
+*.log
 
 # Build files:
 build/build.ninja

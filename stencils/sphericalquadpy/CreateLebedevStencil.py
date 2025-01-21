@@ -59,13 +59,14 @@ def WriteLebedevStencilToFile(order):
             f.write(f"{theta[i]: .60f},")
             f.write(f"{phi[i]: .60f}\n")
             
-# 3->31:
-for i in range(3,32,2):
-    WriteLebedevStencilToFile(i)
+## 3->31:
+#for i in range(3,32,2):
+#    WriteLebedevStencilToFile(i)
 
-# 35->47
-WriteLebedevStencilToFile(35)
-WriteLebedevStencilToFile(41)
-WriteLebedevStencilToFile(47)
-WriteLebedevStencilToFile(53)
-WriteLebedevStencilToFile(59)
+## 35->47
+#WriteLebedevStencilToFile(35)
+#WriteLebedevStencilToFile(41)
+#WriteLebedevStencilToFile(47)
+#WriteLebedevStencilToFile(53)
+#WriteLebedevStencilToFile(59)
+WriteLebedevStencilToFile(77)
