@@ -138,6 +138,7 @@ public:
     //void CollideBackwardEuler();
 
     void TakePicture();
+    void SaveHarmonicInterpolation();
     void RunSimulation();
 };
 #endif //__INCLUDE_GUARD_Radiation_h__

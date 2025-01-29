@@ -38,7 +38,12 @@ void Mesh::WriteToCsv(std::string directory, std::string name)
     std::string fullPath = (directory == "") ? name + ".csv" : directory + "/" + name + ".csv";
     
     std::ofstream fileOut(fullPath);
-    fileOut << "vertices:\n";
+    fileOut << "positions:\n";
+    for(const Vector3& v : m_vertices)
+        fileOut << v[0] << "," << v[1] << "," << v[2] << "\n";
+    
+    fileOut << "\n";
+    fileOut << "normals:\n";
     for(const Vector3& v : m_vertices)
         fileOut << v[0] << "," << v[1] << "," << v[2] << "\n";
     

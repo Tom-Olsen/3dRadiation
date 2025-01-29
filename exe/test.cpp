@@ -424,6 +424,48 @@ void TestInitialDataFunction()
     }
 }
 
+void GeodesicEquationSolver()
+{
+    // Create Radiation object:
+    size_t nx = 101;
+    size_t ny = 101;
+    size_t nz = 101;    
+    Coord start(-4, -4, -4);
+    Coord end(4, 4, 4);
+    Grid grid(nx, ny, nz, start, end);
+    double dt = 0.1;
+    SchwarzSchild metric(grid, 1.0, 0.0); // needs at least LebedevStencil5
+    // KerrSchild metric(grid, 1.0, 0.0);
+
+    std::ofstream file("output/geodesicEquationSolver.csv");
+    file << "x, y, z, s\n";
+    int n = 5;
+    for (int i = 0; i < n; i++)
+        for (int j = 0; j < n; j++)
+        {
+            double x = -3.5 + i / (n - 1.0) * 7.0;
+            double y = -3.5 + j / (n - 1.0) * 7.0;
+            Coord xyz(x, y, -3.5);
+            Tensor4x4 g_ll = metric.GetMetric_ll(xyz);
+
+            Tensor4 temp = OneNormalize(Tensor4(1, 0, 0, 1), g_ll);
+            Tensor3 vLF(temp[1], temp[2], temp[3]);
+            vLF.Print("vLF");
+            PrintDouble(Norm2(temp, g_ll), "norm");
+            double s = 1.0;
+
+            file << xyz[1] << "," << xyz[2] << "," << xyz[3] << "," << s << "\n";
+            for(int k = 0; k < 100; k++)
+            {
+                if (metric.InsideBH(xyz) || grid.OutsideDomain(xyz))
+                    break;
+                s *= RK45_GeodesicEquation<1>(dt, xyz, vLF, metric);
+                file << xyz[1] << "," << xyz[2] << "," << xyz[3] << "," << s << "\n";
+            }
+        }
+    file.close();
+}
+
 
 
 int main()
@@ -433,7 +475,8 @@ int main()
     // MyMethodBoosted();
     // TetradBenchmark();
     // InterpolationBenchmark();
-    TestInitialDataFunction();
+    // TestInitialDataFunction();
+    GeodesicEquationSolver();
 
     // LebedevStencil stencilA(21);
     // cout << "Lebedev21" << endl;

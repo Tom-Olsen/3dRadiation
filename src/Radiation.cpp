@@ -74,29 +74,31 @@ Radiation::Radiation(Metric &metric, LebedevStencil &stencil, LebedevStencil &st
     PARALLEL_FOR(1)
     for (size_t ijk = 0; ijk < grid.nxyz; ijk++)
     {
-            double dataS[streamingStencil.nDir];
-            double dataX[streamingStencil.nDir];
-            double dataY[streamingStencil.nDir];
-            double dataZ[streamingStencil.nDir];
-            double dataCx[streamingStencil.nDir];
-            double dataCy[streamingStencil.nDir];
-            double dataCz[streamingStencil.nDir];
-            for (size_t d = 0; d < streamingStencil.nDir; d++)
-            {
-                Coord xyz = grid.xyz(ijk);
-                dataS[d] = 1.0;
-                dataX[d] = xyz[1];
-                dataY[d] = xyz[2];
-                dataY[d] = xyz[3];
-                dataCx[d] = stencil.Cx(d);
-                dataCy[d] = stencil.Cy(d);
-                dataCz[d] = stencil.Cz(d);
-            }
-            SphericalHarmonicsXyz::GetCoefficients(streamingStencil, dataS, &coefficientsS[HarmonicIndex(0, ijk)]);
-            SphericalHarmonicsXyz::GetCoefficients(streamingStencil, dataX, &coefficientsX[HarmonicIndex(0, ijk)]);
-            SphericalHarmonicsXyz::GetCoefficients(streamingStencil, dataY, &coefficientsY[HarmonicIndex(0, ijk)]);
-            SphericalHarmonicsXyz::GetCoefficients(streamingStencil, dataCx, &coefficientsCx[HarmonicIndex(0, ijk)]);
-            SphericalHarmonicsXyz::GetCoefficients(streamingStencil, dataCy, &coefficientsCy[HarmonicIndex(0, ijk)]);
+        double dataS[streamingStencil.nDir];
+        double dataX[streamingStencil.nDir];
+        double dataY[streamingStencil.nDir];
+        double dataZ[streamingStencil.nDir];
+        double dataCx[streamingStencil.nDir];
+        double dataCy[streamingStencil.nDir];
+        double dataCz[streamingStencil.nDir];
+        for (size_t d = 0; d < streamingStencil.nDir; d++)
+        {
+            Coord xyz = grid.xyz(ijk);
+            dataS[d] = 1.0;
+            dataX[d] = xyz[1];
+            dataY[d] = xyz[2];
+            dataZ[d] = xyz[3];
+            dataCx[d] = streamingStencil.Cx(d);
+            dataCy[d] = streamingStencil.Cy(d);
+            dataCz[d] = streamingStencil.Cz(d);
+        }
+        SphericalHarmonicsXyz::GetCoefficients(streamingStencil, dataS, &coefficientsS[HarmonicIndex(0, ijk)]);
+        SphericalHarmonicsXyz::GetCoefficients(streamingStencil, dataX, &coefficientsX[HarmonicIndex(0, ijk)]);
+        SphericalHarmonicsXyz::GetCoefficients(streamingStencil, dataY, &coefficientsY[HarmonicIndex(0, ijk)]);
+        SphericalHarmonicsXyz::GetCoefficients(streamingStencil, dataZ, &coefficientsY[HarmonicIndex(0, ijk)]);
+        SphericalHarmonicsXyz::GetCoefficients(streamingStencil, dataCx, &coefficientsCx[HarmonicIndex(0, ijk)]);
+        SphericalHarmonicsXyz::GetCoefficients(streamingStencil, dataCy, &coefficientsCy[HarmonicIndex(0, ijk)]);
+        SphericalHarmonicsXyz::GetCoefficients(streamingStencil, dataCz, &coefficientsCy[HarmonicIndex(0, ijk)]);
     }
 }
 Radiation::~Radiation()
@@ -927,6 +929,37 @@ void Radiation::TakePicture()
                                                    intensityAt_i1j0k0, intensityAt_i1j0k1, intensityAt_i1j1k0, intensityAt_i1j1k1);
     }
 }
+void Radiation::SaveHarmonicInterpolation()
+{
+    UpdateSphericalHarmonicsCoefficients();
+    std::ofstream fileOut((std::string)OUTPUTDIR + (std::string)"HarmonicInterpolation.txt");
+    fileOut << "x, y, z, vx, vy, vz, s \n";
+
+    for (size_t k = HALO; k < grid.nz - HALO; k++)
+        for (size_t j = HALO; j < grid.ny - HALO; j++)
+            for (size_t i = HALO; i < grid.nx - HALO; i++)
+            {
+                size_t ijk = grid.Index(i, j, k);
+                Coord xyz = grid.xyz(ijk);
+                double s = 1.0;
+                if (metric.InsideBH(xyz))
+                    continue;
+
+                fileOut << xyz[1] << ", "<< xyz[2] << ", " << xyz[3] << ", ";
+                fileOut << xyz[1] << ", "<< xyz[2] << ", " << xyz[3] << ", " << s << "\n";
+                for (size_t d = 0; d < stencil.nDir; d++)
+                {
+                    size_t index = Index(ijk, d);
+                    Tensor3 direction = stencil.Ct3(d);
+                    s = GetFrequencyShift(ijk, direction);
+                    Coord xyzTemp = GetTempCoordinate(ijk, direction);
+                    Tensor3 vTempIF = GetTemp3VelocityIF(ijk, direction);
+                    fileOut << xyzTemp[1] << ", "<< xyzTemp[2] << ", " << xyzTemp[3] << ", ";
+                    fileOut << xyz[1] + 0.5 * grid.dt * vTempIF[1] << ", "<< xyz[2] + 0.5 * grid.dt * vTempIF[2] << ", " << xyz[3] + 0.5 * grid.dt * vTempIF[3] << ", " << s << "\n";
+                }
+            }
+    fileOut.close();
+}
 
 void Radiation::RunSimulation()
 {
@@ -949,6 +982,8 @@ void Radiation::RunSimulation()
         std::cout << " ny           = " << grid.ny << "\n";
         std::cout << " nz           = " << grid.nz << "\n";
         std::cout << " nDir         = " << stencil.nDir << "\n";
+        std::cout << " nReal        = " << stencil.nDir - stencil.nGhost << "\n";
+        std::cout << " nGhost       = " << stencil.nGhost << "\n";
         std::cout << " sigmaMax     = " << stencil.sigmaMax << "\n";
         std::cout << " fluxMax      = " << stencil.relativeFluxMax << "\n";
         std::cout << " simTime      = " << config.simTime << "\n";

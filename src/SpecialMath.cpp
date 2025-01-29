@@ -57,6 +57,11 @@ Tensor4 NullNormalize(const Tensor4 &vector, const Tensor4x4 &g_ll)
 
     return Tensor4(vector[0], x * vector[1], x * vector[2], x * vector[3]);
 }
+Tensor4 OneNormalize(const Tensor4 &vector, const Tensor4x4 &g_ll)
+{
+    double norm = sqrt(Norm2(vector, g_ll));
+    return Tensor4(vector[0] / norm, vector[1] / norm, vector[2] / norm, vector[3] / norm);
+}
 
 Tensor3 TransformIFtoLF(const Tensor3 &vector, const Tensor4x4 &tetrad)
 {

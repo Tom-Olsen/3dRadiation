@@ -108,16 +108,18 @@ void SphereWaveAnalysis(int n)
     if(n ==14) SphereWave(LebedevStencil(65, 0.19, 0.02, 0.00), StreamingType::FlatAdaptive, cfl);  // 1730 = 1454 + 276
     if(n ==15) SphereWave(LebedevStencil(71, 0.00, 0.00, 0.00), StreamingType::FlatFixed   , cfl);  // 1730
     
-    if(n ==16) SphereWave(LebedevStencil(71, 0.17, 0.06, 0.00), StreamingType::FlatAdaptive, cfl);  // 2030 = 1730 + 300
-    if(n ==17) SphereWave(LebedevStencil(77, 0.00, 0.00, 0.00), StreamingType::FlatFixed   , cfl);  // 2030
+    // Out of memory:
+    // if(n ==16) SphereWave(LebedevStencil(71, 0.17, 0.06, 0.00), StreamingType::FlatAdaptive, cfl);  // 2030 = 1730 + 300
+    // if(n ==17) SphereWave(LebedevStencil(77, 0.00, 0.00, 0.00), StreamingType::FlatFixed   , cfl);  // 2030
 }
 
 Logger Shadow(LebedevStencil stencil, StreamingType streamingType, double cfl)
 {
+    // Changed from 191 to 181 to make higher order stencil work without running out of memory.
     // Grid, Metric, Stencil:
-    size_t nx = 191;
-    size_t ny = 191;
-    size_t nz = 191;
+    size_t nx = 181;
+    size_t ny = 181;
+    size_t nz = 181;
     Coord start(-0.2, -0.2, -0.2);
     Coord end(1.7, 1.7, 1.7);
     Grid grid(nx, ny, nz, start, end);
@@ -187,6 +189,7 @@ Logger Shadow(LebedevStencil stencil, StreamingType streamingType, double cfl)
 }
 void ShadowAnalysis(int n)
 {
+    // Repeat with nx=ny=nz=181 instead of 191 to get n==14 and n==15 to work.
     double cfl = 0.9;
     if(n == 0) Shadow(LebedevStencil(21, 0.14, 0.12, 0.00), StreamingType::FlatAdaptive, cfl);  // 194 = 170 + 24
     if(n == 1) Shadow(LebedevStencil(23, 0.00, 0.00, 0.00), StreamingType::FlatFixed   , cfl);  // 194
@@ -212,8 +215,9 @@ void ShadowAnalysis(int n)
     if(n ==14) Shadow(LebedevStencil(65, 0.19, 0.02, 0.00), StreamingType::FlatAdaptive, cfl);  // 1730 = 1454 + 276
     if(n ==15) Shadow(LebedevStencil(71, 0.00, 0.00, 0.00), StreamingType::FlatFixed   , cfl);  // 1730
     
-    if(n ==16) Shadow(LebedevStencil(71, 0.17, 0.06, 0.00), StreamingType::FlatAdaptive, cfl);  // 2030 = 1730 + 300
-    if(n ==17) Shadow(LebedevStencil(77, 0.00, 0.00, 0.00), StreamingType::FlatFixed   , cfl);  // 2030
+    // Out of memory:
+    // if(n ==16) Shadow(LebedevStencil(71, 0.17, 0.06, 0.00), StreamingType::FlatAdaptive, cfl);  // 2030 = 1730 + 300
+    // if(n ==17) Shadow(LebedevStencil(77, 0.00, 0.00, 0.00), StreamingType::FlatFixed   , cfl);  // 2030
 }
 
 Logger Star(LebedevStencil stencil, StreamingType streamingType, double cfl, double kappaA)
@@ -678,8 +682,8 @@ Logger CurvedBeam(LebedevStencil stencil, StreamingType streamingType, double cf
     Coord end(5, 4, 0.25);
     Grid grid(nx, ny, nz, start, end);
     grid.SetCFL(cfl);
-    SchwarzSchild metric(grid, 1.0, 0.0); // needs at least LebedevStencil5
-    // KerrSchild metric(grid, 1.0, 0.0);
+    // SchwarzSchild metric(grid, 1.0, 0.0); // needs at least LebedevStencil5
+    KerrSchild metric(grid, 1.0, 0.0);
     LebedevStencil streamingStencil(5);
     InterpolationGrid interpGrid(500, 1000, stencil);
     Camera camera;
@@ -741,32 +745,32 @@ Logger CurvedBeam(LebedevStencil stencil, StreamingType streamingType, double cf
 void CurvedBeamAnalysis(int n)
 {
     double cfl = 0.9;
-    if(n == 0) CurvedBeam(LebedevStencil(21, 0.14, 0.12, 0.00), StreamingType::FlatAdaptive, cfl);  // 194 = 170 + 24
-    if(n == 1) CurvedBeam(LebedevStencil(23, 0.00, 0.00, 0.00), StreamingType::FlatFixed   , cfl);  // 194
+    if(n == 0) CurvedBeam(LebedevStencil(21, 0.14, 0.12, 0.00), StreamingType::CurvedAdaptive, cfl);  // 194 = 170 + 24
+    if(n == 1) CurvedBeam(LebedevStencil(23, 0.00, 0.00, 0.00), StreamingType::CurvedFixed   , cfl);  // 194
 
-    if(n == 2) CurvedBeam(LebedevStencil(29, 0.00, 0.13, 0.00), StreamingType::FlatAdaptive, cfl);  // 350 = 302 + 48
-    if(n == 3) CurvedBeam(LebedevStencil(31, 0.00, 0.00, 0.00), StreamingType::FlatFixed   , cfl);  // 350
+    if(n == 2) CurvedBeam(LebedevStencil(29, 0.00, 0.13, 0.00), StreamingType::CurvedAdaptive, cfl);  // 350 = 302 + 48
+    if(n == 3) CurvedBeam(LebedevStencil(31, 0.00, 0.00, 0.00), StreamingType::CurvedFixed   , cfl);  // 350
     
-    if(n == 4) CurvedBeam(LebedevStencil(35, 0.00, 0.20, 0.00), StreamingType::FlatAdaptive, cfl);  // 582 = 434 + 148
-    if(n == 5) CurvedBeam(LebedevStencil(41, 0.00, 0.00, 0.00), StreamingType::FlatFixed   , cfl);  // 590
+    if(n == 4) CurvedBeam(LebedevStencil(35, 0.00, 0.20, 0.00), StreamingType::CurvedAdaptive, cfl);  // 582 = 434 + 148
+    if(n == 5) CurvedBeam(LebedevStencil(41, 0.00, 0.00, 0.00), StreamingType::CurvedFixed   , cfl);  // 590
     
-    if(n == 6) CurvedBeam(LebedevStencil(41, 0.20, 0.18, 0.00), StreamingType::FlatAdaptive, cfl);  // 770 = 590 + 120
-    if(n == 7) CurvedBeam(LebedevStencil(47, 0.00, 0.00, 0.00), StreamingType::FlatFixed   , cfl);  // 770
+    if(n == 6) CurvedBeam(LebedevStencil(41, 0.20, 0.18, 0.00), StreamingType::CurvedAdaptive, cfl);  // 770 = 590 + 120
+    if(n == 7) CurvedBeam(LebedevStencil(47, 0.00, 0.00, 0.00), StreamingType::CurvedFixed   , cfl);  // 770
     
-    if(n == 8) CurvedBeam(LebedevStencil(47, 0.19, 0.17, 0.00), StreamingType::FlatAdaptive, cfl);  // 978 = 770 + 208
-    if(n == 9) CurvedBeam(LebedevStencil(53, 0.00, 0.00, 0.00), StreamingType::FlatFixed   , cfl);  // 974
+    if(n == 8) CurvedBeam(LebedevStencil(47, 0.19, 0.17, 0.00), StreamingType::CurvedAdaptive, cfl);  // 978 = 770 + 208
+    if(n == 9) CurvedBeam(LebedevStencil(53, 0.00, 0.00, 0.00), StreamingType::CurvedFixed   , cfl);  // 974
     
-    if(n ==10) CurvedBeam(LebedevStencil(53, 0.18, 0.13, 0.00), StreamingType::FlatAdaptive, cfl);  // 1202 = 974 + 228
-    if(n ==11) CurvedBeam(LebedevStencil(59, 0.00, 0.00, 0.00), StreamingType::FlatFixed   , cfl);  // 1202
+    if(n ==10) CurvedBeam(LebedevStencil(53, 0.18, 0.13, 0.00), StreamingType::CurvedAdaptive, cfl);  // 1202 = 974 + 228
+    if(n ==11) CurvedBeam(LebedevStencil(59, 0.00, 0.00, 0.00), StreamingType::CurvedFixed   , cfl);  // 1202
     
-    if(n ==12) CurvedBeam(LebedevStencil(59, 0.16, 0.14, 0.00), StreamingType::FlatAdaptive, cfl);  // 1454 = 1202 + 252
-    if(n ==13) CurvedBeam(LebedevStencil(65, 0.00, 0.00, 0.00), StreamingType::FlatFixed   , cfl);  // 1454
+    if(n ==12) CurvedBeam(LebedevStencil(59, 0.16, 0.14, 0.00), StreamingType::CurvedAdaptive, cfl);  // 1454 = 1202 + 252
+    if(n ==13) CurvedBeam(LebedevStencil(65, 0.00, 0.00, 0.00), StreamingType::CurvedFixed   , cfl);  // 1454
     
-    if(n ==14) CurvedBeam(LebedevStencil(65, 0.19, 0.02, 0.00), StreamingType::FlatAdaptive, cfl);  // 1730 = 1454 + 276
-    if(n ==15) CurvedBeam(LebedevStencil(71, 0.00, 0.00, 0.00), StreamingType::FlatFixed   , cfl);  // 1730
+    if(n ==14) CurvedBeam(LebedevStencil(65, 0.19, 0.02, 0.00), StreamingType::CurvedAdaptive, cfl);  // 1730 = 1454 + 276
+    if(n ==15) CurvedBeam(LebedevStencil(71, 0.00, 0.00, 0.00), StreamingType::CurvedFixed   , cfl);  // 1730
     
-    if(n ==16) CurvedBeam(LebedevStencil(71, 0.17, 0.06, 0.00), StreamingType::FlatAdaptive, cfl);  // 2030 = 1730 + 300
-    if(n ==17) CurvedBeam(LebedevStencil(77, 0.00, 0.00, 0.00), StreamingType::FlatFixed   , cfl);  // 2030
+    if(n ==16) CurvedBeam(LebedevStencil(71, 0.17, 0.06, 0.00), StreamingType::CurvedAdaptive, cfl);  // 2030 = 1730 + 300
+    if(n ==17) CurvedBeam(LebedevStencil(77, 0.00, 0.00, 0.00), StreamingType::CurvedFixed   , cfl);  // 2030
 }
 
 Logger ThinHalfDisk(LebedevStencil stencil, StreamingType streamingType, double cfl, int resolutionScale)
@@ -986,19 +990,29 @@ Logger ThinFullDisk(LebedevStencil stencil, StreamingType streamingType, double 
 void ThinFullDiskAnalysis(int n)
 {
     double cfl = 0.9;
-    // if(n == 0) ThinFullDisk(LebedevStencil(41, 0.00, 0.00, 0.00), StreamingType::CurvedFixed, cfl, 3);
-    // if(n == 1) ThinFullDisk(LebedevStencil(41, 0.00, 0.00, 0.00), StreamingType::CurvedFixed, cfl, 4);
-    // if(n == 2) ThinFullDisk(LebedevStencil(41, 0.00, 0.00, 0.00), StreamingType::CurvedFixed, cfl, 5);
-    // if(n == 3) ThinFullDisk(LebedevStencil(41, 0.00, 0.00, 0.00), StreamingType::CurvedFixed, cfl, 6);
-    // if(n == 4) ThinFullDisk(LebedevStencil(41, 0.00, 0.00, 0.00), StreamingType::CurvedFixed, cfl, 7);
-    // if(n == 5) ThinFullDisk(LebedevStencil(41, 0.00, 0.00, 0.00), StreamingType::CurvedFixed, cfl, 8);
-    // if(n == 6) ThinFullDisk(LebedevStencil(41, 0.00, 0.00, 0.00), StreamingType::CurvedFixed, cfl, 9);
+    if(n == 0) ThinFullDisk(LebedevStencil(59, 0.00, 0.00, 0.00), StreamingType::CurvedFixed, cfl, 3);  // Done
+    if(n == 1) ThinFullDisk(LebedevStencil(59, 0.00, 0.00, 0.00), StreamingType::CurvedFixed, cfl, 4);  // Done
+    if(n == 2) ThinFullDisk(LebedevStencil(59, 0.00, 0.00, 0.00), StreamingType::CurvedFixed, cfl, 5);  // Done
+    if(n == 3) ThinFullDisk(LebedevStencil(59, 0.00, 0.00, 0.00), StreamingType::CurvedFixed, cfl, 6);  // Done
+    if(n == 4) ThinFullDisk(LebedevStencil(59, 0.00, 0.00, 0.00), StreamingType::CurvedFixed, cfl, 7);  // Done
     
-    if(n == 0) ThinFullDisk(LebedevStencil(59, 0.00, 0.00, 0.00), StreamingType::CurvedFixed, cfl, 3);
-    if(n == 1) ThinFullDisk(LebedevStencil(59, 0.00, 0.00, 0.00), StreamingType::CurvedFixed, cfl, 4);
-    if(n == 2) ThinFullDisk(LebedevStencil(59, 0.00, 0.00, 0.00), StreamingType::CurvedFixed, cfl, 5);
-    if(n == 3) ThinFullDisk(LebedevStencil(59, 0.00, 0.00, 0.00), StreamingType::CurvedFixed, cfl, 6);
-    if(n == 4) ThinFullDisk(LebedevStencil(59, 0.00, 0.00, 0.00), StreamingType::CurvedFixed, cfl, 7);
+    if(n == 5) ThinFullDisk(LebedevStencil(65, 0.00, 0.00, 0.00), StreamingType::CurvedFixed, cfl, 3);  // Done
+    if(n == 6) ThinFullDisk(LebedevStencil(65, 0.00, 0.00, 0.00), StreamingType::CurvedFixed, cfl, 4);  // Done
+    if(n == 7) ThinFullDisk(LebedevStencil(65, 0.00, 0.00, 0.00), StreamingType::CurvedFixed, cfl, 5);  // Done
+    if(n == 8) ThinFullDisk(LebedevStencil(65, 0.00, 0.00, 0.00), StreamingType::CurvedFixed, cfl, 6);  // Done
+    if(n == 9) ThinFullDisk(LebedevStencil(65, 0.00, 0.00, 0.00), StreamingType::CurvedFixed, cfl, 7);  // OOM crash
+    
+    if(n ==10) ThinFullDisk(LebedevStencil(71, 0.00, 0.00, 0.00), StreamingType::CurvedFixed, cfl, 3);  // Done
+    if(n ==11) ThinFullDisk(LebedevStencil(71, 0.00, 0.00, 0.00), StreamingType::CurvedFixed, cfl, 4);  // Done
+    if(n ==12) ThinFullDisk(LebedevStencil(71, 0.00, 0.00, 0.00), StreamingType::CurvedFixed, cfl, 5);  // Done
+    if(n ==13) ThinFullDisk(LebedevStencil(71, 0.00, 0.00, 0.00), StreamingType::CurvedFixed, cfl, 6);  // Done
+    if(n ==14) ThinFullDisk(LebedevStencil(71, 0.00, 0.00, 0.00), StreamingType::CurvedFixed, cfl, 7);  // OOM crash
+    
+    if(n ==15) ThinFullDisk(LebedevStencil(77, 0.00, 0.00, 0.00), StreamingType::CurvedFixed, cfl, 3);  // Done
+    if(n ==16) ThinFullDisk(LebedevStencil(77, 0.00, 0.00, 0.00), StreamingType::CurvedFixed, cfl, 4);  // Done
+    if(n ==17) ThinFullDisk(LebedevStencil(77, 0.00, 0.00, 0.00), StreamingType::CurvedFixed, cfl, 5);  // Done
+    if(n ==18) ThinFullDisk(LebedevStencil(77, 0.00, 0.00, 0.00), StreamingType::CurvedFixed, cfl, 6);  // Done
+    if(n ==19) ThinFullDisk(LebedevStencil(77, 0.00, 0.00, 0.00), StreamingType::CurvedFixed, cfl, 7);  // OOM crash
 }
 
 void StencilAnalysis(int n)
@@ -1157,6 +1171,41 @@ void TestThinDiskSetup()
 
     fileOut.close();
 }
+void SaveCurvedBeamHarmonicsInterpolation(LebedevStencil stencil, StreamingType streamingType, size_t nx, size_t ny, size_t nz)
+{
+    // Create Radiation object:
+    Coord start(0, 0, -0.25);
+    Coord end(5, 4, 0.25);
+    Grid grid(nx, ny, nz, start, end);
+    grid.SetCFL(0.5);
+    SchwarzSchild metric(grid, 1.0, 0.0); // needs at least LebedevStencil5
+    // KerrSchild metric(grid, 1.0, 0.0);
+    LebedevStencil streamingStencil(5);
+    InterpolationGrid interpGrid(500, 1000, stencil);
+    Camera camera;
+
+    // Config:
+    Config config =
+        {
+            .name = "irrelevant",
+            .simTime = 10.0,
+            .writePeriod = 11.0,
+            .updateSphericalHarmonics = false,
+            .keepSourceNodesActive = true,
+            .writeData = WRITE_DATA,
+            .printSetup = PRINT_SETUP,
+            .printProgress = PRINT_PROGRESS,
+            .printResults = PRINT_RESULTS,
+            .useCamera = false,
+            .saveInitialData = SAVE_ID,
+            .streamingType = streamingType,
+            .initialDataType = InitialDataType::Moments,
+        };
+
+    // Radiation:
+    Radiation radiation(metric, stencil, streamingStencil, interpGrid, camera, config);
+    radiation.SaveHarmonicInterpolation();
+}
 
 int main(int argc, char *argv[])
 {
@@ -1164,16 +1213,24 @@ int main(int argc, char *argv[])
     if (argc > 1)
         n = atoi(argv[1]);
 
-    // SphereWaveAnalysis(n);       // 
-    ShadowAnalysis(n);           // 
+    // SphereWaveAnalysis(n);       // Done
+    // ShadowAnalysis(n);           // Done
     // StarAnalysis(n);             // Done
-    // BeamCrossingAnalysis(n);     // 
+    // BeamCrossingAnalysis(n);     // Done
     // DiffusionAnalysis(n);        // Done
     // MovingDiffusionAnalysis(n);  // Done
-    // CurvedBeamAnalysis(n);       // 
+    // CurvedBeamAnalysis(n);       // Done
     // TestThinDiskSetup();         // Done
     // ThinHalfDiskAnalysis(n);     // Not needed for paper, just a quick test for Full Disk
     // ThinFullDiskAnalysis(n);     // Done
     // StencilAnalysis(n);          // Done
     // StencilConfig(n);            // Done
+    
+    // size_t nx = 51; // 5
+    // size_t ny = 41; // 4
+    // size_t nz = 6;  // 0.5
+    // SaveCurvedBeamHarmonicsInterpolation(LebedevStencil(21, 0.00, 0.00, 0.00), StreamingType::FlatFixed, nx, ny, nz);
+
+    // double cfl = 0.9;
+    // CurvedBeam(LebedevStencil(21, 0.14, 0.12, 0.00), StreamingType::FlatAdaptive, cfl);  // 194 = 170 + 24
 }

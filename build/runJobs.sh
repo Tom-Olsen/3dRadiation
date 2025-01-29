@@ -19,6 +19,8 @@ sbatch --dependency=afterok:$compile_job_id --job-name=myjob --nodes=1 --ntasks=
 sbatch --dependency=afterok:$compile_job_id --job-name=myjob --nodes=1 --ntasks=1 --cpus-per-task=64 --mem=250G --time=024:00:00 --partition=calea --wrap="srun -n 1 env OMP_PLACES=threads env OMP_PROC_BIND=true ./main.out 15"
 sbatch --dependency=afterok:$compile_job_id --job-name=myjob --nodes=1 --ntasks=1 --cpus-per-task=64 --mem=250G --time=024:00:00 --partition=calea --wrap="srun -n 1 env OMP_PLACES=threads env OMP_PROC_BIND=true ./main.out 16"
 sbatch --dependency=afterok:$compile_job_id --job-name=myjob --nodes=1 --ntasks=1 --cpus-per-task=64 --mem=250G --time=024:00:00 --partition=calea --wrap="srun -n 1 env OMP_PLACES=threads env OMP_PROC_BIND=true ./main.out 17"
+sbatch --dependency=afterok:$compile_job_id --job-name=myjob --nodes=1 --ntasks=1 --cpus-per-task=64 --mem=250G --time=024:00:00 --partition=calea --wrap="srun -n 1 env OMP_PLACES=threads env OMP_PROC_BIND=true ./main.out 18"
+sbatch --dependency=afterok:$compile_job_id --job-name=myjob --nodes=1 --ntasks=1 --cpus-per-task=64 --mem=250G --time=024:00:00 --partition=calea --wrap="srun -n 1 env OMP_PLACES=threads env OMP_PROC_BIND=true ./main.out 19"
 
 # Main Iboga:
 # sbatch --job-name=myjob --nodes=1 --ntasks=1 --cpus-per-task=20 --mem=32G --time=024:00:00 --partition=iboga --wrap="srun -n 1 env OMP_PLACES=threads env OMP_PROC_BIND=true ./main.out 0"
