@@ -1,4 +1,5 @@
 This repository contains the 3D GRLMBRT code developed in the context of my PhD thesis, "General Relativistic Lattice Boltzmann Method for Radiation Transport", and my paper of the same title.
+Professor Luciano Rezzolla helped with the development of the theoretical framework and crucial code optimizations.
 It is a standalone radiation transport code to simulate the behavior of radiation (photons and neutrinos) in the presence of a matter fluid in curved spacetime.
 The code is not coupled to a matter fluid code yet, making all interactions between matter and radiation static.
 The code is parallelized via openMP.
