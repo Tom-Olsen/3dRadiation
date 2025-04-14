@@ -357,8 +357,8 @@ Logger BeamCrossing(LebedevStencil stencil, StreamingType streamingType, double 
     Radiation radiation(metric, stencil, streamingStencil, interpGrid, camera, config);
 
     // Initial Data:
-    Tensor3 dir0 = Tensor3(0.2,  0.1, 0.0).EuklNormalized();
-    Tensor3 dir1 = Tensor3(0.2, -0.1, 0.0).EuklNormalized();
+    Tensor3 dir0 = Tensor3(0.3,  0.1, 0.0).EuklNormalized();
+    Tensor3 dir1 = Tensor3(0.3, -0.1, 0.0).EuklNormalized();
     
     // Find nearest directions in stencil:
     float dist0 = 1e10;
@@ -426,32 +426,11 @@ Logger BeamCrossing(LebedevStencil stencil, StreamingType streamingType, double 
 void BeamCrossingAnalysis(int n)
 {
     double cfl = 0.9;
-    if(n == 0) BeamCrossing(LebedevStencil(21, 0.14, 0.12, 0.00), StreamingType::FlatAdaptive, cfl);  // 194 = 170 + 24
-    if(n == 1) BeamCrossing(LebedevStencil(23, 0.00, 0.00, 0.00), StreamingType::FlatFixed   , cfl);  // 194
+    if(n == 0) BeamCrossing(LebedevStencil(53, 0.00, 0.00, 0.00), StreamingType::FlatFixed   , cfl);  // 974
+    if(n == 1) BeamCrossing(LebedevStencil(71, 0.00, 0.00, 0.00), StreamingType::FlatFixed   , cfl);  // 1730
 
-    if(n == 2) BeamCrossing(LebedevStencil(29, 0.00, 0.13, 0.00), StreamingType::FlatAdaptive, cfl);  // 350 = 302 + 48
-    if(n == 3) BeamCrossing(LebedevStencil(31, 0.00, 0.00, 0.00), StreamingType::FlatFixed   , cfl);  // 350
-    
-    if(n == 4) BeamCrossing(LebedevStencil(35, 0.00, 0.20, 0.00), StreamingType::FlatAdaptive, cfl);  // 582 = 434 + 148
-    if(n == 5) BeamCrossing(LebedevStencil(41, 0.00, 0.00, 0.00), StreamingType::FlatFixed   , cfl);  // 590
-    
-    if(n == 6) BeamCrossing(LebedevStencil(41, 0.20, 0.18, 0.00), StreamingType::FlatAdaptive, cfl);  // 770 = 590 + 120
-    if(n == 7) BeamCrossing(LebedevStencil(47, 0.00, 0.00, 0.00), StreamingType::FlatFixed   , cfl);  // 770
-    
-    if(n == 8) BeamCrossing(LebedevStencil(47, 0.19, 0.17, 0.00), StreamingType::FlatAdaptive, cfl);  // 978 = 770 + 208
-    if(n == 9) BeamCrossing(LebedevStencil(53, 0.00, 0.00, 0.00), StreamingType::FlatFixed   , cfl);  // 974
-    
-    if(n ==10) BeamCrossing(LebedevStencil(53, 0.18, 0.13, 0.00), StreamingType::FlatAdaptive, cfl);  // 1202 = 974 + 228
-    if(n ==11) BeamCrossing(LebedevStencil(59, 0.00, 0.00, 0.00), StreamingType::FlatFixed   , cfl);  // 1202
-    
-    if(n ==12) BeamCrossing(LebedevStencil(59, 0.16, 0.14, 0.00), StreamingType::FlatAdaptive, cfl);  // 1454 = 1202 + 252
-    if(n ==13) BeamCrossing(LebedevStencil(65, 0.00, 0.00, 0.00), StreamingType::FlatFixed   , cfl);  // 1454
-    
-    if(n ==14) BeamCrossing(LebedevStencil(65, 0.19, 0.02, 0.00), StreamingType::FlatAdaptive, cfl);  // 1730 = 1454 + 276
-    if(n ==15) BeamCrossing(LebedevStencil(71, 0.00, 0.00, 0.00), StreamingType::FlatFixed   , cfl);  // 1730
-    
-    if(n ==16) BeamCrossing(LebedevStencil(71, 0.17, 0.06, 0.00), StreamingType::FlatAdaptive, cfl);  // 2030 = 1730 + 300
-    if(n ==17) BeamCrossing(LebedevStencil(77, 0.00, 0.00, 0.00), StreamingType::FlatFixed   , cfl);  // 2030
+    if(n == 2) BeamCrossing(LebedevStencil(47, 0.19, 0.17, 0.00), StreamingType::FlatAdaptive, cfl);  // 978 = 770 + 208
+    if(n == 3) BeamCrossing(LebedevStencil(65, 0.19, 0.02, 0.00), StreamingType::FlatAdaptive, cfl);  // 1730 = 1454 + 276
 }
 
 Logger Diffusion(LebedevStencil stencil, StreamingType streamingType, double kappaS, double lambda, double cfl, double correctionFactor)
@@ -682,8 +661,8 @@ Logger CurvedBeam(LebedevStencil stencil, StreamingType streamingType, double cf
     Coord end(5, 4, 0.25);
     Grid grid(nx, ny, nz, start, end);
     grid.SetCFL(cfl);
-    // SchwarzSchild metric(grid, 1.0, 0.0); // needs at least LebedevStencil5
-    KerrSchild metric(grid, 1.0, 0.0);
+    SchwarzSchild metric(grid, 1.0, 0.0); // needs at least LebedevStencil5
+    // KerrSchild metric(grid, 1.0, 0.0);
     LebedevStencil streamingStencil(5);
     InterpolationGrid interpGrid(500, 1000, stencil);
     Camera camera;
@@ -745,32 +724,85 @@ Logger CurvedBeam(LebedevStencil stencil, StreamingType streamingType, double cf
 void CurvedBeamAnalysis(int n)
 {
     double cfl = 0.9;
-    if(n == 0) CurvedBeam(LebedevStencil(21, 0.14, 0.12, 0.00), StreamingType::CurvedAdaptive, cfl);  // 194 = 170 + 24
-    if(n == 1) CurvedBeam(LebedevStencil(23, 0.00, 0.00, 0.00), StreamingType::CurvedFixed   , cfl);  // 194
+    // ref0 and ref1 configs:
+    // if(n == 0) CurvedBeam(LebedevStencil(21, 0.14, 0.12, 0.00), StreamingType::CurvedAdaptive, cfl);  // 194 = 170 + 24
+    // if(n == 1) CurvedBeam(LebedevStencil(23, 0.00, 0.00, 0.00), StreamingType::CurvedFixed   , cfl);  // 194
 
-    if(n == 2) CurvedBeam(LebedevStencil(29, 0.00, 0.13, 0.00), StreamingType::CurvedAdaptive, cfl);  // 350 = 302 + 48
-    if(n == 3) CurvedBeam(LebedevStencil(31, 0.00, 0.00, 0.00), StreamingType::CurvedFixed   , cfl);  // 350
+    // if(n == 2) CurvedBeam(LebedevStencil(29, 0.00, 0.13, 0.00), StreamingType::CurvedAdaptive, cfl);  // 350 = 302 + 48
+    // if(n == 3) CurvedBeam(LebedevStencil(31, 0.00, 0.00, 0.00), StreamingType::CurvedFixed   , cfl);  // 350
     
-    if(n == 4) CurvedBeam(LebedevStencil(35, 0.00, 0.20, 0.00), StreamingType::CurvedAdaptive, cfl);  // 582 = 434 + 148
-    if(n == 5) CurvedBeam(LebedevStencil(41, 0.00, 0.00, 0.00), StreamingType::CurvedFixed   , cfl);  // 590
+    // if(n == 4) CurvedBeam(LebedevStencil(35, 0.00, 0.20, 0.00), StreamingType::CurvedAdaptive, cfl);  // 582 = 434 + 148
+    // if(n == 5) CurvedBeam(LebedevStencil(41, 0.00, 0.00, 0.00), StreamingType::CurvedFixed   , cfl);  // 590
     
-    if(n == 6) CurvedBeam(LebedevStencil(41, 0.20, 0.18, 0.00), StreamingType::CurvedAdaptive, cfl);  // 770 = 590 + 120
-    if(n == 7) CurvedBeam(LebedevStencil(47, 0.00, 0.00, 0.00), StreamingType::CurvedFixed   , cfl);  // 770
+    // if(n == 6) CurvedBeam(LebedevStencil(41, 0.20, 0.18, 0.00), StreamingType::CurvedAdaptive, cfl);  // 770 = 590 + 120
+    // if(n == 7) CurvedBeam(LebedevStencil(47, 0.00, 0.00, 0.00), StreamingType::CurvedFixed   , cfl);  // 770
     
-    if(n == 8) CurvedBeam(LebedevStencil(47, 0.19, 0.17, 0.00), StreamingType::CurvedAdaptive, cfl);  // 978 = 770 + 208
-    if(n == 9) CurvedBeam(LebedevStencil(53, 0.00, 0.00, 0.00), StreamingType::CurvedFixed   , cfl);  // 974
+    // if(n == 8) CurvedBeam(LebedevStencil(47, 0.19, 0.17, 0.00), StreamingType::CurvedAdaptive, cfl);  // 978 = 770 + 208
+    // if(n == 9) CurvedBeam(LebedevStencil(53, 0.00, 0.00, 0.00), StreamingType::CurvedFixed   , cfl);  // 974
     
-    if(n ==10) CurvedBeam(LebedevStencil(53, 0.18, 0.13, 0.00), StreamingType::CurvedAdaptive, cfl);  // 1202 = 974 + 228
-    if(n ==11) CurvedBeam(LebedevStencil(59, 0.00, 0.00, 0.00), StreamingType::CurvedFixed   , cfl);  // 1202
+    // if(n ==10) CurvedBeam(LebedevStencil(53, 0.18, 0.13, 0.00), StreamingType::CurvedAdaptive, cfl);  // 1202 = 974 + 228
+    // if(n ==11) CurvedBeam(LebedevStencil(59, 0.00, 0.00, 0.00), StreamingType::CurvedFixed   , cfl);  // 1202
     
-    if(n ==12) CurvedBeam(LebedevStencil(59, 0.16, 0.14, 0.00), StreamingType::CurvedAdaptive, cfl);  // 1454 = 1202 + 252
-    if(n ==13) CurvedBeam(LebedevStencil(65, 0.00, 0.00, 0.00), StreamingType::CurvedFixed   , cfl);  // 1454
+    // if(n ==12) CurvedBeam(LebedevStencil(59, 0.16, 0.14, 0.00), StreamingType::CurvedAdaptive, cfl);  // 1454 = 1202 + 252
+    // if(n ==13) CurvedBeam(LebedevStencil(65, 0.00, 0.00, 0.00), StreamingType::CurvedFixed   , cfl);  // 1454
     
-    if(n ==14) CurvedBeam(LebedevStencil(65, 0.19, 0.02, 0.00), StreamingType::CurvedAdaptive, cfl);  // 1730 = 1454 + 276
-    if(n ==15) CurvedBeam(LebedevStencil(71, 0.00, 0.00, 0.00), StreamingType::CurvedFixed   , cfl);  // 1730
+    // if(n ==14) CurvedBeam(LebedevStencil(65, 0.19, 0.02, 0.00), StreamingType::CurvedAdaptive, cfl);  // 1730 = 1454 + 276
+    // if(n ==15) CurvedBeam(LebedevStencil(71, 0.00, 0.00, 0.00), StreamingType::CurvedFixed   , cfl);  // 1730
     
-    if(n ==16) CurvedBeam(LebedevStencil(71, 0.17, 0.06, 0.00), StreamingType::CurvedAdaptive, cfl);  // 2030 = 1730 + 300
-    if(n ==17) CurvedBeam(LebedevStencil(77, 0.00, 0.00, 0.00), StreamingType::CurvedFixed   , cfl);  // 2030
+    // if(n ==16) CurvedBeam(LebedevStencil(71, 0.17, 0.06, 0.00), StreamingType::CurvedAdaptive, cfl);  // 2030 = 1730 + 300
+    // if(n ==17) CurvedBeam(LebedevStencil(77, 0.00, 0.00, 0.00), StreamingType::CurvedFixed   , cfl);  // 2030
+    
+    // if(n ==18) CurvedBeam(LebedevStencil(77, 0.14, 0.11, 0.00), StreamingType::CurvedAdaptive, cfl);  // 2354 = 2030 + 324
+    // if(n ==19) CurvedBeam(LebedevStencil(83, 0.00, 0.00, 0.00), StreamingType::CurvedFixed   , cfl);  // 2354
+    
+    // if(n ==20) CurvedBeam(LebedevStencil(83, 0.00, 0.13, 0.00), StreamingType::CurvedAdaptive, cfl);  // 2718 = 2354 + 364
+    // if(n ==21) CurvedBeam(LebedevStencil(89, 0.00, 0.00, 0.00), StreamingType::CurvedFixed   , cfl);  // 2702
+    
+    // if(n ==22) CurvedBeam(LebedevStencil(89, 0.00, 0.12, 0.00), StreamingType::CurvedAdaptive, cfl);  // 3066 = 2702 + 364
+    // if(n ==23) CurvedBeam(LebedevStencil(95, 0.00, 0.00, 0.00), StreamingType::CurvedFixed   , cfl);  // 3074
+    
+    // if(n ==24) CurvedBeam(LebedevStencil( 95, 0.12, 0.11, 0.00), StreamingType::CurvedAdaptive, cfl);  // 3066 = 2702 + 364
+    // if(n ==25) CurvedBeam(LebedevStencil(101, 0.00, 0.00, 0.00), StreamingType::CurvedFixed   , cfl);  // 3074
+    
+    // if(n ==26) CurvedBeam(LebedevStencil(101, 0.00, 0.11, 0.00), StreamingType::CurvedAdaptive, cfl);  // 3066 = 2702 + 364
+    // if(n ==27) CurvedBeam(LebedevStencil(107, 0.00, 0.00, 0.00), StreamingType::CurvedFixed   , cfl);  // 3074
+
+    // ref0, ref1, and ref2 configs:
+    // if(n ==  0) CurvedBeam(LebedevStencil(29, 0.07,  0.07,  0.07), StreamingType::CurvedAdaptive, cfl);  // 350 = 302 + 48
+    // if(n ==  1) CurvedBeam(LebedevStencil(31, 0.00,  0.00,  0.00), StreamingType::CurvedFixed, cfl);     // 350
+    
+    // if(n ==  2) CurvedBeam(LebedevStencil(31, 0.14,  0.13,  0.09), StreamingType::CurvedAdaptive, cfl);  // 434 = 350 + 84
+    // if(n ==  3) CurvedBeam(LebedevStencil(35, 0.00,  0.00,  0.00), StreamingType::CurvedFixed, cfl);     // 434
+    
+    // if(n ==  4) CurvedBeam(LebedevStencil(35, 0.12,  0.12,  0.09), StreamingType::CurvedAdaptive, cfl);  // 590 = 434 + 156
+    // if(n ==  5) CurvedBeam(LebedevStencil(41, 0.00,  0.00,  0.00), StreamingType::CurvedFixed, cfl);     // 590
+    
+    // if(n ==  6) CurvedBeam(LebedevStencil(41, 0.11,  0.11,  0.08), StreamingType::CurvedAdaptive, cfl);  // 770 = 590 + 180
+    // if(n ==  7) CurvedBeam(LebedevStencil(47, 0.00,  0.00,  0.00), StreamingType::CurvedFixed, cfl);     // 770
+    
+    // if(n ==  8) CurvedBeam(LebedevStencil(47, 0.08,  0.08,  0.08), StreamingType::CurvedAdaptive, cfl);  // 974 = 770 + 204
+    // if(n ==  9) CurvedBeam(LebedevStencil(53, 0.00,  0.00,  0.00), StreamingType::CurvedFixed, cfl);     // 974
+    
+    // if(n == 10) CurvedBeam(LebedevStencil(53, 0.08,  0.08,  0.08), StreamingType::CurvedAdaptive, cfl);  // 1202 = 974 + 228
+    // if(n == 11) CurvedBeam(LebedevStencil(59, 0.00,  0.00,  0.00), StreamingType::CurvedFixed, cfl);     // 1202
+    
+    // if(n == 12) CurvedBeam(LebedevStencil(59, 0.08,  0.08,  0.07), StreamingType::CurvedAdaptive, cfl);  // 1454 = 1202 + 252
+    // if(n == 13) CurvedBeam(LebedevStencil(65, 0.00,  0.00,  0.00), StreamingType::CurvedFixed, cfl);     // 1454
+    
+    // if(n == 14) CurvedBeam(LebedevStencil(65, 0.10,  0.08,  0.05), StreamingType::CurvedAdaptive, cfl);  // 1730 = 1454 + 276
+    // if(n == 15) CurvedBeam(LebedevStencil(71, 0.00,  0.00,  0.00), StreamingType::CurvedFixed, cfl);     // 1730
+    
+    // if(n == 16) CurvedBeam(LebedevStencil(71, 0.12,  0.06,  0.04), StreamingType::CurvedAdaptive, cfl);  // 2030 = 1730 + 300
+    // if(n == 17) CurvedBeam(LebedevStencil(77, 0.00,  0.00,  0.00), StreamingType::CurvedFixed, cfl);     // 2030
+    
+    // if(n == 18) CurvedBeam(LebedevStencil(77, 0.10,  0.05,  0.05), StreamingType::CurvedAdaptive, cfl);  // 2354 = 2030 + 324
+    // if(n == 19) CurvedBeam(LebedevStencil(83, 0.00,  0.00,  0.00), StreamingType::CurvedFixed, cfl);     // 2354
+    
+    // if(n == 20) CurvedBeam(LebedevStencil(83, 0.11,  0.04,  0.04), StreamingType::CurvedAdaptive, cfl);  // 2702 = 2354 + 348
+    // if(n == 21) CurvedBeam(LebedevStencil(89, 0.00,  0.00,  0.00), StreamingType::CurvedFixed, cfl);     // 2702
+    
+    // if(n == 22) CurvedBeam(LebedevStencil(89, 0.09,  0.07,  0.04), StreamingType::CurvedAdaptive, cfl);  // 3074 = 2702 + 372
+    // if(n == 23) CurvedBeam(LebedevStencil(95, 0.00,  0.00,  0.00), StreamingType::CurvedFixed, cfl);     // 3074
 }
 
 Logger ThinHalfDisk(LebedevStencil stencil, StreamingType streamingType, double cfl, int resolutionScale)
@@ -1053,7 +1085,7 @@ void PrintStencilConfig(LebedevStencil& stencil)
     if (nDir < 10) spaceDir += " ";
     if (nDir < 100) spaceDir += " ";
 
-    std::cout << stencil.refinement0Threshold << ", " << stencil.refinement1Threshold << ",\t";
+    std::cout << stencil.refinement0Threshold << ", " << stencil.refinement1Threshold << ", " << stencil.refinement2Threshold << ",\t";
     std::cout << spaceReal << nReal << ", ";
     std::cout << spaceGhost << nGhost << ", ";
     std::cout << spaceDir << nDir << "\n";
@@ -1063,7 +1095,7 @@ void StencilConfig(int n)
 {
     std::cout << std::fixed << std::setprecision(3);
     int N = 21;
-    double ref[] = {0.00, 0.01, 0.02, 0.03, 0.04, 0.05, 0.06, 0.07, 0.08, 0.09, 0.10, 0.11, 0.12, 0.13, 0.14, 0.15, 0.16, 0.17, 0.18, 0.19, 0.20};
+    double ref[N] = {0.00, 0.01, 0.02, 0.03, 0.04, 0.05, 0.06, 0.07, 0.08, 0.09, 0.10, 0.11, 0.12, 0.13, 0.14, 0.15, 0.16, 0.17, 0.18, 0.19, 0.20};
 
     int order = -1;
     if (n ==  0) order = 15;
@@ -1080,29 +1112,41 @@ void StencilConfig(int n)
     if (n == 11) order = 59;
     if (n == 12) order = 65;
     if (n == 13) order = 71;
-
-    if (n == 14)
+    if (n == 14) order = 77;
+    if (n == 15) order = 83;
+    if (n == 16) order = 89;
+    if (n == 17)
     {
+        int order = 95;
         std::cout << "order = " << order << "\n";
         std::cout << " ref0,  ref1,    nR,  nG, nDir\n";
-        int order = 77;
         LebedevStencil stencilA = LebedevStencil(order, 0.00, 0.00, 0.00);
         PrintStencilConfig(stencilA);
         return;
     }
     
+    //std::cout << "order = " << order << "\n";
+    //std::cout << " ref0,  ref1,    nR,  nG, nDir\n";
+    //for (int i = 0; i < N; i++)
+    //{
+    //    LebedevStencil stencilA = LebedevStencil(order, ref[0], ref[i], 0.00);
+    //    PrintStencilConfig(stencilA);
+    //    for (int j = i + 1; j < N; j++)
+    //    {
+    //        LebedevStencil stencil = LebedevStencil(order, ref[j], ref[i], 0.00);
+    //        PrintStencilConfig(stencil);
+    //    }
+    //}
+    
     std::cout << "order = " << order << "\n";
-    std::cout << " ref0,  ref1,    nR,  nG, nDir\n";
+    std::cout << " ref0,  ref1,  ref2,    nR,  nG, nDir\n";
     for (int i = 0; i < N; i++)
-    {
-        LebedevStencil stencilA = LebedevStencil(order, ref[0], ref[i], 0.00);
-        PrintStencilConfig(stencilA);
-        for (int j = i + 1; j < N; j++)
-        {
-            LebedevStencil stencil = LebedevStencil(order, ref[j], ref[i], 0.00);
-            PrintStencilConfig(stencil);
-        }
-    }
+        for (int j = i; j < N; j++)
+            for (int k = j; k < N; k++)
+            {
+                LebedevStencil stencil = LebedevStencil(order, ref[k], ref[j], ref[i]);
+                PrintStencilConfig(stencil);
+            }
 }
 void TestThinDiskSetup()
 {
@@ -1219,7 +1263,7 @@ int main(int argc, char *argv[])
     // BeamCrossingAnalysis(n);     // Done
     // DiffusionAnalysis(n);        // Done
     // MovingDiffusionAnalysis(n);  // Done
-    // CurvedBeamAnalysis(n);       // Done
+    CurvedBeamAnalysis(n);       // Done
     // TestThinDiskSetup();         // Done
     // ThinHalfDiskAnalysis(n);     // Not needed for paper, just a quick test for Full Disk
     // ThinFullDiskAnalysis(n);     // Done

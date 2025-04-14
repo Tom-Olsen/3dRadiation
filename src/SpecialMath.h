@@ -13,6 +13,7 @@ double Dot(const Tensor4 &vector0, const Tensor4 &vector1, const Tensor4x4 &gamm
 double Norm2(const Tensor3 &vector, const Tensor3x3 &gamma_ll);
 double Norm2(const Tensor4 &vector, const Tensor4x4 &g_ll);
 Tensor4 NullNormalize(const Tensor4 &vector, const Tensor4x4 &g_ll);
+Tensor3 OneNormalize(const Tensor3 &vector, const Tensor3x3 &g_ll);
 Tensor4 OneNormalize(const Tensor4 &vector, const Tensor4x4 &g_ll);
 
 Tensor3 TransformIFtoLF(const Tensor3 &vector, const Tensor4x4 &tetrad);

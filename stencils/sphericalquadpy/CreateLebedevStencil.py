@@ -69,4 +69,4 @@ def WriteLebedevStencilToFile(order):
 #WriteLebedevStencilToFile(47)
 #WriteLebedevStencilToFile(53)
 #WriteLebedevStencilToFile(59)
-WriteLebedevStencilToFile(77)
+WriteLebedevStencilToFile(113)

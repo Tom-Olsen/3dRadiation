@@ -57,6 +57,11 @@ Tensor4 NullNormalize(const Tensor4 &vector, const Tensor4x4 &g_ll)
 
     return Tensor4(vector[0], x * vector[1], x * vector[2], x * vector[3]);
 }
+Tensor3 OneNormalize(const Tensor3 &vector, const Tensor3x3 &gamma_ll)
+{
+    double norm = sqrt(Norm2(vector, gamma_ll));
+    return Tensor3(vector[1] / norm, vector[2] / norm, vector[3] / norm);
+}
 Tensor4 OneNormalize(const Tensor4 &vector, const Tensor4x4 &g_ll)
 {
     double norm = sqrt(Norm2(vector, g_ll));

@@ -73,6 +73,8 @@ public:
         // Stencil:
         file << "Stencil Properties:" << std::endl;
         file << "Intensity Stencil: nDir          = " << intensityStencil.nDir << std::endl;
+        file << "Intensity Stencil: nReal         = " << intensityStencil.nDir - intensityStencil.nGhost << std::endl;
+        file << "Intensity Stencil: nGhost        = " << intensityStencil.nGhost << std::endl;
         file << "Intensity Stencil: nOrder        = " << intensityStencil.nOrder << std::endl;
         file << "Intensity Stencil: nCoefficients = " << intensityStencil.nCoefficients << std::endl;
         file << "Intensity Stencil: max Interpolation Error = " << 100 * intensityStencil.maxInterpolationError << "%" << std::endl;
