@@ -651,12 +651,17 @@ void MovingDiffusionAnalysis(int n)
     if (n == 7) MovingDiffusion(LebedevStencil(29, 0.00, 0.15, 0.00), StreamingType::FlatAdaptive, 1000.0, lambda, cfl, correctionFactor, 0.5);
 }
 
-Logger CurvedBeam(LebedevStencil stencil, StreamingType streamingType, double cfl)
+Logger CurvedBeam(LebedevStencil stencil, StreamingType streamingType, double cfl, double simTime = 10.0)
 {
     // Create Radiation object:
-    size_t nx = 201;
-    size_t ny = 161;
-    size_t nz =  21;    
+    // Values for proper paper simulations:
+    //size_t nx = 201;
+    //size_t ny = 161;
+    //size_t nz =  21;    
+    // Values for quick perf benchmark:
+    size_t nx = 101;
+    size_t ny =  81;
+    size_t nz =  11;
     Coord start(0, 0, -0.25);
     Coord end(5, 4, 0.25);
     Grid grid(nx, ny, nz, start, end);
@@ -671,7 +676,7 @@ Logger CurvedBeam(LebedevStencil stencil, StreamingType streamingType, double cf
     Config config =
         {
             .name = "Curved Beam 3d/" + metric.Name() + "_" + StreamingName(streamingType) + "_" + stencil.name + Format(cfl, 2) + "cfl",
-            .simTime = 10.0,
+            .simTime = simTime,
             .writePeriod = 11.0,
             .updateSphericalHarmonics = false,
             .keepSourceNodesActive = true,
@@ -708,7 +713,6 @@ Logger CurvedBeam(LebedevStencil stencil, StreamingType streamingType, double cf
                     Tensor4 uLF(1, 1, 0, 0);
                     uLF = NullNormalize(uLF, metric.GetMetric_ll(ijk));
                     Tensor3 vLF = Vec3ObservedByEulObs<LF, LF>(uLF, xyz, metric);
-
                     radiation.isInitialGridPoint[ijk] = true;
                     radiation.initialE_LF[ijk] = 1;
                     radiation.initialFx_LF[ijk] = 10 * vLF[1];
@@ -1263,7 +1267,7 @@ int main(int argc, char *argv[])
     // BeamCrossingAnalysis(n);     // Done
     // DiffusionAnalysis(n);        // Done
     // MovingDiffusionAnalysis(n);  // Done
-    CurvedBeamAnalysis(n);       // Done
+    // CurvedBeamAnalysis(n);       // Done
     // TestThinDiskSetup();         // Done
     // ThinHalfDiskAnalysis(n);     // Not needed for paper, just a quick test for Full Disk
     // ThinFullDiskAnalysis(n);     // Done
@@ -1277,4 +1281,13 @@ int main(int argc, char *argv[])
 
     // double cfl = 0.9;
     // CurvedBeam(LebedevStencil(21, 0.14, 0.12, 0.00), StreamingType::FlatAdaptive, cfl);  // 194 = 170 + 24
+
+    // Quick Curved Beam runs for perf memory bandwidth measurements:
+    double cfl = 0.9;
+    // ThinFullDisk(LebedevStencil(59, 0.00, 0.00, 0.00), StreamingType::CurvedFixed, cfl, 3);  // Done
+    // CurvedBeam(LebedevStencil(29, 0.07,  0.07,  0.07), StreamingType::CurvedAdaptive, cfl, 0.1);  // 350 = 302 + 48
+    //CurvedBeam(LebedevStencil(35, 0.12,  0.12,  0.09), StreamingType::CurvedAdaptive, cfl, 0.1);  // 590 = 434 + 156
+    //CurvedBeam(LebedevStencil(47, 0.08,  0.08,  0.08), StreamingType::CurvedAdaptive, cfl, 0.1);  // 974 = 770 + 204
+    //CurvedBeam(LebedevStencil(71, 0.12,  0.06,  0.04), StreamingType::CurvedAdaptive, cfl, 0.1);  // 2030 = 1730 + 300
+    CurvedBeam(LebedevStencil(89, 0.09,  0.07,  0.04), StreamingType::CurvedAdaptive, cfl, 0.1);  // 3074 = 2702 + 372
 }
